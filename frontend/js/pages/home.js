@@ -44,11 +44,11 @@ export async function homePage() {
     h("p", { class: "muted" }, "Escolha uma trilha para continuar a expedição."),
     h(
       "div",
-      { class: "subject-grid" },
+      { class: "subject-grid stagger" },
       data.subjects.map((s) =>
         h(
           "a",
-          { class: "card subject-card", href: `#/mapa/${s.slug}` },
+          { class: "card subject-card", href: `#/mapa/${s.slug}`, dataset: { subject: s.slug } },
           h("div", { class: "subject-head" }, h("span", { class: "subject-icon", "aria-hidden": "true" }, s.icon), h("h2", {}, s.name)),
           levelProgress(s),
           s.guardianAvailable ? h("p", { class: "callout" }, "🛡️ O Desafio do Guardião está esperando por você!") : null,
@@ -61,7 +61,7 @@ export async function homePage() {
     ),
     h(
       "div",
-      { class: "totals" },
+      { class: "totals stagger" },
       h("div", { class: "tile" }, h("strong", {}, `🔥 ${data.totals.streak}`), h("span", {}, data.totals.streak === 1 ? "dia de prática" : "dias de prática")),
       h("div", { class: "tile" }, h("strong", {}, data.totals.problemsSolved), h("span", {}, "problemas resolvidos")),
       h("div", { class: "tile" }, h("strong", {}, `🏅 ${data.totals.achievements}`), h("span", {}, "medalhas")),

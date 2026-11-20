@@ -1,6 +1,7 @@
 import { api } from "../api.js";
 import { h } from "../dom.js";
 import { store } from "../store.js";
+import { confetti, countUp } from "../effects.js";
 import { levelBadge, levelProgress, startAndPlay } from "./shared.js";
 
 const TITLES = ["Continue praticando!", "Boa! Etapa concluída!", "Muito bem!", "Perfeito!"];
@@ -29,6 +30,15 @@ export async function summaryPage({ sessionId }) {
         )
       : null;
 
+  // Comemoração: XP contando e confete quando a conquista merece.
+  const celebrate = s.stars === 3 || s.guardianPassed || (s.mode === "diario" && s.correct > 0) || (s.mode === "nivelamento" && s.resultLevel) || s.achievements.length > 0;
+  setTimeout(() => {
+    if (!main.isConnected) return;
+    const xp = main.querySelector(".xp");
+    if (xp) countUp(xp, s.xpEarned, { prefix: "+", suffix: " XP", duration: 1100 });
+    if (celebrate) confetti({ count: 120, spread: 1.4 });
+  }, 450);
+
   return h(
     "section",
     { class: "page-narrow summary" },
@@ -39,7 +49,7 @@ export async function summaryPage({ sessionId }) {
           "section",
           { class: "card medals-earned" },
           h("h2", {}, s.achievements.length === 1 ? "Nova medalha!" : "Novas medalhas!"),
-          h("ul", { class: "medal-grid" }, s.achievements.map(medal)),
+          h("ul", { class: "medal-grid stagger" }, s.achievements.map(medal)),
         )
       : null,
     h("div", { class: "card" }, h("h2", {}, s.progress.name), levelProgress(s.progress)),

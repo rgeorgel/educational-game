@@ -23,7 +23,10 @@ class ProgressBar extends HTMLElement {
 
     const fill = document.createElement("span");
     fill.className = "progress-fill";
-    fill.style.setProperty("width", `${value}%`);
+    // Na primeira exibição a barra "enche" a partir do zero (a transição está em game.css).
+    const previous = this.querySelector(".progress-fill")?.style.width;
+    fill.style.setProperty("width", previous ?? "0%");
+    requestAnimationFrame(() => requestAnimationFrame(() => fill.style.setProperty("width", `${value}%`)));
     const track = document.createElement("span");
     track.className = "progress-track";
     track.append(fill);

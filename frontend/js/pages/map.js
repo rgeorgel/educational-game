@@ -89,6 +89,10 @@ export async function mapPage({ subject }) {
     );
   }
 
+  // Próxima etapa sugerida: a primeira aberta e ainda sem estrelas no nível atual.
+  const currentStages = map.levels.filter((l) => l.current).flatMap((l) => l.regions.flatMap((r) => r.stages));
+  const nextStageId = currentStages.find((st) => st.unlocked && st.stars === 0)?.id ?? null;
+
   let stageNumber = 0;
   const levels = map.levels.map((section) => {
     const levelStages = section.regions.flatMap((r) => r.stages);
@@ -113,39 +117,16 @@ export async function mapPage({ subject }) {
     }
 
     const regions = section.regions.map((region) =>
-        h(
-          "section",
-          { class: "card region" },
-          h("header", { class: "region-head" }, h("span", { class: "region-icon", "aria-hidden": "true" }, region.icon), h("div", {}, h("h2", {}, region.name), h("p", { class: "muted small" }, region.description))),
-          h(
-            "ol",
-            { class: "stage-path" },
-            region.stages.map((stage) => {
-              stageNumber++;
-              const button = h(
-                "button",
-                {
-                  type: "button",
-                  class: `stage${stage.unlocked ? "" : " locked"}${stage.stars > 0 ? " done" : ""}`,
-                  disabled: !stage.unlocked,
-                  "aria-label": stage.unlocked
-                    ? `Etapa ${stageNumber}: ${stage.name}. ${stage.stars} de 3 estrelas. ${stage.problemCount} problemas.`
-                    : `Etapa ${stageNumber}: ${stage.name}. Bloqueada.`,
-                },
-                h("span", { class: "stage-node", "aria-hidden": "true" }, stage.unlocked ? String(stageNumber) : "🔒"),
-                h(
-                  "span",
-                  { class: "stage-info" },
-                  h("span", { class: "stage-name" }, stage.name),
-                  h("span", { class: "muted small" }, `${stage.problemCount} problemas · ${stage.skills.join(", ")}`),
-                ),
-                h("star-rating", { stars: String(stage.stars) }),
-              );
-              button.addEventListener("click", () => startAndPlay(() => api.startSession(profile.id, stage.id), button, error));
-              return h("li", {}, button);
-            }),
-          ),
+      h(
+        "section",
+        { class: "card region" },
+        h("header", { class: "region-head" }, h("span", { class: "region-icon", "aria-hidden": "true" }, region.icon), h("div", {}, h("h2", {}, region.name), h("p", { class: "muted small" }, region.description))),
+        trail(
+          region.stages.map((stage) => ({ stage, number: ++stageNumber })),
+          nextStageId,
+          (stage, button) => startAndPlay(() => api.startSession(profile.id, stage.id), button, error),
         ),
+      ),
     );
 
     // Níveis já superados ficam recolhidos; o nível atual aparece aberto.
@@ -159,8 +140,7 @@ export async function mapPage({ subject }) {
     "section",
     { class: "page" },
     tabs,
-    h("h1", {}, `${progress.icon} ${progress.name}`),
-    h("div", { class: "card" }, levelProgress(progress)),
+    h("div", { class: "map-hero", dataset: { subject } }, h("h1", {}, `${progress.icon} ${progress.name}`), h("div", { class: "card" }, levelProgress(progress))),
     error,
     placement,
     guardian,
@@ -168,4 +148,83 @@ export async function mapPage({ subject }) {
     levels,
     h("p", { class: "muted small center" }, `Ganhe pelo menos 1 estrela para liberar a próxima etapa. Quando a barra do nível chegar a ${progress.guardianAt}% (a marca na barra), o Desafio do Guardião abre.`),
   );
+}
+
+// ---------- Trilha em ziguezague ----------
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+// Deslocamento horizontal de cada etapa (-1 a 1), formando uma curva suave.
+const WAVE = [0, 0.7, 1, 0.7, 0, -0.7, -1, -0.7];
+
+/** Curva suave passando pelos centros dos nós. */
+function curve(points) {
+  if (points.length < 2) return "";
+  let d = `M ${points[0][0]} ${points[0][1]}`;
+  for (let i = 1; i < points.length; i++) {
+    const [x0, y0] = points[i - 1];
+    const [x1, y1] = points[i];
+    const dy = (y1 - y0) / 2;
+    d += ` C ${x0} ${y0 + dy}, ${x1} ${y1 - dy}, ${x1} ${y1}`;
+  }
+  return d;
+}
+
+function trail(items, nextStageId, onPlay) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.classList.add("trail-path");
+  svg.setAttribute("aria-hidden", "true");
+  const basePath = document.createElementNS(SVG_NS, "path");
+  const donePath = document.createElementNS(SVG_NS, "path");
+  donePath.classList.add("done");
+  svg.append(basePath, donePath);
+
+  const steps = items.map(({ stage, number }, index) => {
+    const challenge = /desafio/i.test(stage.slug);
+    const done = stage.stars > 0;
+    const isNext = stage.id === nextStageId;
+    const label = stage.unlocked
+      ? `Etapa ${number}: ${stage.name}. ${stage.stars} de 3 estrelas. ${stage.problemCount} problemas.${isNext ? " Próxima etapa." : ""}`
+      : `Etapa ${number}: ${stage.name}. Bloqueada.`;
+    const node = h(
+      "button",
+      { type: "button", class: "trail-node", disabled: !stage.unlocked, "aria-label": label, title: stage.skills.join(", ") },
+      h("span", { "aria-hidden": "true" }, !stage.unlocked ? "🔒" : challenge ? "🏆" : String(number)),
+    );
+    node.addEventListener("click", () => onPlay(stage, node));
+
+    const step = h(
+      "li",
+      { class: ["trail-step", done ? "done" : "", stage.unlocked ? "" : "locked", isNext ? "next" : "", challenge ? "challenge" : ""].filter(Boolean).join(" ") },
+      isNext ? h("span", { class: "trail-bubble", "aria-hidden": "true" }, "Jogar!") : null,
+      node,
+      h(
+        "span",
+        { class: "trail-label" },
+        h("strong", {}, stage.name),
+        h("star-rating", { stars: String(stage.stars) }),
+        h("span", { class: "muted small" }, `${stage.problemCount} problemas`),
+      ),
+    );
+    step.style.setProperty("--wave", String(WAVE[index % WAVE.length]));
+    return step;
+  });
+
+  const list = h("ol", { class: "trail" }, svg, steps);
+  const doneCount = items.findIndex(({ stage }) => stage.stars === 0);
+  const completed = doneCount === -1 ? items.length : doneCount;
+
+  // Redesenha o caminho sempre que o tamanho muda (tela girada, detalhes abertos…).
+  const draw = () => {
+    const box = list.getBoundingClientRect();
+    if (box.width === 0) return;
+    const points = [...list.querySelectorAll(".trail-node")].map((n) => {
+      const r = n.getBoundingClientRect();
+      return [Math.round(r.left + r.width / 2 - box.left), Math.round(r.top + r.height / 2 - box.top)];
+    });
+    svg.setAttribute("viewBox", `0 0 ${Math.round(box.width)} ${Math.round(box.height)}`);
+    basePath.setAttribute("d", curve(points));
+    donePath.setAttribute("d", completed > 0 ? curve(points.slice(0, Math.min(completed + 1, points.length))) : "");
+  };
+  new ResizeObserver(draw).observe(list);
+  return list;
 }

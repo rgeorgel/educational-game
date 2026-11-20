@@ -18,7 +18,7 @@ export async function progressPage() {
     h("h1", {}, `Progresso de ${data.nickname} `, h("span", { "aria-hidden": "true" }, data.avatar)),
     h(
       "div",
-      { class: "totals" },
+      { class: "totals stagger" },
       h("div", { class: "tile" }, h("strong", {}, `🔥 ${history.streak}`), h("span", {}, history.streak === 1 ? "dia de prática" : "dias de prática")),
       h("div", { class: "tile" }, h("strong", {}, `⚡ ${t.xp}`), h("span", {}, "XP")),
       h("div", { class: "tile" }, h("strong", {}, t.problemsSolved), h("span", {}, "problemas")),
@@ -36,7 +36,7 @@ export async function progressPage() {
       "section",
       { class: "card" },
       h("h2", {}, `Medalhas (${earned} de ${medals.length})`),
-      h("ul", { class: "medal-grid" }, medals.map(medal)),
+      h("ul", { class: "medal-grid stagger" }, medals.map(medal)),
     ),
     data.subjects.map((s) =>
       h(

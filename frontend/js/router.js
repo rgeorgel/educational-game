@@ -76,6 +76,7 @@ async function render() {
 
   const node = view instanceof Node ? view : view.node;
   cleanup = view instanceof Node ? null : (view.cleanup ?? null);
+  node.classList?.add("page-enter"); // transição suave entre telas (game.css)
   outlet.replaceChildren(node);
   document.title = match.route.title ? `${match.route.title} · Expedição Numérica` : "Expedição Numérica";
 

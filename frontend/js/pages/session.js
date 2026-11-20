@@ -5,6 +5,7 @@ import { readOnlyFigure, renderAnswer } from "../problem-types/index.js";
 import { loading } from "./shared.js";
 import { getPrefs } from "../prefs.js";
 import { speak, voiceSupported } from "../voice.js";
+import { confettiFrom, floatText } from "../effects.js";
 
 const PRAISE = ["Muito bem!", "Isso aí!", "Mandou bem!", "Excelente!", "Certinho!", "Show!"];
 const ENCOURAGE = ["Quase! Vamos ver como faz.", "Não foi dessa vez — errar faz parte de aprender.", "Boa tentativa! Olha a explicação."];
@@ -34,6 +35,9 @@ export async function sessionPage({ sessionId }) {
 
   const dots = h("ol", { class: "dots", "aria-hidden": "true" });
   const counter = h("span", { class: "counter" });
+  // Sequência de acertos nesta visita ("🔥 3 seguidas").
+  let streak = 0;
+  const combo = h("span", { class: "combo", hidden: true, "aria-live": "polite" });
   const body = h("div", { class: "play-body" }, loading("Preparando o desafio…"));
   const live = h("div", { class: "visually-hidden", "aria-live": "polite" });
 
@@ -45,6 +49,7 @@ export async function sessionPage({ sessionId }) {
       { class: "play-top" },
       h("a", { href: "#/", class: "btn btn-ghost btn-icon", "aria-label": "Sair da sessão", onClick: exit }, "✕"),
       dots,
+      combo,
       counter,
     ),
     body,
@@ -129,6 +134,23 @@ export async function sessionPage({ sessionId }) {
       renderDots(problem.number, problem.total);
       answer.reveal(result, value);
       showFeedback(result);
+      celebrate(result);
+    }
+
+    function celebrate(result) {
+      streak = result.correct ? streak + 1 : 0;
+      combo.hidden = streak < 2;
+      if (streak >= 2) {
+        combo.textContent = `🔥 ${streak} seguidas`;
+        combo.classList.remove("bump");
+        void combo.offsetWidth; // reinicia a animação
+        combo.classList.add("bump");
+      }
+      if (!result.correct) return;
+      const xpTag = feedback.querySelector(".xp");
+      if (xpTag) floatText(xpTag, `+${result.xpEarned} XP`);
+      // Confete maior a cada 3 acertos seguidos; menor nos demais.
+      confettiFrom(feedback.querySelector(".feedback-title") ?? feedback, { count: streak % 3 === 0 ? 90 : 40, spread: streak % 3 === 0 ? 1.2 : 0.7 });
     }
 
     function showFeedback(result) {

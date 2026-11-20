@@ -62,23 +62,39 @@ function renderHeader() {
   const path = currentPath();
   const playing = path.startsWith("/jogar/");
 
+  // Link com ícone + texto; no celular só o ícone aparece (o texto vira o rótulo acessível).
+  const link = (href, icon, label, current, extra = {}) =>
+    h(
+      "a",
+      { href, class: "nav-link", title: label, "aria-label": label, "aria-current": current ? "page" : null, ...extra },
+      h("span", { class: "nav-ico", "aria-hidden": "true" }, icon),
+      h("span", { class: "nav-text" }, label),
+    );
+
   const nav = [];
   if (me && profile && !playing) {
     nav.push(
-      h("a", { href: "#/", class: "nav-link", "aria-current": path === "/" ? "page" : null }, "Início"),
-      h("a", { href: "#/progresso", class: "nav-link", "aria-current": path === "/progresso" ? "page" : null }, "Progresso"),
-      h("a", { href: "#/avatar", class: "profile-chip", title: "Meu avatar" }, avatarView(profile, "sm"), h("span", {}, profile.nickname)),
+      link("#/", "🏠", "Início", path === "/"),
+      link("#/progresso", "📈", "Progresso", path === "/progresso"),
+      h("a", { href: "#/avatar", class: "profile-chip", title: "Meu avatar" }, avatarView(profile, "sm"), h("span", { class: "nav-text" }, profile.nickname)),
     );
   }
   if (me && !playing) {
     if (me.isGuest) {
-      nav.push(h("a", { href: "#/salvar", class: "btn btn-primary btn-small save-btn", "aria-current": path === "/salvar" ? "page" : null }, "💾 Salvar progresso"));
+      nav.push(
+        h(
+          "a",
+          { href: "#/salvar", class: "btn btn-primary btn-small save-btn", title: "Salvar progresso", "aria-label": "Salvar progresso", "aria-current": path === "/salvar" ? "page" : null },
+          h("span", { "aria-hidden": "true" }, "💾"),
+          h("span", { class: "nav-text" }, " Salvar progresso"),
+        ),
+      );
     }
     nav.push(
-      h("a", { href: "#/perfis", class: "nav-link", "aria-current": path === "/perfis" ? "page" : null, title: "Trocar de perfil" }, "Perfis"),
-      h("a", { href: "#/responsavel", class: "nav-link", "aria-current": path.startsWith("/responsavel") || path.startsWith("/turmas") ? "page" : null }, "Responsável"),
-      h("a", { href: "#/config", class: "nav-link nav-icon", "aria-label": "Configurações", "aria-current": path === "/config" ? "page" : null }, "⚙️"),
-      h("button", { type: "button", class: "btn btn-ghost btn-small", onClick: logout }, "Sair"),
+      link("#/perfis", "👥", "Perfis", path === "/perfis"),
+      link("#/responsavel", "👪", "Responsável", path.startsWith("/responsavel") || path.startsWith("/turmas")),
+      link("#/config", "⚙️", "Configurações", path === "/config", { class: "nav-link nav-settings" }),
+      h("button", { type: "button", class: "btn btn-ghost btn-small logout-btn", onClick: logout, title: "Sair", "aria-label": "Sair" }, h("span", { class: "nav-ico", "aria-hidden": "true" }, "🚪"), h("span", { class: "nav-text" }, "Sair")),
     );
   }
 
@@ -86,7 +102,7 @@ function renderHeader() {
     h(
       "div",
       { class: "container header-inner" },
-      h("a", { href: me ? "#/" : "/", class: "brand" }, h("span", { "aria-hidden": "true" }, "🧭"), " Expedição Numérica"),
+      h("a", { href: me ? "#/" : "/", class: "brand", "aria-label": "Expedição Numérica" }, h("span", { "aria-hidden": "true" }, "🧭"), h("span", { class: "brand-text" }, " Expedição Numérica")),
       h("nav", { class: "header-nav", "aria-label": "Principal" }, nav),
     ),
   );

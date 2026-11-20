@@ -1,0 +1,6 @@
+# Educa Game — buscadores e assistentes de IA são bem-vindos na landing page.
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://educa-game.georgel.ca/sitemap.xml

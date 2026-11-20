@@ -1,4 +1,4 @@
--- Apaga TODAS as tabelas do Expedição Numérica (conteúdo e progresso) do banco conectado.
+-- Apaga TODAS as tabelas do Educa Game (conteúdo e progresso) do banco conectado.
 -- Uso: antes de restaurar um backup completo (pg_restore sem --clean), para os IDs ficarem iguais aos do backup.
 --
 --   psql -h 127.0.0.1 -p 15432 -U USUARIO -d BANCO -f scripts/db/apagar-tabelas-do-jogo.sql

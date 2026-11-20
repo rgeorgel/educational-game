@@ -1,0 +1,39 @@
+# Educa Game
+
+> Educa Game é um jogo educativo grátis, em português do Brasil, de matemática e lógica para crianças a partir de 7 anos (sem idade máxima). Os desafios se adaptam ao nível de cada jogador, do Iniciante ao Expert. Não tem anúncios nem compras e dá para começar sem cadastro, só com um apelido.
+
+- Site: https://educa-game.georgel.ca/
+- Jogar: https://educa-game.georgel.ca/jogar
+- Idioma: português (pt-BR)
+- Preço: grátis, sem anúncios e sem compras dentro do jogo
+- Plataformas: navegador do celular, tablet ou computador; instalável como app (PWA)
+- Público: a partir de 7 anos; crianças, adolescentes, famílias e professores
+
+## Como funciona
+
+- Sessões curtas, de 3 a 5 minutos, com problemas escolhidos no ponto certo de dificuldade.
+- O nível vem do desempenho, não da idade. Um teste de nivelamento opcional acha o ponto de partida.
+- Depois de um erro vem uma explicação e um problema parecido para tentar de novo. Não há vidas perdidas.
+- Para subir de nível, a barra de domínio precisa chegar a 85% e o jogador enfrenta o Desafio do Guardião.
+- Os problemas são gerados na hora e não se repetem iguais.
+
+## Trilhas e níveis
+
+Duas trilhas (Matemática e Lógica), quatro níveis e mais de 40 habilidades:
+
+- Iniciante: contagem, dezenas, adição e subtração, grupos iguais, dinheiro e horas; padrões, sequências, "qual é o diferente?", maior e menor.
+- Médio: tabuada, divisão, expressões, frações, decimais, perímetro e área; Sudoku 4×4, quadrado mágico, balanças, verdadeiro ou falso.
+- Avançado: números negativos, potências, MMC e MDC, proporção, equações; Sudoku 6×6, proposições, conjuntos, enigmas de detetive.
+- Expert: sistemas de equações, equação do 2º grau, juros, Teorema de Pitágoras, contagem; tabelas-verdade, cavaleiros e mentirosos, programação passo a passo.
+
+## Recursos
+
+- Desafio do dia com XP em dobro, medalhas e itens de avatar.
+- Leitura em voz alta, texto grande e tema escuro.
+- Área do responsável com os últimos 7 dias, nível em cada trilha e o que pede mais prática.
+- Vários perfis por conta (um por filho).
+- Turmas: o professor cria a turma e compartilha um código; a família escolhe quem participa.
+
+## Privacidade
+
+O jogo guarda só apelido, avatar, ano escolar (opcional) e o progresso. Nada de nome completo, foto ou localização. A conta é do adulto responsável, que pode apagar tudo a qualquer momento.

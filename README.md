@@ -1,9 +1,7 @@
-# Expedição Numérica
+# Educa Game
 
 Jogo educacional de **matemática e lógica** para crianças e adolescentes, com progressão por níveis
 (Iniciante → Médio → Avançado → Expert). O plano completo está em [docs/PLANO.md](docs/PLANO.md).
-
-> "Expedição Numérica" é um nome provisório.
 
 ## Status
 

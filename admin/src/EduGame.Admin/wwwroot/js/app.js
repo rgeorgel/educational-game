@@ -71,7 +71,7 @@ function renderLogin() {
       },
     },
     h("h1", {}, "Painel admin"),
-    h("p", { class: "muted" }, "Expedição Numérica · acompanhamento de uso"),
+    h("p", { class: "muted" }, "Educa Game · acompanhamento de uso"),
     session.configured
       ? [h("label", { for: "user" }, "Usuário"), user, h("label", { for: "pass" }, "Senha"), pass, error, button]
       : h("p", { class: "notice" }, session.problem),
@@ -109,7 +109,7 @@ function shell(active, content) {
     h(
       "header",
       { class: "topbar" },
-      h("div", { class: "brand" }, h("strong", {}, "Expedição Numérica"), h("span", { class: "badge" }, "super admin")),
+      h("div", { class: "brand" }, h("strong", {}, "Educa Game"), h("span", { class: "badge" }, "super admin")),
       h(
         "nav",
         { "aria-label": "Seções" },

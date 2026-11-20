@@ -1,7 +1,8 @@
 {
-  "name": "Expedição Numérica",
-  "short_name": "Expedição",
-  "description": "Jogo de matemática e lógica para crianças e adolescentes.",
+  "name": "Educa Game",
+  "short_name": "Educa Game",
+  "description": "Jogo educativo grátis de matemática e lógica para crianças e adolescentes.",
+  "categories": ["education", "games", "kids"],
   "lang": "pt-BR",
   "start_url": "/jogar#/",
   "scope": "/",

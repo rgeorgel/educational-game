@@ -102,7 +102,7 @@ function renderHeader() {
     h(
       "div",
       { class: "container header-inner" },
-      h("a", { href: me ? "#/" : "/", class: "brand", "aria-label": "Expedição Numérica" }, h("span", { "aria-hidden": "true" }, "🧭"), h("span", { class: "brand-text" }, " Expedição Numérica")),
+      h("a", { href: me ? "#/" : "/", class: "brand", "aria-label": "Educa Game" }, h("span", { "aria-hidden": "true" }, "🧭"), h("span", { class: "brand-text" }, " Educa Game")),
       h("nav", { class: "header-nav", "aria-label": "Principal" }, nav),
     ),
   );

@@ -78,7 +78,7 @@ async function render() {
   cleanup = view instanceof Node ? null : (view.cleanup ?? null);
   node.classList?.add("page-enter"); // transição suave entre telas (game.css)
   outlet.replaceChildren(node);
-  document.title = match.route.title ? `${match.route.title} · Expedição Numérica` : "Expedição Numérica";
+  document.title = match.route.title ? `${match.route.title} · Educa Game` : "Educa Game";
 
   // Acessibilidade: leva o foco ao título da nova página.
   const heading = outlet.querySelector("h1");

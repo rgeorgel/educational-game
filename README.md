@@ -103,6 +103,82 @@ docker compose up -d --build
 - Depois de alterar domínio ou variáveis, clique em **Redeploy** (enquanto aparecer "Changes pending", a mudança
   ainda não foi aplicada e o proxy responde 503).
 
+## Painel de super admin
+
+Um painel para acompanhar o uso do jogo. Ele roda como um **serviço separado** (`edugame-admin`, pasta `admin/`):
+- não usa o código do jogo nem a API do jogo;
+- tem login próprio;
+- só **lê** o banco.
+
+Toda conexão do painel abre em modo somente leitura e cada consulta tem limite de 20 segundos. O `/health` do painel confirma esse modo.
+
+O que mostra:
+
+- **Visão geral:**
+  - contas, convidados e perfis;
+  - pessoas ativas hoje, em 7 e em 30 dias;
+  - acessos;
+  - perguntas respondidas hoje e em 7 dias, comparadas com a semana anterior;
+  - % de acertos e tempo médio por resposta;
+  - convidados que salvaram a conta e partidas concluídas.
+- **Gráficos da visão geral:**
+  - perguntas respondidas por dia (14, 30 ou 90 dias) e por semana (12 semanas);
+  - pessoas ativas por dia;
+  - novos cadastros (contas × convidados);
+  - respostas por horário do dia.
+- **Usuários:** busca por e-mail ou apelido e filtro conta/convidado. Ao clicar em alguém, abre o detalhe: perfis, níveis, últimos 30 dias e partidas recentes.
+- **Ranking:** os 50 primeiros por XP, respostas, % de acertos (mínimo de 20 respostas) ou dias jogando. Períodos: sempre, 7, 30 ou 90 dias, com ou sem convidados.
+- **Conteúdo:**
+  - habilidades mais difíceis e mais praticadas;
+  - etapas mais jogadas;
+  - modos de jogo;
+  - jogadores por nível;
+  - medalhas.
+
+Os dias são contados no horário de Brasília (`Admin__TimeZone` muda isso). Os **acessos** vêm da tabela `daily_visits`, que o jogo preenche:
+- conta 1 acesso cada vez que alguém abre o jogo, entra ou cria conta;
+- só existem dados a partir da versão que criou essa tabela.
+
+Convidados apagados por inatividade somem também das estatísticas.
+
+### Como ativar
+
+1. No `.env`, defina `ADMIN_USERNAME` e `ADMIN_PASSWORD`. A senha precisa ter 12 ou mais caracteres. Sem eles, o painel mostra como configurar e não deixa entrar.
+2. Rode `docker compose up -d --build edugame-admin` e acesse http://localhost:8081 (a porta é `ADMIN_PORT`).
+
+Proteções do login:
+- usuário e senha são comparados em tempo constante;
+- no máximo 8 tentativas a cada 5 minutos por IP;
+- cookie próprio (`edugame.admin`, HttpOnly, SameSite Strict) que expira em 8 horas.
+
+Por padrão a porta só abre em `127.0.0.1` (`ADMIN_BIND`).
+
+**Recomendado no servidor:** um usuário do Postgres que só pode ler, informado em `ADMIN_DB_USER` e `ADMIN_DB_PASSWORD`:
+
+```sql
+CREATE ROLE edugame_leitura LOGIN PASSWORD 'troque-esta-senha';
+GRANT CONNECT ON DATABASE edugame TO edugame_leitura;
+GRANT USAGE ON SCHEMA public TO edugame_leitura;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO edugame_leitura;
+ALTER DEFAULT PRIVILEGES FOR ROLE edugame IN SCHEMA public GRANT SELECT ON TABLES TO edugame_leitura;
+```
+
+No **Coolify**:
+1. Cadastre `ADMIN_USERNAME` e `ADMIN_PASSWORD` (e, se quiser, `ADMIN_DB_USER` e `ADMIN_DB_PASSWORD`) nas variáveis do recurso.
+2. Em **Domains**, coloque um **domínio separado** no serviço **`edugame-admin`**, porta `8080`. Exemplo: `http://admin.seu-dominio:8080`, que o Coolify publica com HTTPS.
+3. Clique em **Redeploy**.
+
+O painel não aparece em buscadores: envia `noindex`.
+
+Para desenvolver sem Docker:
+
+```bash
+cd admin
+Database__Host=127.0.0.1 Database__Port=5433 Database__Name=edugame Database__Username=edugame \
+Database__Password=... Admin__Username=admin Admin__Password=uma-senha-longa \
+dotnet run --project src/EduGame.Admin
+```
+
 ## Desenvolvimento do backend
 
 Pré-requisito: [.NET SDK 10](https://dotnet.microsoft.com/download).
@@ -161,6 +237,7 @@ backend/
   src/EduGame.Infrastructure/  EF Core, migrations, seed de conteúdo
   tests/                       testes unitários e de integração
 frontend/                      HTML, CSS e JS servidos pelo nginx (index.html = landing, jogar.html = jogo)
+admin/                         painel de super admin: serviço .NET separado, só leitura no banco (wwwroot = interface)
 nginx/                         configuração do proxy reverso
 docs/                          plano e documentação
 ```

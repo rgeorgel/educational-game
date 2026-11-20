@@ -79,5 +79,37 @@ services:
       edugame-api:
         condition: service_healthy
 
+  # Painel de super admin: serviço separado do jogo (não usa o código nem a API do jogo).
+  # Só lê o banco, numa conexão em modo somente leitura. Fica bloqueado até ADMIN_USERNAME e
+  # ADMIN_PASSWORD serem definidos. Por padrão só abre em 127.0.0.1 (veja ADMIN_BIND no .env.example).
+  edugame-admin:
+    build: ./admin
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      Admin__Username: ${ADMIN_USERNAME:-}
+      Admin__Password: ${ADMIN_PASSWORD:-}
+      Database__Host: ${DB_HOST:-db}
+      Database__Port: ${DB_PORT:-5432}
+      Database__Name: ${DB_NAME:-edugame}
+      # Opcional: um usuário do banco só com permissão de leitura (ADMIN_DB_USER / ADMIN_DB_PASSWORD).
+      Database__Username: ${ADMIN_DB_USER:-${DB_USER:-edugame}}
+      Database__Password: ${ADMIN_DB_PASSWORD:-${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}}
+      Database__SslMode: ${DB_SSL_MODE:-Prefer}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${ADMIN_BIND:-127.0.0.1}:${ADMIN_PORT:-8081}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
   pgdata:

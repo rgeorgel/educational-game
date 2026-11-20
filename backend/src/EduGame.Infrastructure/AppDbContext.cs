@@ -38,6 +38,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Attempt> Attempts => Set<Attempt>();
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    public DbSet<Analytics.DailyVisit> DailyVisits => Set<Analytics.DailyVisit>();
 
     private static readonly JsonSerializerOptions Json = JsonSerializerOptions.Web;
 
@@ -191,6 +192,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasKey(x => new { x.ClassroomId, x.ProfileId });
             e.HasOne<Classroom>().WithMany().HasForeignKey(x => x.ClassroomId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<Analytics.DailyVisit>(e =>
+        {
+            e.ToTable("daily_visits");
+            e.HasKey(x => new { x.UserId, x.Date });
+            e.HasIndex(x => x.Date);
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         // ---------- Sessões ----------

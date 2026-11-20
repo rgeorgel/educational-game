@@ -846,6 +846,29 @@ namespace EduGame.Infrastructure.Migrations
                     b.ToTable("session_problems", (string)null);
                 });
 
+            modelBuilder.Entity("EduGame.Infrastructure.Analytics.DailyVisit", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<int>("Visits")
+                        .HasColumnType("integer")
+                        .HasColumnName("visits");
+
+                    b.HasKey("UserId", "Date")
+                        .HasName("pk_daily_visits");
+
+                    b.HasIndex("Date")
+                        .HasDatabaseName("ix_daily_visits_date");
+
+                    b.ToTable("daily_visits", (string)null);
+                });
+
             modelBuilder.Entity("EduGame.Infrastructure.Identity.AppUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1388,6 +1411,16 @@ namespace EduGame.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_session_problems_skills_skill_id");
+                });
+
+            modelBuilder.Entity("EduGame.Infrastructure.Analytics.DailyVisit", b =>
+                {
+                    b.HasOne("EduGame.Infrastructure.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_daily_visits_users_user_id");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

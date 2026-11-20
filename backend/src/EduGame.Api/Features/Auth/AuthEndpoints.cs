@@ -24,7 +24,7 @@ public static class AuthEndpoints
     {
         var auth = api.MapGroup("/auth").WithTags("Auth").RequireRateLimiting(RateLimits.Auth);
 
-        auth.MapPost("/register", async (RegisterRequest req, UserManager<AppUser> users, SignInManager<AppUser> signIn) =>
+        auth.MapPost("/register", async (RegisterRequest req, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, GameClock clock, CancellationToken ct) =>
         {
             if (ValidateAccountData(req.Email, req.AcceptTerms, out var email) is { } invalid) return invalid;
 
@@ -33,11 +33,12 @@ public static class AuthEndpoints
             if (!result.Succeeded) return IdentityError(result);
 
             await signIn.SignInAsync(user, isPersistent: true);
+            await db.RecordVisitAsync(user.Id, clock.Today, ct);
             return Results.Ok(new MeResponse(email, false, []));
         });
 
         // Jogar sem cadastro: cria uma conta de convidado (só apelido) presa a este aparelho.
-        api.MapPost("/auth/guest", async (GuestRequest req, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, CancellationToken ct) =>
+        api.MapPost("/auth/guest", async (GuestRequest req, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, GameClock clock, CancellationToken ct) =>
         {
             var nickname = (req.Nickname ?? "").Trim();
             if (ProfileEndpoints.ValidateNicknameAndAvatar(nickname, req.Avatar) is { } invalid) return invalid;
@@ -49,6 +50,7 @@ public static class AuthEndpoints
             var profile = new PlayerProfile { UserId = user.Id, Nickname = nickname, Avatar = req.Avatar };
             db.Profiles.Add(profile);
             await db.SaveChangesAsync(ct);
+            await db.RecordVisitAsync(user.Id, clock.Today, ct);
 
             // Cookie longo: quem volta neste aparelho continua de onde parou.
             await signIn.SignInAsync(user, new AuthenticationProperties
@@ -59,7 +61,7 @@ public static class AuthEndpoints
             return Results.Ok(new MeResponse(null, true, [ProfileEndpoints.ToDto(profile)]));
         }).RequireRateLimiting(RateLimits.Guest).WithTags("Auth");
 
-        auth.MapPost("/login", async (LoginRequest req, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, CancellationToken ct) =>
+        auth.MapPost("/login", async (LoginRequest req, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, GameClock clock, CancellationToken ct) =>
         {
             var user = await users.FindByEmailAsync(req.Email?.Trim() ?? "");
             if (user is null)
@@ -73,6 +75,7 @@ public static class AuthEndpoints
 
             user.LastSeenAt = DateTimeOffset.UtcNow;
             await users.UpdateAsync(user);
+            await db.RecordVisitAsync(user.Id, clock.Today, ct);
             var profiles = await ProfileEndpoints.ListAsync(db, user.Id, ct);
             return Results.Ok(new MeResponse(user.Email!, false, profiles));
         });
@@ -115,7 +118,7 @@ public static class AuthEndpoints
             return Results.Ok(new MeResponse(email, false, profiles));
         }).RequireAuthorization().RequireRateLimiting(RateLimits.Auth).WithTags("Auth");
 
-        api.MapGet("/me", async (HttpContext http, UserManager<AppUser> users, AppDbContext db, CancellationToken ct) =>
+        api.MapGet("/me", async (HttpContext http, UserManager<AppUser> users, AppDbContext db, GameClock clock, CancellationToken ct) =>
         {
             var user = await users.GetUserAsync(http.User);
             if (user is null) return Results.Unauthorized();
@@ -126,6 +129,9 @@ public static class AuthEndpoints
                 user.LastSeenAt = DateTimeOffset.UtcNow;
                 await users.UpdateAsync(user);
             }
+
+            // O app chama /me uma vez ao abrir: conta como um acesso do dia.
+            await db.RecordVisitAsync(user.Id, clock.Today, ct);
 
             var profiles = await ProfileEndpoints.ListAsync(db, user.Id, ct);
             return Results.Ok(new MeResponse(user.Email, user.IsGuest, profiles));

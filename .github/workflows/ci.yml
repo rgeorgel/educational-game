@@ -27,6 +27,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build da imagem da API
         run: docker build -t edugame-api ./backend
+      - name: Build da imagem do painel admin
+        run: docker build -t edugame-admin ./admin
       - name: Build da imagem web (nginx + frontend)
         run: docker build -f nginx/Dockerfile -t edugame-web .
       - name: Validar docker compose (banco local em container)

@@ -139,3 +139,24 @@ public class GuestFlowTests(ApiFactory factory)
         Assert.True(await db.Users.AnyAsync(u => !u.IsGuest)); // contas salvas continuam
     }
 }
+
+[Collection(ApiCollection.Name)]
+public class VisitTrackingTests(ApiFactory factory)
+{
+    [Fact]
+    public async Task Opening_the_game_counts_daily_visits()
+    {
+        var client = factory.CreateClient();
+        var guest = await client.PostAsJsonAsync("/api/auth/guest", new { nickname = "Visita", avatar = "🐼" });
+        var me = await guest.Content.ReadFromJsonAsync<JsonElement>();
+        var profileId = me.GetProperty("profiles")[0].GetProperty("id").GetGuid();
+        await client.GetAsync("/api/me");
+        await client.GetAsync("/api/me");
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var userId = await db.Profiles.Where(p => p.Id == profileId).Select(p => p.UserId).SingleAsync();
+        var visits = await db.DailyVisits.Where(v => v.UserId == userId).SumAsync(v => v.Visits);
+        Assert.Equal(3, visits); // criação + 2 aberturas
+    }
+}

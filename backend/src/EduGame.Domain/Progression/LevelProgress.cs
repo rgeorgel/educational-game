@@ -9,8 +9,8 @@ public enum SkillStatus
 }
 
 /// <summary>Situação do jogador num nível de um tópico.</summary>
-/// <param name="Percent">0–100: quanto falta para o próximo nível.</param>
-/// <param name="ReadyForNextLevel">Domínio suficiente para o Desafio do Guardião.</param>
+/// <param name="Percent">0–100: avanço real no nível (média do avanço de cada habilidade rumo ao domínio).</param>
+/// <param name="ReadyForNextLevel">Avanço suficiente para o Desafio do Guardião (<see cref="LevelProgress.GuardianThreshold"/>).</param>
 public sealed record LevelProgressResult(
     LevelDefinition Current,
     LevelDefinition? Next,
@@ -21,8 +21,8 @@ public sealed record LevelProgressResult(
 
 public static class LevelProgress
 {
-    /// <summary>Fração das habilidades do nível que precisa estar dominada para subir.</summary>
-    public const double MasteryShareToAdvance = 0.8;
+    /// <summary>Avanço do nível (a barra) a partir do qual o Desafio do Guardião abre.</summary>
+    public const int GuardianThreshold = 85;
 
     /// <summary>Quantos dias sem praticar até uma habilidade dominada pedir revisão.</summary>
     public const int ReviewAfterDays = 21;
@@ -53,9 +53,17 @@ public static class LevelProgress
 
     public static LevelDefinition BySlug(string slug) => LevelDefinitions.All.Single(l => l.Slug == slug);
 
+    /// <summary>Quanto uma habilidade já andou no nível: 0 = rating inicial, 1 = dominada.</summary>
+    public static double SkillProgress(LevelDefinition level, int? rating)
+    {
+        var start = Rating.InitialFor(level);
+        return Math.Clamp(((rating ?? start) - start) / (double)(TargetRating(level) - start), 0, 1);
+    }
+
     /// <summary>
-    /// Calcula o progresso dentro do nível atual a partir dos ratings das habilidades desse nível.
-    /// Cada habilidade contribui com quanto já andou entre o rating inicial e o rating-alvo.
+    /// Calcula o progresso no nível atual: a média do avanço de cada habilidade (cada uma vale no máximo 100%).
+    /// A barra mostra exatamente esse número, e o Guardião abre quando ela chega a <see cref="GuardianThreshold"/>%.
+    /// A prova do Guardião mistura todas as habilidades, então nenhuma pode ficar muito para trás.
     /// </summary>
     public static LevelProgressResult Compute(LevelDefinition current, IReadOnlyCollection<int?> skillRatings)
     {
@@ -63,21 +71,10 @@ public static class LevelProgress
         var total = skillRatings.Count;
         if (total == 0) return new(current, next, 0, 0, 0, false);
 
-        var start = Rating.InitialFor(current);
         var target = TargetRating(current);
-
         var mastered = skillRatings.Count(r => r >= target);
-        var needed = (int)Math.Ceiling(total * MasteryShareToAdvance);
+        var percent = (int)Math.Floor(skillRatings.Average(r => SkillProgress(current, r)) * 100);
 
-        // Média do avanço de cada habilidade, limitada a 100% por habilidade.
-        var avg = skillRatings
-            .Select(r => Math.Clamp(((r ?? start) - start) / (double)(target - start), 0, 1))
-            .Average();
-
-        // O progresso só chega a 100% quando o critério de domínio é atingido.
-        var ready = mastered >= needed;
-        var percent = ready ? 100 : Math.Min(99, (int)Math.Floor(avg * 100 / MasteryShareToAdvance));
-
-        return new(current, next, percent, mastered, total, ready && next is not null);
+        return new(current, next, percent, mastered, total, percent >= GuardianThreshold && next is not null);
     }
 }

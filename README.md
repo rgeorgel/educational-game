@@ -109,9 +109,10 @@ dotnet ef migrations add NomeDaMigration -p src/EduGame.Infrastructure -s src/Ed
   e escolhe o de dificuldade mais próxima do rating do jogador (70% no nível dele, 20% abaixo, 10% acima).
 - **Respostas:** a resposta nunca vai para o navegador. O cliente envia a resposta e o servidor valida, atualiza
   rating e XP e devolve a explicação.
-- **Progresso:** a barra de nível mostra o avanço das habilidades do nível atual. Uma habilidade conta como dominada
-  quando o rating chega ao início do próximo nível (1000 → Médio, 1500 → Avançado, 2000 → Expert).
-- **Desafio do Guardião:** com 80% das habilidades do nível dominadas, o mapa oferece o Guardião (12 problemas de todo o nível).
+- **Progresso:** a barra do nível é a média do avanço de cada habilidade rumo ao domínio (cada uma vale no máximo 100%).
+  Uma habilidade está dominada quando o rating chega ao início do próximo nível (1000 → Médio, 1500 → Avançado, 2000 → Expert).
+- **Desafio do Guardião:** abre quando a barra do nível chega a 85% (`LevelProgress.GuardianThreshold`).
+  A prova tem 12 problemas de todas as habilidades do nível.
   Acertar 9 ou mais promove o jogador; nunca se perde nível.
 - **Nivelamento:** antes de começar um tópico, o jogador pode fazer um teste adaptativo de 10 perguntas (sem dicas).
   A estimativa começa pela série escolar, sobe a cada acerto e desce a cada erro, com passos cada vez menores.

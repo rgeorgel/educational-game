@@ -97,7 +97,7 @@ O **nível geral** do jogador em cada tópico (Matemática, Lógica) é derivado
 
 | Nível     | Faixa de rating | Para subir de nível                                                        |
 |-----------|-----------------|----------------------------------------------------------------------------|
-| Iniciante | 0 – 999         | ≥ 80% das habilidades do nível com rating ≥ 1000 **e** passar no Desafio do Guardião |
+| Iniciante | 0 – 999         | barra do nível ≥ 85% (média do avanço das habilidades rumo a 1000) **e** passar no Desafio do Guardião |
 | Médio     | 1000 – 1499     | idem, com rating ≥ 1500                                                    |
 | Avançado  | 1500 – 1999     | idem, com rating ≥ 2000                                                    |
 | Expert    | 2000+           | nível máximo — conteúdo de desafio contínuo e ranking opcional             |

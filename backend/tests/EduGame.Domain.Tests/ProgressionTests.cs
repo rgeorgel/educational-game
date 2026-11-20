@@ -99,24 +99,39 @@ public class LevelProgressTests
     }
 
     [Fact]
-    public void Progress_grows_with_ratings_but_only_hits_100_when_ready()
+    public void Percent_is_the_honest_average_of_skill_progress()
     {
-        var partial = LevelProgress.Compute(LevelDefinitions.Iniciante, [650, 650, 650, 650, 650]);
-        Assert.InRange(partial.Percent, 30, 99);
-        Assert.False(partial.ReadyForNextLevel);
+        // Iniciante: 300 → 1000. 650 é metade do caminho.
+        var half = LevelProgress.Compute(LevelDefinitions.Iniciante, [650, 650, 650, 650]);
+        Assert.Equal(50, half.Percent);
+        Assert.False(half.ReadyForNextLevel);
 
-        var ready = LevelProgress.Compute(LevelDefinitions.Iniciante, [1000, 1050, 1100, 1000, 400]);
-        Assert.Equal(100, ready.Percent);
-        Assert.True(ready.ReadyForNextLevel);
-        Assert.Equal(4, ready.MasteredSkills);
+        // Habilidades acima do domínio não compensam as que faltam: cada uma vale no máximo 100%.
+        var capped = LevelProgress.Compute(LevelDefinitions.Iniciante, [2000, 300]);
+        Assert.Equal(50, capped.Percent);
+
+        Assert.Equal(100, LevelProgress.Compute(LevelDefinitions.Iniciante, [1000, 1200]).Percent);
     }
 
     [Fact]
-    public void Below_80_percent_mastery_is_not_ready()
+    public void Guardian_opens_at_85_percent_even_without_every_skill_mastered()
     {
-        var result = LevelProgress.Compute(LevelDefinitions.Iniciante, [1000, 1000, 1000, 400, 400]);
-        Assert.False(result.ReadyForNextLevel);
-        Assert.True(result.Percent < 100);
+        // O caso que motivou a regra: muito acerto, mas nenhuma habilidade em 1000 ainda.
+        var almost = LevelProgress.Compute(LevelDefinitions.Iniciante, [918, 981, 912, 799]);
+        Assert.Equal(0, almost.MasteredSkills);
+        Assert.Equal(86, almost.Percent);
+        Assert.True(almost.ReadyForNextLevel);
+
+        var below = LevelProgress.Compute(LevelDefinitions.Iniciante, [880, 880, 880, 880]);
+        Assert.Equal(85, LevelProgress.GuardianThreshold);
+        Assert.True(below.Percent < LevelProgress.GuardianThreshold);
+        Assert.False(below.ReadyForNextLevel);
+    }
+
+    [Fact]
+    public void Top_level_is_never_ready_for_a_next_level()
+    {
+        Assert.False(LevelProgress.Compute(LevelDefinitions.Expert, [3000, 3000]).ReadyForNextLevel);
     }
 
     [Fact]

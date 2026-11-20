@@ -158,11 +158,27 @@ progress-bar {
 }
 
 .progress-track {
+  position: relative;
   display: block;
   height: 14px;
   border-radius: 999px;
   background: var(--surface-2);
   overflow: hidden;
+}
+
+.progress-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--text);
+  opacity: 0.45;
+}
+
+.progress-mark.reached {
+  opacity: 0.9;
+  background: var(--surface);
 }
 
 .progress-fill {

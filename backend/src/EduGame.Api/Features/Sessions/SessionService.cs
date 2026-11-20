@@ -118,7 +118,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
     {
         var status = await progress.ForSubjectAsync(profile.Id, subject, ct);
         if (!status.GuardianAvailable)
-            throw new SessionException(SessionError.NotAvailable, "O Desafio do Guardião abre quando você domina 80% das habilidades do nível.");
+            throw new SessionException(SessionError.NotAvailable, $"O Desafio do Guardião abre quando o avanço do nível chega a {LevelProgress.GuardianThreshold}%.");
 
         var level = await progress.CurrentLevelAsync(profile.Id, subject.Id, ct);
         var skills = await db.Skills.Where(s => s.SubjectId == subject.Id && s.LevelId == level.Id).Select(s => s.Id).ToListAsync(ct);

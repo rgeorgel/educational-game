@@ -2,7 +2,7 @@
 
 /** <progress-bar value="40" label="40% para Médio" level="iniciante"></progress-bar> */
 class ProgressBar extends HTMLElement {
-  static observedAttributes = ["value", "label", "level"];
+  static observedAttributes = ["value", "label", "level", "mark"];
 
   connectedCallback() {
     this.render();
@@ -27,6 +27,17 @@ class ProgressBar extends HTMLElement {
     const track = document.createElement("span");
     track.className = "progress-track";
     track.append(fill);
+
+    // Marca opcional (ex.: onde o Desafio do Guardião abre).
+    const mark = this.getAttribute("mark");
+    if (mark !== null) {
+      const tick = document.createElement("span");
+      tick.className = `progress-mark${value >= Number(mark) ? " reached" : ""}`;
+      tick.style.setProperty("left", `${Math.max(0, Math.min(100, Number(mark)))}%`);
+      tick.setAttribute("aria-hidden", "true");
+      tick.title = "O Desafio do Guardião abre aqui";
+      track.append(tick);
+    }
     this.replaceChildren(track);
   }
 }

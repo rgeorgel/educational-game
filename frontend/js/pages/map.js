@@ -63,7 +63,7 @@ export async function mapPage({ subject }) {
         "div",
         { class: "banner-body" },
         h("h2", {}, `Desafio do Guardião: rumo ao ${progress.nextLevel.name}!`),
-        h("p", { class: "muted" }, "12 problemas de todas as habilidades do nível. Acerte pelo menos 9 para subir de nível. Se não der, pratique mais um pouco e tente de novo quando quiser."),
+        h("p", { class: "muted" }, "12 problemas de todas as habilidades do nível. Acerte pelo menos 9 para subir de nível. Se não der, pratique as habilidades que faltam e tente de novo quando quiser."),
         h("div", { class: "actions-left" }, btn),
       ),
     );
@@ -166,6 +166,6 @@ export async function mapPage({ subject }) {
     guardian,
     review,
     levels,
-    h("p", { class: "muted small center" }, "Ganhe pelo menos 1 estrela para liberar a próxima etapa. Domine 80% das habilidades do nível para enfrentar o Guardião."),
+    h("p", { class: "muted small center" }, `Ganhe pelo menos 1 estrela para liberar a próxima etapa. Quando a barra do nível chegar a ${progress.guardianAt}% (a marca na barra), o Desafio do Guardião abre.`),
   );
 }

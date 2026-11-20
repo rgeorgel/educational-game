@@ -5,21 +5,41 @@ export function levelBadge(level) {
   return h("span", { class: `level-badge level-${level.slug}` }, h("span", { "aria-hidden": "true" }, level.icon), ` ${level.name}`);
 }
 
-/** Barra "x% para o próximo nível". */
+/**
+ * Barra do nível: mostra o avanço real (média das habilidades rumo ao domínio),
+ * a marca em que o Guardião abre e as habilidades que mais faltam.
+ */
 export function levelProgress(progress) {
-  const label = progress.nextLevel
-    ? progress.guardianAvailable
-      ? `Pronto para o Desafio do Guardião!`
-      : progress.readyForNextLevel
-        ? `Pronto para ${progress.nextLevel.name} — conteúdo em breve!`
-        : `${progress.percent}% para ${progress.nextLevel.name}`
-    : "Nível máximo!";
+  const next = progress.nextLevel;
+  let label;
+  if (!next) label = progress.percent >= 100 ? "Nível máximo dominado!" : `${progress.percent}% do nível máximo`;
+  else if (progress.guardianAvailable) label = `${progress.percent}% · Guardião liberado!`;
+  else if (progress.readyForNextLevel) label = `${progress.percent}% · ${next.name} em breve`;
+  else label = `${progress.percent}% · o Guardião abre em ${progress.guardianAt}%`;
+
+  // Habilidades mais longe do domínio (as que mais ajudam a barra a subir).
+  const missing = (progress.skills ?? [])
+    .map((k) => ({ name: k.name, pct: k.rating === null ? 0 : Math.max(0, Math.min(100, Math.floor(((k.rating - k.startRating) / (k.targetRating - k.startRating)) * 100))) }))
+    .filter((k) => k.pct < 100)
+    .sort((a, b) => a.pct - b.pct)
+    .slice(0, 3);
+
   return h(
     "div",
     { class: "level-progress" },
     h("div", { class: "level-progress-head" }, levelBadge(progress.level), h("span", { class: "muted small" }, label)),
-    h("progress-bar", { value: String(progress.percent), label, level: progress.level.slug }),
-    h("p", { class: "muted small" }, `${progress.masteredSkills} de ${progress.totalSkills} habilidades dominadas`),
+    h("progress-bar", {
+      value: String(progress.percent),
+      label: next ? `${progress.percent}% do nível ${progress.level.name}; o Guardião abre em ${progress.guardianAt}%` : label,
+      level: progress.level.slug,
+      mark: next ? String(progress.guardianAt) : null,
+    }),
+    h(
+      "p",
+      { class: "muted small" },
+      `${progress.masteredSkills} de ${progress.totalSkills} habilidades dominadas`,
+      missing.length && !progress.guardianAvailable ? ` · Para avançar, pratique: ${missing.map((m) => `${m.name} (${m.pct}%)`).join(", ")}` : "",
+    ),
   );
 }
 

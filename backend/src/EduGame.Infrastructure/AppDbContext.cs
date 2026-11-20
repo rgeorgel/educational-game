@@ -19,6 +19,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Subject> Subjects => Set<Subject>();
     public DbSet<Level> Levels => Set<Level>();
     public DbSet<Skill> Skills => Set<Skill>();
+    public DbSet<BnccSkill> BnccSkills => Set<BnccSkill>();
     public DbSet<ProblemTemplate> ProblemTemplates => Set<ProblemTemplate>();
     public DbSet<CuratedProblem> CuratedProblems => Set<CuratedProblem>();
     public DbSet<Classroom> Classrooms => Set<Classroom>();
@@ -88,8 +89,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.Slug).HasMaxLength(64);
             e.Property(x => x.Name).HasMaxLength(128);
             e.Property(x => x.Description).HasMaxLength(512);
+            e.Property(x => x.BnccCodes).HasDefaultValueSql("'{}'::text[]");
             e.HasOne(x => x.Subject).WithMany().HasForeignKey(x => x.SubjectId);
             e.HasOne(x => x.Level).WithMany().HasForeignKey(x => x.LevelId);
+        });
+
+        b.Entity<BnccSkill>(e =>
+        {
+            e.HasKey(x => x.Code);
+            e.Property(x => x.Code).HasMaxLength(16);
+            e.Property(x => x.Component).HasMaxLength(32);
+            e.Property(x => x.Grade).HasMaxLength(32);
+            e.Property(x => x.Summary).HasMaxLength(512);
         });
 
         b.Entity<ProblemTemplate>(e =>

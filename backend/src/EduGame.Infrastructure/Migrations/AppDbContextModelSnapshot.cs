@@ -23,6 +23,41 @@ namespace EduGame.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("EduGame.Domain.Content.BnccSkill", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Component")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("component");
+
+                    b.Property<string>("Grade")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("grade");
+
+                    b.Property<int>("GradeOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("grade_order");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("summary");
+
+                    b.HasKey("Code")
+                        .HasName("pk_bncc_skills");
+
+                    b.ToTable("bncc_skills", (string)null);
+                });
+
             modelBuilder.Entity("EduGame.Domain.Content.CuratedProblem", b =>
                 {
                     b.Property<int>("Id")
@@ -224,6 +259,13 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.PrimitiveCollection<List<string>>("BnccCodes")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasColumnName("bncc_codes")
+                        .HasDefaultValueSql("'{}'::text[]");
 
                     b.Property<string>("Description")
                         .IsRequired()

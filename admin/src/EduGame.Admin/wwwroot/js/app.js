@@ -589,7 +589,7 @@ async function contentPage() {
                 h(
                   "tr",
                   {},
-                  h("td", {}, h("strong", {}, s.name), h("div", { class: "muted small" }, `${s.subject} · ${s.level}`)),
+                  h("td", {}, h("strong", {}, s.name), h("div", { class: "muted small" }, `${s.subject} · ${s.level}`), s.bncc?.length ? h("div", { class: "bncc small" }, `BNCC: ${s.bncc.join(", ")}`) : null),
                   h("td", { class: "n" }, num(s.answers)),
                   h("td", { class: "n" }, h("span", { class: "acc" }, pct(s.correct, s.answers), meter((s.correct / s.answers) * 100))),
                   h("td", { class: "n" }, s.medianSeconds == null ? "—" : s.medianSeconds < 1 ? "< 1 s" : `${String(s.medianSeconds).replace(".", ",")} s`),

@@ -406,7 +406,7 @@ public static class Metrics
         days = days is 7 or 30 or 90 or 365 ? days : 30;
 
         var skills = await ds.ListAsync("""
-            SELECT s.id, s.name, sub.icon || ' ' || sub.name AS subject, l.name AS level,
+            SELECT s.id, s.name, sub.icon || ' ' || sub.name AS subject, l.name AS level, s.bncc_codes,
                    count(*) AS n, count(*) FILTER (WHERE a.is_correct) AS c,
                    avg(a.hints_used) AS hints,
                    percentile_cont(0.5) WITHIN GROUP (ORDER BY a.time_ms) / 1000.0 AS median_s
@@ -416,7 +416,7 @@ public static class Metrics
             JOIN subjects sub ON sub.id = s.subject_id
             JOIN levels l ON l.id = s.level_id
             WHERE a.created_at >= now() - make_interval(days => @days)
-            GROUP BY s.id, s.name, sub.icon, sub.name, l.name, sub."order", l."order", s."order"
+            GROUP BY s.id, s.name, s.bncc_codes, sub.icon, sub.name, l.name, sub."order", l."order", s."order"
             ORDER BY sub."order", l."order", s."order"
             """, r => new
         {
@@ -424,6 +424,7 @@ public static class Metrics
             name = r.Str("name"),
             subject = r.Str("subject"),
             level = r.Str("level"),
+            bncc = r["bncc_codes"] as string[] ?? [],
             answers = r.Long("n"),
             correct = r.Long("c"),
             avgHints = r.Dbl("hints"),

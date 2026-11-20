@@ -41,6 +41,7 @@ export async function classroomsPage() {
     { class: "page-narrow" },
     h("h1", {}, "Minhas turmas"),
     h("p", { class: "muted" }, "Crie uma turma e passe o código para as famílias. Cada responsável decide se o perfil do filho entra na turma."),
+    h("p", { class: "muted small" }, "Todas as habilidades do jogo estão ligadas à BNCC: ", h("a", { href: "#/bncc" }, "ver currículo e BNCC"), "."),
     h("div", { class: "card stack" }, form, error),
     classes.length
       ? h(
@@ -89,8 +90,9 @@ export async function classroomPage({ id }) {
     return profileReportCard(s, h("div", { class: "actions-left" }, remove));
   });
 
-  const attention = report.students.flatMap((s) => s.subjects.flatMap((sub) => sub.needsAttention.map((skill) => `${skill}`)));
-  const counts = Object.entries(attention.reduce((acc, k) => ({ ...acc, [k]: (acc[k] ?? 0) + 1 }), {})).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const attention = report.students.flatMap((s) => s.subjects.flatMap((sub) => sub.attentionSkills ?? sub.needsAttention.map((name) => ({ name, bncc: [] }))));
+  const bnccBySkill = Object.fromEntries(attention.map((a) => [a.name, a.bncc]));
+  const counts = Object.entries(attention.reduce((acc, a) => ({ ...acc, [a.name]: (acc[a.name] ?? 0) + 1 }), {})).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   return h(
     "section",
@@ -105,7 +107,7 @@ export async function classroomPage({ id }) {
       h("p", { class: "muted small" }, "Na Área do responsável, em cada perfil: \"Turmas da escola\" → digite o código."),
     ),
     counts.length
-      ? h("section", { class: "card" }, h("h2", {}, "O que a turma mais precisa praticar"), h("ul", {}, counts.map(([skill, n]) => h("li", {}, `${skill} — ${n} ${n === 1 ? "aluno" : "alunos"}`))))
+      ? h("section", { class: "card" }, h("h2", {}, "O que a turma mais precisa praticar"), h("ul", {}, counts.map(([skill, n]) => h("li", {}, `${skill} — ${n} ${n === 1 ? "aluno" : "alunos"}`, bnccBySkill[skill]?.length ? h("span", { class: "muted small" }, ` · BNCC: ${bnccBySkill[skill].join(", ")}`) : null))))
       : null,
     students.length ? h("div", { class: "report-grid" }, students) : h("p", { class: "card muted" }, "Nenhum aluno entrou ainda."),
     error,

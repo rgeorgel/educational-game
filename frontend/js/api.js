@@ -59,6 +59,7 @@ export const api = {
   deleteProfile: (id) => del(`/profiles/${id}`),
 
   subjects: () => get("/subjects"),
+  curriculum: () => get("/curriculum"),
   map: (profileId, subject) => get(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/map`),
   progress: (profileId) => get(`/profiles/${profileId}/progress`),
 

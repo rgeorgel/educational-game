@@ -120,6 +120,36 @@ api.MapGet("/subjects", async (AppDbContext db, CancellationToken ct) =>
     .WithName("ListSubjects")
     .WithTags("Content");
 
+// Currículo público: todas as habilidades do jogo, por tópico e nível, com o alinhamento à BNCC.
+// Serve a página "Currículo e BNCC" (pais e professores) e pode ser lido sem conta.
+api.MapGet("/curriculum", async (AppDbContext db, HttpContext http, CancellationToken ct) =>
+{
+    var subjects = await db.Subjects.AsNoTracking().OrderBy(s => s.Order).Include(s => s.Levels).ToListAsync(ct);
+    var skills = await db.Skills.AsNoTracking().Where(s => s.Templates.Any(t => t.Active)).OrderBy(s => s.Order).ToListAsync(ct);
+    http.Response.Headers.CacheControl = "public, max-age=3600";
+    return Results.Ok(subjects.Select(subject => new
+    {
+        subject.Slug,
+        subject.Name,
+        subject.Icon,
+        Levels = subject.Levels.OrderBy(l => l.Order).Select(level => new
+        {
+            level.Slug,
+            level.Name,
+            level.Icon,
+            Skills = skills.Where(k => k.SubjectId == subject.Id && k.LevelId == level.Id).Select(k => new
+            {
+                k.Slug,
+                k.Name,
+                k.Description,
+                Bncc = EduGame.Api.Features.Progress.BnccRefDto.For(k.BnccCodes),
+            }),
+        }).Where(l => l.Skills.Any()),
+    }));
+})
+    .WithName("Curriculum")
+    .WithTags("Content");
+
 api.MapAuth();
 api.MapProfiles();
 api.MapMap();

@@ -9,6 +9,16 @@ namespace EduGame.Api.Features.Progress;
 
 public sealed record LevelDto(string Slug, string Name, string Icon);
 
+/// <summary>Habilidade da BNCC ligada a uma habilidade do jogo.</summary>
+public sealed record BnccRefDto(string Code, string Grade, string Component, string Summary)
+{
+    private static readonly Dictionary<string, BnccRefDto> All =
+        EduGame.Infrastructure.Seeding.BnccCatalog.Habilidades.ToDictionary(h => h.Code, h => new BnccRefDto(h.Code, h.Grade, h.Component, h.Summary));
+
+    public static IReadOnlyList<BnccRefDto> For(IEnumerable<string> codes) =>
+        [.. codes.Select(c => All.GetValueOrDefault(c)).OfType<BnccRefDto>()];
+}
+
 public sealed record SkillProgressDto(
     string Slug,
     string Name,
@@ -18,7 +28,8 @@ public sealed record SkillProgressDto(
     int TargetRating,
     SkillStatus Status,
     int Attempts,
-    int Correct);
+    int Correct,
+    IReadOnlyList<BnccRefDto> Bncc);
 
 public sealed record SubjectProgressDto(
     string Slug,
@@ -80,7 +91,8 @@ public sealed class ProgressService(AppDbContext db, GameClock clock)
                 m?.Rating, start, target,
                 LevelProgress.StatusOf(m?.Rating, m?.AttemptsCount ?? 0, m?.LastPracticedAt, levelDef, now),
                 m?.AttemptsCount ?? 0,
-                m?.CorrectCount ?? 0);
+                m?.CorrectCount ?? 0,
+                BnccRefDto.For(s.BnccCodes));
         }).ToList();
 
         var result = LevelProgress.Compute(levelDef, [.. skillDtos.Select(s => s.Rating)]);

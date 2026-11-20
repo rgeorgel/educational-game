@@ -1000,3 +1000,18 @@ details.level-section[open] {
     padding: 0 var(--space-1);
   }
 }
+
+/* Currículo e BNCC */
+.bncc-subject { display: grid; gap: var(--space-4); }
+.bncc-level h3 { margin: 0 0 var(--space-2); }
+.bncc-skills { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.bncc-skill { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--border); }
+.bncc-skill p { margin: 0; }
+.bncc-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.bncc-tags li {
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; font-variant-numeric: tabular-nums;
+  padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface)); color: var(--text);
+}
+.bncc-details summary { cursor: pointer; font-size: 0.85rem; color: var(--primary); width: max-content; }
+.bncc-details ul { margin: var(--space-2) 0 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 0.88rem; }

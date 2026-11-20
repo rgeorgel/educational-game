@@ -27,6 +27,12 @@ Jogo educacional de **matemática e lógica** para crianças e adolescentes, com
   - Área do responsável (relatório por perfil) e turmas de professor com código; o responsável escolhe quais perfis entram.
   - PWA instalável com funcionamento offline parcial, leitura em voz alta e configurações de acessibilidade
     (tema, texto grande, animações reduzidas).
+- [x] **Alinhamento à BNCC:**
+  - Cada habilidade do jogo está ligada às habilidades da BNCC relacionadas: Matemática do 1º ao 9º ano e algumas do Ensino Médio; na Lógica, também o complemento de Computação.
+  - O mapeamento fica em `backend/src/EduGame.Infrastructure/Seeding/BnccCatalog.cs`.
+  - Página pública "Currículo e BNCC" (`/jogar#/bncc`) e API `GET /api/curriculum`.
+  - O relatório da turma mostra os códigos das habilidades que pedem atenção; o painel admin também mostra os códigos.
+  - O mapeamento é uma referência e deve ser revisado por professores.
 - [ ] Fase 4 — Novos tópicos.
 
 ## Stack

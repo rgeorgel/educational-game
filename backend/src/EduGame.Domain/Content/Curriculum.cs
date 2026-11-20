@@ -15,7 +15,24 @@ public class Skill
     public string Description { get; set; } = "";
     public int Order { get; set; }
 
+    /// <summary>Códigos das habilidades da BNCC relacionadas (ex.: "EF03MA07"). Ver <see cref="BnccSkill"/>.</summary>
+    public List<string> BnccCodes { get; set; } = [];
+
     public List<ProblemTemplate> Templates { get; set; } = [];
+}
+
+/// <summary>Habilidade da BNCC (Base Nacional Comum Curricular) usada no alinhamento do conteúdo.</summary>
+public class BnccSkill
+{
+    public required string Code { get; set; }
+    /// <summary>"Matemática" ou "Computação".</summary>
+    public required string Component { get; set; }
+    /// <summary>"3º ano", "Ensino Médio"…</summary>
+    public required string Grade { get; set; }
+    /// <summary>1–9 (Ensino Fundamental) ou 10 (Ensino Médio), para ordenar.</summary>
+    public int GradeOrder { get; set; }
+    /// <summary>Resumo curto (paráfrase, não o texto oficial).</summary>
+    public required string Summary { get; set; }
 }
 
 /// <summary>Liga uma habilidade a um gerador de problemas (código em EduGame.Problems).</summary>

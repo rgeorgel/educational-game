@@ -18,7 +18,11 @@ public sealed record SubjectReport(
     int Xp,
     int MasteredSkills,
     int TotalSkills,
-    IReadOnlyList<string> NeedsAttention);
+    IReadOnlyList<string> NeedsAttention,
+    IReadOnlyList<AttentionSkill> AttentionSkills);
+
+/// <summary>Habilidade que pede atenção, com os códigos da BNCC (para o professor planejar a aula).</summary>
+public sealed record AttentionSkill(string Name, IReadOnlyList<string> Bncc);
 
 public sealed record ProfileReport(
     Guid Id,
@@ -60,8 +64,10 @@ public sealed class ReportService(AppDbContext db, ProgressService progress, Gam
             foreach (var subject in subjects)
             {
                 var s = await progress.ForSubjectAsync(profile.Id, subject, ct);
+                var attention = s.Skills.Where(NeedsAttention).ToList();
                 subjectReports.Add(new SubjectReport(s.Slug, s.Name, s.Icon, s.Level, s.Percent, s.Xp, s.MasteredSkills, s.TotalSkills,
-                    [.. s.Skills.Where(NeedsAttention).Select(k => k.Name)]));
+                    [.. attention.Select(k => k.Name)],
+                    [.. attention.Select(k => new AttentionSkill(k.Name, [.. k.Bncc.Select(b => b.Code)]))]));
             }
 
             var dto = ProfileEndpoints.ToDto(profile);

@@ -5,6 +5,7 @@ import { h } from "./dom.js";
 import { applyPrefs } from "./prefs.js";
 import { authPage, saveProgressPage } from "./pages/auth.js";
 import { avatarPage } from "./pages/avatar.js";
+import { bnccPage } from "./pages/bncc.js";
 import { classroomPage, classroomsPage } from "./pages/classrooms.js";
 import { guardianPage } from "./pages/guardian.js";
 import { settingsPage } from "./pages/settings.js";
@@ -23,7 +24,7 @@ applyPrefs();
 
 const PUBLIC = ["/entrar", "/conta", "/cadastro"];
 // Páginas do adulto: não exigem escolher um perfil de jogador.
-const NO_PROFILE_NEEDED = ["/perfis", "/responsavel", "/turmas", "/config", "/salvar"];
+const NO_PROFILE_NEEDED = ["/perfis", "/responsavel", "/turmas", "/config", "/salvar", "/bncc"];
 
 route("/", homePage, { title: "Início" });
 route("/entrar", () => authPage("jogar"), { title: "Jogar" });
@@ -40,8 +41,13 @@ route("/config", settingsPage, { title: "Configurações" });
 route("/responsavel", guardianPage, { title: "Área do responsável" });
 route("/turmas", classroomsPage, { title: "Turmas" });
 route("/turmas/:id", classroomPage, { title: "Turma" });
+route("/bncc", bnccPage, { title: "Currículo e BNCC" });
+
+// Abertas para todos, com ou sem conta (ex.: professor avaliando o jogo).
+const OPEN = ["/bncc"];
 
 setGuard((path) => {
+  if (OPEN.includes(path)) return null;
   if (!store.state.me) return PUBLIC.includes(path) ? null : "/entrar";
   if (PUBLIC.includes(path)) return "/perfis";
   if (!store.profile && !NO_PROFILE_NEEDED.some((p) => path === p || path.startsWith(`${p}/`))) return "/perfis";
@@ -92,7 +98,7 @@ function renderHeader() {
     }
     nav.push(
       link("#/perfis", "👥", "Perfis", path === "/perfis"),
-      link("#/responsavel", "👪", "Responsável", path.startsWith("/responsavel") || path.startsWith("/turmas")),
+      link("#/responsavel", "👪", "Responsável", path.startsWith("/responsavel") || path.startsWith("/turmas") || path === "/bncc"),
       link("#/config", "⚙️", "Configurações", path === "/config", { class: "nav-link nav-settings" }),
       h("button", { type: "button", class: "btn btn-ghost btn-small logout-btn", onClick: logout, title: "Sair", "aria-label": "Sair" }, h("span", { class: "nav-ico", "aria-hidden": "true" }, "🚪"), h("span", { class: "nav-text" }, "Sair")),
     );

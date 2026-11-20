@@ -14,6 +14,9 @@ public static class ContentSeeder
 {
     public static async Task SeedAsync(AppDbContext db, CancellationToken ct = default)
     {
+        await UpsertBnccAsync(db, ct);
+        await db.SaveChangesAsync(ct);
+
         foreach (var def in ContentCatalog.Subjects)
         {
             var subject = await UpsertSubjectAsync(db, def, ct);
@@ -75,8 +78,27 @@ public static class ContentSeeder
             skill.Description = skillDef.Description;
             skill.LevelId = levels[skillDef.Level].Id;
             skill.Order = ++order;
+            var codes = BnccCatalog.ForSkill(skillDef.Slug);
+            if (!skill.BnccCodes.SequenceEqual(codes)) skill.BnccCodes = [.. codes];
         }
         return existing;
+    }
+
+    private static async Task UpsertBnccAsync(AppDbContext db, CancellationToken ct)
+    {
+        var existing = await db.BnccSkills.ToDictionaryAsync(b => b.Code, ct);
+        foreach (var def in BnccCatalog.Habilidades)
+        {
+            if (!existing.TryGetValue(def.Code, out var row))
+            {
+                row = new BnccSkill { Code = def.Code, Component = def.Component, Grade = def.Grade, Summary = def.Summary };
+                db.BnccSkills.Add(row);
+            }
+            row.Component = def.Component;
+            row.Grade = def.Grade;
+            row.GradeOrder = def.GradeOrder;
+            row.Summary = def.Summary;
+        }
     }
 
     private static Task UpsertTemplatesAsync(AppDbContext db, IEnumerable<Skill> skills, CancellationToken ct)

@@ -129,6 +129,8 @@ export async function guardianPage() {
       { class: "muted" },
       "Acompanhe o progresso de cada perfil. ",
       h("a", { href: "#/turmas" }, "É professor? Crie e acompanhe suas turmas."),
+      " ",
+      h("a", { href: "#/bncc" }, "Veja o currículo do jogo alinhado à BNCC."),
     ),
     reports.length
       ? h("div", { class: "report-grid" }, reports.map((r) => profileReportCard(r, classroomManager(r.id))))

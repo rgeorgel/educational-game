@@ -66,6 +66,13 @@ services:
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-8080}:80"
+    healthcheck:
+      # Plataformas como o Coolify só mandam tráfego para containers saudáveis.
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     depends_on:
       api:
         condition: service_healthy

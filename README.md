@@ -98,7 +98,10 @@ docker compose up -d --build
   `docker-compose.override.yml` de desenvolvimento é ignorado).
 - Cadastre as variáveis `DB_*` e `ASPNETCORE_ENVIRONMENT=Production` nas variáveis de ambiente do recurso e
   **não** defina `COMPOSE_PROFILES`.
-- Associe o domínio ao serviço `web` (porta 80 do container).
+- Em **Domains**, coloque o domínio no serviço **`web`** (não no `api`). O nginx escuta na porta 80 do container;
+  se o Coolify pedir a porta, use `http://seu-dominio:80`.
+- Depois de alterar domínio ou variáveis, clique em **Redeploy** (enquanto aparecer "Changes pending", a mudança
+  ainda não foi aplicada e o proxy responde 503).
 
 ## Desenvolvimento do backend
 

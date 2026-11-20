@@ -46,6 +46,7 @@ export function start(element) {
 }
 
 async function render() {
+  if (!outlet) return; // ainda não iniciou (ex.: 401 durante a inicialização)
   const id = ++renderId;
   const path = currentPath();
 

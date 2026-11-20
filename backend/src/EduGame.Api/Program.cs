@@ -69,6 +69,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+
+// Identifica quem respondeu: ajuda a diagnosticar proxies apontando para o serviço errado.
+app.Use((ctx, next) =>
+{
+    ctx.Response.Headers["X-Served-By"] = "edugame-api";
+    return next();
+});
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseAuthentication();

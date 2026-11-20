@@ -88,7 +88,7 @@ docker compose up -d --build
   (`listen_addresses` e `pg_hba.conf`).
 - As migrations são aplicadas quando a API inicia. Se o usuário do banco não puder criar tabelas, use
   `DB_MIGRATE_ON_STARTUP=false` e aplique as migrations por fora.
-- Se algo estiver errado (senha, host, porta), a API não sobe e o motivo aparece em `docker compose logs api`.
+- Se algo estiver errado (senha, host, porta), a API não sobe e o motivo aparece em `docker compose logs edugame-api`.
 - O container `web` é uma imagem própria (`nginx/Dockerfile`) com o frontend e a configuração do nginx dentro,
   sem volumes: funciona em plataformas que não montam arquivos do repositório.
 

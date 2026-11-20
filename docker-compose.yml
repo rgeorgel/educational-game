@@ -29,7 +29,9 @@ services:
       timeout: 5s
       retries: 10
 
-  api:
+  # Nome único de propósito: em redes compartilhadas (ex.: "Connect to Predefined Network" do Coolify)
+  # outro app pode ter um serviço chamado só "api", e o nginx acabaria falando com ele.
+  edugame-api:
     build: ./backend
     restart: unless-stopped
     environment:
@@ -74,7 +76,7 @@ services:
       retries: 5
       start_period: 5s
     depends_on:
-      api:
+      edugame-api:
         condition: service_healthy
 
 volumes:

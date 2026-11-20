@@ -34,7 +34,8 @@ async function request(method, path, body) {
   const data = isJson ? await res.json() : null;
 
   if (!res.ok) {
-    if (res.status === 401 && !path.startsWith("/auth/")) listeners.forEach((fn) => fn());
+    // 401 em /me é o esperado quando ninguém está logado (a inicialização trata); nas demais, a sessão expirou.
+    if (res.status === 401 && !path.startsWith("/auth/") && path !== "/me") listeners.forEach((fn) => fn());
     if (res.status === 429 && !data) throw new ApiError(429, { title: "Muitas tentativas", detail: "Espere um minuto e tente de novo." });
     throw new ApiError(res.status, data);
   }

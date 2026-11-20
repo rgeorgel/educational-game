@@ -1,0 +1,10 @@
+# Só para desenvolvimento local: o Docker Compose lê este arquivo automaticamente
+# quando você roda "docker compose up" nesta pasta.
+# Em produção (ex.: Coolify, que usa "-f docker-compose.yml") ele é ignorado
+# e o frontend vem de dentro da imagem.
+services:
+  web:
+    volumes:
+      # Edite HTML/CSS/JS e recarregue a página, sem rebuild.
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro

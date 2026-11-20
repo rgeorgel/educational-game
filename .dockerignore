@@ -1,0 +1,4 @@
+# Contexto da imagem "web" (nginx): só precisa de frontend/ e nginx/.
+**
+!frontend/**
+!nginx/default.conf

@@ -57,7 +57,8 @@ Acesse http://localhost:8080 (ou a porta de `WEB_PORT`).
 - A API fica atrás do nginx em `/api` (ex.: http://localhost:8080/api/health).
 - Documento OpenAPI: http://localhost:8080/api/openapi/v1.json
 - O Postgres local fica exposto apenas em `127.0.0.1:5433` (configurável via `DB_LOCAL_PORT`).
-- O frontend é montado como volume: edite HTML/CSS/JS e recarregue a página.
+- O frontend é montado como volume pelo `docker-compose.override.yml` (lido automaticamente só no ambiente local):
+  edite HTML/CSS/JS e recarregue a página.
 
 Para parar: `docker compose down` (adicione `-v` para apagar o banco local).
 
@@ -88,6 +89,16 @@ docker compose up -d --build
 - As migrations são aplicadas quando a API inicia. Se o usuário do banco não puder criar tabelas, use
   `DB_MIGRATE_ON_STARTUP=false` e aplique as migrations por fora.
 - Se algo estiver errado (senha, host, porta), a API não sobe e o motivo aparece em `docker compose logs api`.
+- O container `web` é uma imagem própria (`nginx/Dockerfile`) com o frontend e a configuração do nginx dentro,
+  sem volumes: funciona em plataformas que não montam arquivos do repositório.
+
+#### Coolify
+
+- Use o tipo de recurso **Docker Compose** apontando para `docker-compose.yml` (o Coolify roda com `-f`, então o
+  `docker-compose.override.yml` de desenvolvimento é ignorado).
+- Cadastre as variáveis `DB_*` e `ASPNETCORE_ENVIRONMENT=Production` nas variáveis de ambiente do recurso e
+  **não** defina `COMPOSE_PROFILES`.
+- Associe o domínio ao serviço `web` (porta 80 do container).
 
 ## Desenvolvimento do backend
 

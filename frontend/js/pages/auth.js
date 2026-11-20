@@ -18,7 +18,9 @@ function avatarPicker(avatars) {
   );
 }
 
-export async function authPage() {
+/** Tela de início. A aba inicial pode ser "jogar" (padrão), "entrar" ou "criar". */
+export async function authPage(initialTab) {
+  const firstTab = ["jogar", "entrar", "criar"].includes(initialTab) ? initialTab : "jogar";
   const avatars = await api.avatars().catch(() => ["🦊", "🐼", "🐯", "🐸"]);
 
   // ---------- Jogar agora (sem cadastro) ----------
@@ -128,7 +130,7 @@ export async function authPage() {
   tabPlay.addEventListener("click", () => setTab("jogar"));
   tabLogin.addEventListener("click", () => setTab("entrar"));
   tabCreate.addEventListener("click", () => setTab("criar"));
-  setTab("jogar");
+  setTab(firstTab);
 
   return h(
     "section",

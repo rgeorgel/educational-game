@@ -6,13 +6,17 @@
 // - Respostas e outras escritas (POST/PUT/DELETE): só rede (o servidor confere as respostas).
 // Ao sair da conta, o app pede para apagar o cache de dados (aparelhos compartilhados).
 
-const VERSION = "v3";
+const VERSION = "v4";
 const SHELL_CACHE = `edugame-shell-${VERSION}`;
 const DATA_CACHE = "edugame-data";
 
 const SHELL = [
   "/",
   "/index.html",
+  "/jogar",
+  "/jogar.html",
+  "/css/landing.css",
+  "/js/landing.js",
   "/manifest.webmanifest",
   "/css/tokens.css",
   "/css/base.css",
@@ -81,9 +85,10 @@ self.addEventListener("fetch", (event) => {
     return; // demais chamadas da API: direto na rede
   }
 
-  // Navegação (o app é uma página só): sem rede, entrega o index.html do cache.
+  // Navegação: sem rede, entrega a página do cache (o jogo em /jogar; o resto cai na landing).
   if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request, SHELL_CACHE, () => caches.match("/index.html")));
+    const page = url.pathname.startsWith("/jogar") ? "/jogar.html" : "/index.html";
+    event.respondWith(networkFirst(request, SHELL_CACHE, () => caches.match(page)));
     return;
   }
 

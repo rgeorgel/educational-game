@@ -3,7 +3,7 @@
   "short_name": "Expedição",
   "description": "Jogo de matemática e lógica para crianças e adolescentes.",
   "lang": "pt-BR",
-  "start_url": "/#/",
+  "start_url": "/jogar#/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",

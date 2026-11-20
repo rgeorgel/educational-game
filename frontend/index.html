@@ -3,25 +3,232 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Expedição Numérica</title>
-    <meta name="description" content="Jogo educacional de matemática e lógica para crianças e adolescentes." />
+    <title>Expedição Numérica · Jogo de matemática e lógica para crianças e adolescentes</title>
+    <meta
+      name="description"
+      content="Jogo gratuito de matemática e lógica que acompanha o ritmo de cada criança: do Iniciante ao Expert, com desafios do dia, medalhas e leitura em voz alta. Comece sem cadastro."
+    />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#2f6fde" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Expedição Numérica · Matemática e lógica viram aventura" />
+    <meta property="og:description" content="Desafios que se adaptam ao nível de cada criança. Grátis, sem anúncios e sem cadastro para começar." />
+    <meta property="og:image" content="/assets/icon-512.png" />
     <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
     <link rel="stylesheet" href="/css/tokens.css" />
     <link rel="stylesheet" href="/css/base.css" />
-    <link rel="stylesheet" href="/css/components.css" />
-    <link rel="stylesheet" href="/css/pages.css" />
-    <script type="module" src="/js/main.js"></script>
+    <link rel="stylesheet" href="/css/landing.css" />
+    <script type="module" src="/js/landing.js"></script>
   </head>
-  <body>
-    <a class="skip-link" href="#app">Pular para o conteúdo</a>
-    <header id="app-header" class="app-header"></header>
-    <main id="app" class="container app-main" tabindex="-1">
-      <p class="loading" role="status">Carregando…</p>
+  <body class="landing">
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="lp-header">
+      <div class="lp-container lp-header-inner">
+        <a href="/" class="lp-brand"><span aria-hidden="true">🧭</span> Expedição Numérica</a>
+        <nav class="lp-nav" aria-label="Principal">
+          <a href="#como-funciona" class="lp-nav-link">Como funciona</a>
+          <a href="#familias" class="lp-nav-link">Famílias e escolas</a>
+          <a href="/jogar#/conta" class="lp-nav-link" data-cta="login">Entrar</a>
+          <a href="/jogar#/entrar" class="lp-btn lp-btn-primary lp-btn-small" data-cta="play">Jogar agora</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="conteudo">
+      <!-- ---------- Hero ---------- -->
+      <section class="lp-hero">
+        <div class="lp-container lp-hero-inner">
+          <div class="lp-hero-text">
+            <p class="lp-eyebrow">Matemática e lógica · 7 a 17 anos</p>
+            <h1>Cada problema resolvido é um passo na expedição.</h1>
+            <p class="lp-lead">
+              Desafios que se ajustam ao nível de cada criança, do primeiro "quanto é 3 + 4?" até equações e enigmas de lógica.
+              Sem pressa, sem vidas perdidas: errar vira dica e um novo problema parecido para tentar de novo.
+            </p>
+            <div class="lp-cta-row">
+              <a href="/jogar#/entrar" class="lp-btn lp-btn-primary lp-btn-big" data-cta="play">Jogar agora</a>
+              <a href="/jogar#/conta" class="lp-btn lp-btn-ghost lp-btn-big" data-cta="login">Já tenho conta</a>
+            </div>
+            <p class="lp-note">Grátis, sem anúncios e sem cadastro para começar: só um apelido.</p>
+          </div>
+
+          <!-- Prévia do jogo feita em HTML (sem imagens) -->
+          <div class="lp-preview" aria-hidden="true">
+            <div class="lp-card lp-problem">
+              <div class="lp-problem-top">
+                <span class="lp-dots"><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="now"></i><i></i><i></i></span>
+                <span class="lp-muted">4/6</span>
+              </div>
+              <p class="lp-skill">Tabuada completa</p>
+              <p class="lp-prompt">Quanto é 7 × 8?</p>
+              <p class="lp-answer">56</p>
+              <div class="lp-feedback">✅ Mandou bem! <strong>+18 XP</strong></div>
+            </div>
+            <div class="lp-card lp-level">
+              <div class="lp-level-head"><span class="lp-badge lvl-medio">🌿 Médio</span><span class="lp-muted">72% · Guardião em 85%</span></div>
+              <div class="lp-bar"><span class="lp-bar-fill"></span><span class="lp-bar-mark"></span></div>
+            </div>
+            <div class="lp-card lp-medal"><span class="lp-medal-icon">⭐</span><span><strong>Três estrelas!</strong><br /><span class="lp-muted">Nova medalha</span></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- Números ---------- -->
+      <section class="lp-stats" aria-label="O jogo em números">
+        <div class="lp-container lp-stats-inner">
+          <div><strong>2</strong><span>trilhas: Matemática e Lógica</span></div>
+          <div><strong>4</strong><span>níveis, do Iniciante ao Expert</span></div>
+          <div><strong>40+</strong><span>habilidades para dominar</span></div>
+          <div><strong>∞</strong><span>problemas: nunca repetem igual</span></div>
+        </div>
+      </section>
+
+      <!-- ---------- Como funciona ---------- -->
+      <section id="como-funciona" class="lp-section">
+        <div class="lp-container">
+          <h2>Como funciona</h2>
+          <ol class="lp-steps">
+            <li>
+              <span class="lp-step-num">1</span>
+              <h3>Escolha um apelido</h3>
+              <p>Sem formulário: escolha um bicho para o avatar e comece. Quem já sabe bastante pode fazer um teste rápido e pular para o nível certo.</p>
+            </li>
+            <li>
+              <span class="lp-step-num">2</span>
+              <h3>Resolva desafios curtos</h3>
+              <p>Sessões de 3 a 5 minutos. O jogo escolhe problemas no ponto certo: nem fáceis demais, nem impossíveis. Tem dica sempre que precisar.</p>
+            </li>
+            <li>
+              <span class="lp-step-num">3</span>
+              <h3>Suba de nível</h3>
+              <p>Ganhe estrelas, libere novas regiões do mapa e, quando a barra chegar a 85%, enfrente o Desafio do Guardião para subir de nível.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ---------- Níveis ---------- -->
+      <section class="lp-section lp-section-alt">
+        <div class="lp-container">
+          <h2>Do primeiro passo ao topo da montanha</h2>
+          <p class="lp-section-lead">O nível vem do desempenho, não da idade. Cada criança anda no seu ritmo.</p>
+          <div class="lp-levels">
+            <article class="lp-level-card">
+              <span class="lp-badge lvl-iniciante">🌱 Iniciante</span>
+              <p><strong>Matemática:</strong> contagem, dezenas, adição e subtração, grupos iguais, dinheiro e horas.</p>
+              <p><strong>Lógica:</strong> padrões, sequências, "qual é o diferente?", maior e menor.</p>
+            </article>
+            <article class="lp-level-card">
+              <span class="lp-badge lvl-medio">🌿 Médio</span>
+              <p><strong>Matemática:</strong> tabuada, divisão, expressões, frações, decimais, perímetro e área.</p>
+              <p><strong>Lógica:</strong> Sudoku 4×4, quadrado mágico, balanças, verdadeiro ou falso.</p>
+            </article>
+            <article class="lp-level-card">
+              <span class="lp-badge lvl-avancado">🌳 Avançado</span>
+              <p><strong>Matemática:</strong> números negativos, potências, MMC e MDC, proporção, equações.</p>
+              <p><strong>Lógica:</strong> Sudoku 6×6, proposições, conjuntos, enigmas de detetive.</p>
+            </article>
+            <article class="lp-level-card">
+              <span class="lp-badge lvl-expert">🏔️ Expert</span>
+              <p><strong>Matemática:</strong> sistemas, 2º grau, juros, Pitágoras, contagem.</p>
+              <p><strong>Lógica:</strong> tabelas-verdade, cavaleiros e mentirosos, programação passo a passo.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- Recursos ---------- -->
+      <section class="lp-section">
+        <div class="lp-container">
+          <h2>Feito para aprender de verdade</h2>
+          <ul class="lp-features">
+            <li><span class="lp-feature-icon" aria-hidden="true">🎯</span><h3>Dificuldade que se adapta</h3><p>O jogo acompanha cada habilidade e oferece o próximo desafio na medida certa.</p></li>
+            <li><span class="lp-feature-icon" aria-hidden="true">💡</span><h3>Errar ensina</h3><p>Depois de um erro vem a explicação e um problema parecido para tentar de novo.</p></li>
+            <li><span class="lp-feature-icon" aria-hidden="true">📆</span><h3>Desafio do dia</h3><p>Um problema especial por dia, com XP em dobro, para criar o hábito.</p></li>
+            <li><span class="lp-feature-icon" aria-hidden="true">🏅</span><h3>Medalhas e avatar</h3><p>Conquistas por esforço e constância, e itens para o avatar desbloqueados com XP.</p></li>
+            <li><span class="lp-feature-icon" aria-hidden="true">🔊</span><h3>Leitura em voz alta</h3><p>Para quem ainda está aprendendo a ler. Também há texto grande e tema escuro.</p></li>
+            <li><span class="lp-feature-icon" aria-hidden="true">📱</span><h3>Celular, tablet ou PC</h3><p>Funciona no navegador e pode ser instalado como app na tela inicial.</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ---------- Famílias e escolas ---------- -->
+      <section id="familias" class="lp-section lp-section-alt">
+        <div class="lp-container lp-split">
+          <div>
+            <h2>Para famílias e escolas</h2>
+            <ul class="lp-checks">
+              <li><strong>Área do responsável:</strong> veja os últimos 7 dias, o nível em cada trilha e o que pede mais prática.</li>
+              <li><strong>Vários perfis por conta:</strong> cada filho com o seu progresso.</li>
+              <li><strong>Turmas:</strong> o professor cria a turma e compartilha um código; a família escolhe quem participa.</li>
+              <li><strong>Privacidade em primeiro lugar:</strong> só apelido e progresso, nada de nome completo, foto ou localização. Sem anúncios e sem compras.</li>
+            </ul>
+            <div class="lp-cta-row">
+              <a href="/jogar#/cadastro" class="lp-btn lp-btn-primary" data-cta="signup">Criar conta de responsável</a>
+              <a href="/jogar#/entrar" class="lp-btn lp-btn-ghost" data-cta="play">Experimentar sem cadastro</a>
+            </div>
+          </div>
+          <div class="lp-card lp-report" aria-hidden="true">
+            <div class="lp-report-head"><span class="lp-avatar">🦊</span><span><strong>Luna</strong><br /><span class="lp-muted">Jogou hoje</span></span></div>
+            <div class="lp-report-stats">
+              <div><strong>🔥 5</strong><span class="lp-muted">dias seguidos</span></div>
+              <div><strong>64</strong><span class="lp-muted">problemas em 7 dias</span></div>
+              <div><strong>88%</strong><span class="lp-muted">de acertos</span></div>
+            </div>
+            <p class="lp-attention">Pede atenção: Frações</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- Perguntas ---------- -->
+      <section class="lp-section">
+        <div class="lp-container lp-narrow">
+          <h2>Perguntas frequentes</h2>
+          <details class="lp-faq">
+            <summary>É grátis?</summary>
+            <p>Sim. Não há assinatura, compras dentro do jogo nem anúncios.</p>
+          </details>
+          <details class="lp-faq">
+            <summary>Precisa criar conta?</summary>
+            <p>Não para começar: basta um apelido, e o progresso fica salvo no aparelho. Para não correr o risco de perder e para jogar em outros aparelhos, é só usar "Salvar progresso" e criar a conta quando quiser — tudo o que já foi conquistado continua.</p>
+          </details>
+          <details class="lp-faq">
+            <summary>Para que idade é?</summary>
+            <p>Para crianças e adolescentes de 7 a 17 anos, mais ou menos. Como o nível vem do desempenho, cada um começa onde está; o teste de nivelamento ajuda a achar o ponto de partida.</p>
+          </details>
+          <details class="lp-faq">
+            <summary>Funciona no celular?</summary>
+            <p>Sim, no navegador do celular, tablet ou computador. Também dá para instalar na tela inicial como um app.</p>
+          </details>
+          <details class="lp-faq">
+            <summary>Quais dados vocês guardam?</summary>
+            <p>Apenas apelido, avatar, ano escolar (opcional) e o progresso no jogo. A conta é do adulto responsável, que pode apagar tudo a qualquer momento. Professores só veem os perfis que a família colocar na turma.</p>
+          </details>
+        </div>
+      </section>
+
+      <!-- ---------- CTA final ---------- -->
+      <section class="lp-final">
+        <div class="lp-container lp-final-inner">
+          <h2>Pronto para a expedição?</h2>
+          <p>Leva menos de um minuto para começar.</p>
+          <a href="/jogar#/entrar" class="lp-btn lp-btn-light lp-btn-big" data-cta="play">Jogar agora</a>
+        </div>
+      </section>
     </main>
-    <noscript><p class="container">Este jogo precisa de JavaScript para funcionar.</p></noscript>
+
+    <footer class="lp-footer">
+      <div class="lp-container lp-footer-inner">
+        <span><span aria-hidden="true">🧭</span> Expedição Numérica</span>
+        <nav aria-label="Rodapé">
+          <a href="/jogar#/entrar">Jogar</a>
+          <a href="/jogar#/conta">Entrar</a>
+          <a href="/jogar#/cadastro">Criar conta</a>
+        </nav>
+      </div>
+    </footer>
   </body>
 </html>

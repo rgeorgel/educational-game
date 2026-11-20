@@ -993,3 +993,10 @@ details.level-section[open] {
 .auth .tabs .tab {
   padding: 0 var(--space-2);
 }
+
+@media (max-width: 420px) {
+  .auth .tabs .tab {
+    font-size: 0.85rem;
+    padding: 0 var(--space-1);
+  }
+}

@@ -21,12 +21,14 @@ import { store } from "./store.js";
 
 applyPrefs();
 
-const PUBLIC = ["/entrar"];
+const PUBLIC = ["/entrar", "/conta", "/cadastro"];
 // Páginas do adulto: não exigem escolher um perfil de jogador.
 const NO_PROFILE_NEEDED = ["/perfis", "/responsavel", "/turmas", "/config", "/salvar"];
 
 route("/", homePage, { title: "Início" });
-route("/entrar", authPage, { title: "Entrar" });
+route("/entrar", () => authPage("jogar"), { title: "Jogar" });
+route("/conta", () => authPage("entrar"), { title: "Entrar" });
+route("/cadastro", () => authPage("criar"), { title: "Criar conta" });
 route("/perfis", profilesPage, { title: "Perfis" });
 route("/mapa/:subject", mapPage, { title: "Mapa" });
 route("/jogar/:sessionId", sessionPage, { title: "Jogando" });
@@ -84,7 +86,7 @@ function renderHeader() {
     h(
       "div",
       { class: "container header-inner" },
-      h("a", { href: "#/", class: "brand" }, h("span", { "aria-hidden": "true" }, "🧭"), " Expedição Numérica"),
+      h("a", { href: me ? "#/" : "/", class: "brand" }, h("span", { "aria-hidden": "true" }, "🧭"), " Expedição Numérica"),
       h("nav", { class: "header-nav", "aria-label": "Principal" }, nav),
     ),
   );

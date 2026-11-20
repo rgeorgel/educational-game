@@ -51,7 +51,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Acesse http://localhost:8080 (ou a porta de `WEB_PORT`).
+Acesse http://localhost:8080 (ou a porta de `WEB_PORT`): a raiz é a landing page e o jogo fica em `/jogar`.
 
 - O `.env` de exemplo já traz `COMPOSE_PROFILES=local-db`, que sobe o Postgres num container (só precisa de `DB_PASSWORD`).
 - A API fica atrás do nginx em `/api` (ex.: http://localhost:8080/api/health).
@@ -160,7 +160,7 @@ backend/
   src/EduGame.Problems/        geradores e validadores de problemas (C# puro)
   src/EduGame.Infrastructure/  EF Core, migrations, seed de conteúdo
   tests/                       testes unitários e de integração
-frontend/                      HTML, CSS e JS servidos pelo nginx
+frontend/                      HTML, CSS e JS servidos pelo nginx (index.html = landing, jogar.html = jogo)
 nginx/                         configuração do proxy reverso
 docs/                          plano e documentação
 ```

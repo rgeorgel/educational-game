@@ -12,3 +12,6 @@ TestResults/
 .DS_Store
 .idea/
 .vscode/
+
+# Backups do banco (contêm dados pessoais)
+backups/

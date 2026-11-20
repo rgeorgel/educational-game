@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EduGame.Api/EduGame.Api.csproj" />
+    <Project Path="src/EduGame.Domain/EduGame.Domain.csproj" />
+    <Project Path="src/EduGame.Infrastructure/EduGame.Infrastructure.csproj" />
+    <Project Path="src/EduGame.Problems/EduGame.Problems.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/EduGame.Api.Tests/EduGame.Api.Tests.csproj" />
+    <Project Path="tests/EduGame.Domain.Tests/EduGame.Domain.Tests.csproj" />
+    <Project Path="tests/EduGame.Problems.Tests/EduGame.Problems.Tests.csproj" />
+  </Folder>
+</Solution>

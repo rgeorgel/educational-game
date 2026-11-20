@@ -1,0 +1,14 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+
+# Ambiente
+.env
+
+# SO / editores
+.DS_Store
+.idea/
+.vscode/

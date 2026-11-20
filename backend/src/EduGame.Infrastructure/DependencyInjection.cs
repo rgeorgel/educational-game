@@ -13,8 +13,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        var connectionString = config.GetConnectionString("Default")
-            ?? throw new InvalidOperationException("ConnectionStrings:Default não configurada.");
+        var connectionString = DatabaseSettings.BuildConnectionString(config);
 
         services.AddDbContext<AppDbContext>(o => o
             .UseNpgsql(connectionString)

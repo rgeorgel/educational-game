@@ -53,20 +53,25 @@ docker compose up -d --build
 
 Acesse http://localhost:8080 (ou a porta de `WEB_PORT`).
 
-- O `.env` de exemplo já traz `COMPOSE_PROFILES=local-db`, que sobe o Postgres num container.
+- O `.env` de exemplo já traz `COMPOSE_PROFILES=local-db`, que sobe o Postgres num container (só precisa de `DB_PASSWORD`).
 - A API fica atrás do nginx em `/api` (ex.: http://localhost:8080/api/health).
 - Documento OpenAPI: http://localhost:8080/api/openapi/v1.json
-- O Postgres fica exposto apenas em `127.0.0.1:5433` (configurável via `POSTGRES_PORT`).
+- O Postgres local fica exposto apenas em `127.0.0.1:5433` (configurável via `DB_LOCAL_PORT`).
 - O frontend é montado como volume: edite HTML/CSS/JS e recarregue a página.
 
 Para parar: `docker compose down` (adicione `-v` para apagar o banco local).
 
 ### Servidor (banco fora do Docker)
 
-No `.env` do servidor, **não** defina `COMPOSE_PROFILES` e informe a conexão com o banco:
+No `.env` do servidor, **não** defina `COMPOSE_PROFILES` e informe os dados do seu Postgres:
 
 ```bash
-DATABASE_CONNECTION_STRING=Host=host.docker.internal;Port=5432;Database=edugame;Username=edugame;Password=...;SSL Mode=Prefer
+DB_HOST=host.docker.internal   # Postgres no próprio servidor; ou o IP/nome de outra máquina
+DB_PORT=5432
+DB_NAME=edugame
+DB_USER=edugame
+DB_PASSWORD=sua-senha
+DB_SSL_MODE=Prefer             # opcional: Disable, Prefer, Require, VerifyCA, VerifyFull
 WEB_PORT=8080
 ASPNETCORE_ENVIRONMENT=Production
 ```
@@ -76,12 +81,13 @@ docker compose up -d --build
 ```
 
 - Só sobem os containers `api` e `web`; o container do banco nem é criado.
-- `Host=host.docker.internal` aponta para um Postgres instalado no próprio servidor (já configurado no compose,
-  inclusive em Linux). Para um banco em outra máquina, use o IP ou nome dela.
-- Num Postgres instalado no próprio servidor, ele precisa aceitar conexões vindas da rede do Docker
+- A senha pode ter qualquer caractere (inclusive `;` e `=`): a API monta a conexão campo a campo.
+- `DB_HOST=host.docker.internal` aponta para um Postgres instalado no próprio servidor (já configurado no compose,
+  inclusive em Linux). Esse Postgres precisa aceitar conexões vindas da rede do Docker
   (`listen_addresses` e `pg_hba.conf`).
 - As migrations são aplicadas quando a API inicia. Se o usuário do banco não puder criar tabelas, use
-  `DATABASE_MIGRATE_ON_STARTUP=false` e aplique as migrations por fora.
+  `DB_MIGRATE_ON_STARTUP=false` e aplique as migrations por fora.
+- Se algo estiver errado (senha, host, porta), a API não sobe e o motivo aparece em `docker compose logs api`.
 
 ## Desenvolvimento do backend
 

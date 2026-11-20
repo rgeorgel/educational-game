@@ -28,9 +28,9 @@ jobs:
       - name: Build da imagem da API
         run: docker build -t edugame-api ./backend
       - name: Validar docker compose (banco local em container)
-        run: COMPOSE_PROFILES=local-db POSTGRES_PASSWORD=ci docker compose config --quiet
+        run: COMPOSE_PROFILES=local-db DB_PASSWORD=ci docker compose config --quiet
       - name: Validar docker compose (banco externo, sem container do banco)
         run: |
-          DATABASE_CONNECTION_STRING="Host=db.exemplo;Database=edugame;Username=u;Password=p" docker compose config --services > services.txt
+          DB_HOST=db.exemplo DB_NAME=edugame DB_USER=u DB_PASSWORD=p docker compose config --services > services.txt
           cat services.txt
           ! grep -qx db services.txt

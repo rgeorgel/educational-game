@@ -5,8 +5,8 @@ name: edugame
 # - Local (desenvolvimento): o Postgres roda num container. Ative o perfil "local-db"
 #   no .env com COMPOSE_PROFILES=local-db (o .env.example já vem assim).
 #
-# - Servidor: o Postgres fica fora do Docker. Não ative o perfil e informe a conexão em
-#   DATABASE_CONNECTION_STRING no .env. O container "db" nem é criado.
+# - Servidor: o Postgres fica fora do Docker. Não ative o perfil e informe no .env
+#   DB_HOST, DB_PORT, DB_NAME, DB_USER e DB_PASSWORD. O container "db" nem é criado.
 
 services:
   db:
@@ -14,16 +14,17 @@ services:
     profiles: ["local-db"]
     restart: unless-stopped
     environment:
-      POSTGRES_DB: edugame
-      POSTGRES_USER: edugame
-      # Sem valor o Postgres se recusa a iniciar (erro claro no log).
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: ${DB_NAME:-edugame}
+      POSTGRES_USER: ${DB_USER:-edugame}
+      # Sem senha o Postgres se recusa a iniciar (erro claro no log).
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+      # Porta no seu computador para acessar o banco local (ex.: DBeaver, dotnet run).
+      - "127.0.0.1:${DB_LOCAL_PORT:-${POSTGRES_PORT:-5433}}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U edugame -d edugame"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -33,9 +34,14 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      # Servidor: defina DATABASE_CONNECTION_STRING. Local: usa o container "db".
-      ConnectionStrings__Default: ${DATABASE_CONNECTION_STRING:-Host=db;Port=5432;Database=edugame;Username=edugame;Password=${POSTGRES_PASSWORD:-}}
-      Database__MigrateOnStartup: ${DATABASE_MIGRATE_ON_STARTUP:-true}
+      # Banco: no servidor, informe os dados do seu Postgres; localmente o padrão é o container "db".
+      Database__Host: ${DB_HOST:-db}
+      Database__Port: ${DB_PORT:-5432}
+      Database__Name: ${DB_NAME:-edugame}
+      Database__Username: ${DB_USER:-edugame}
+      Database__Password: ${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}
+      Database__SslMode: ${DB_SSL_MODE:-Prefer}
+      Database__MigrateOnStartup: ${DB_MIGRATE_ON_STARTUP:-${DATABASE_MIGRATE_ON_STARTUP:-true}}
     extra_hosts:
       # Permite usar Host=host.docker.internal para um Postgres instalado no próprio servidor (Linux).
       - "host.docker.internal:host-gateway"

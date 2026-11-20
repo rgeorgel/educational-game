@@ -5,27 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Expedição Numérica</title>
     <meta name="description" content="Jogo educacional de matemática e lógica para crianças e adolescentes." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/css/tokens.css" />
     <link rel="stylesheet" href="/css/base.css" />
-    <link rel="stylesheet" href="/css/status.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
     <script type="module" src="/js/main.js"></script>
   </head>
   <body>
-    <main class="container status-page">
-      <h1>🧭 Expedição Numérica</h1>
-      <p class="muted">Fase 0 — infraestrutura no ar.</p>
-
-      <section class="card" aria-labelledby="health-title">
-        <h2 id="health-title">Status do sistema</h2>
-        <ul class="status-list" id="health" aria-live="polite">
-          <li>Verificando…</li>
-        </ul>
-      </section>
-
-      <section class="card" aria-labelledby="subjects-title">
-        <h2 id="subjects-title">Tópicos cadastrados</h2>
-        <div id="subjects" class="subjects">Carregando…</div>
-      </section>
+    <a class="skip-link" href="#app">Pular para o conteúdo</a>
+    <header id="app-header" class="app-header"></header>
+    <main id="app" class="container app-main" tabindex="-1">
+      <p class="loading" role="status">Carregando…</p>
     </main>
+    <noscript><p class="container">Este jogo precisa de JavaScript para funcionar.</p></noscript>
   </body>
 </html>

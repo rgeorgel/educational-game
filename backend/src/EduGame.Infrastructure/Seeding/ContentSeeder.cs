@@ -1,50 +1,128 @@
 using EduGame.Domain.Content;
 using EduGame.Domain.Progression;
+using EduGame.Problems;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduGame.Infrastructure.Seeding;
 
 /// <summary>
-/// Garante que o conteúdo base (tópicos e níveis) exista no banco.
-/// É idempotente: pode rodar a cada inicialização.
+/// Sincroniza o <see cref="ContentCatalog"/> com o banco (insere e atualiza pelo slug).
+/// É idempotente: roda a cada inicialização. Itens removidos do catálogo não são apagados
+/// (o histórico dos jogadores pode depender deles); geradores removidos são desativados.
 /// </summary>
 public static class ContentSeeder
 {
-    private static readonly (string Slug, string Name, string Icon, int Order)[] Subjects =
-    [
-        ("matematica", "Matemática", "➗", 1),
-        ("logica", "Lógica", "🧩", 2),
-    ];
-
     public static async Task SeedAsync(AppDbContext db, CancellationToken ct = default)
     {
-        foreach (var (slug, name, icon, order) in Subjects)
+        foreach (var def in ContentCatalog.Subjects)
         {
-            var subject = await db.Subjects.Include(s => s.Levels).SingleOrDefaultAsync(s => s.Slug == slug, ct);
-            if (subject is null)
-            {
-                subject = new Subject { Slug = slug, Name = name };
-                db.Subjects.Add(subject);
-            }
-            subject.Name = name;
-            subject.Icon = icon;
-            subject.Order = order;
+            var subject = await UpsertSubjectAsync(db, def, ct);
+            await db.SaveChangesAsync(ct);
 
-            foreach (var def in LevelDefinitions.All)
+            var levels = subject.Levels.ToDictionary(l => l.Slug);
+            var skills = await UpsertSkillsAsync(db, subject, def, levels, ct);
+            await db.SaveChangesAsync(ct);
+
+            await UpsertTemplatesAsync(db, skills.Values, ct);
+            await UpsertRegionsAsync(db, subject, def, levels, skills, ct);
+            await db.SaveChangesAsync(ct);
+        }
+    }
+
+    private static async Task<Subject> UpsertSubjectAsync(AppDbContext db, ContentCatalog.SubjectDef def, CancellationToken ct)
+    {
+        var subject = await db.Subjects.Include(s => s.Levels).SingleOrDefaultAsync(s => s.Slug == def.Slug, ct);
+        if (subject is null)
+        {
+            subject = new Subject { Slug = def.Slug, Name = def.Name };
+            db.Subjects.Add(subject);
+        }
+        subject.Name = def.Name;
+        subject.Icon = def.Icon;
+        subject.Order = def.Order;
+
+        foreach (var levelDef in LevelDefinitions.All)
+        {
+            var level = subject.Levels.SingleOrDefault(l => l.Slug == levelDef.Slug);
+            if (level is null)
             {
-                var level = subject.Levels.SingleOrDefault(l => l.Slug == def.Slug);
-                if (level is null)
+                level = new Level { Slug = levelDef.Slug, Name = levelDef.Name };
+                subject.Levels.Add(level);
+            }
+            level.Name = levelDef.Name;
+            level.Icon = levelDef.Icon;
+            level.Order = levelDef.Order;
+            level.MinRating = levelDef.MinRating;
+        }
+        return subject;
+    }
+
+    private static async Task<Dictionary<string, Skill>> UpsertSkillsAsync(
+        AppDbContext db, Subject subject, ContentCatalog.SubjectDef def, Dictionary<string, Level> levels, CancellationToken ct)
+    {
+        var existing = await db.Skills.Include(s => s.Templates).Where(s => s.SubjectId == subject.Id).ToDictionaryAsync(s => s.Slug, ct);
+        var order = 0;
+        foreach (var skillDef in def.Skills)
+        {
+            if (!existing.TryGetValue(skillDef.Slug, out var skill))
+            {
+                skill = new Skill { Slug = skillDef.Slug, Name = skillDef.Name, SubjectId = subject.Id };
+                db.Skills.Add(skill);
+                existing[skillDef.Slug] = skill;
+            }
+            skill.Name = skillDef.Name;
+            skill.Description = skillDef.Description;
+            skill.LevelId = levels[skillDef.Level].Id;
+            skill.Order = ++order;
+        }
+        return existing;
+    }
+
+    private static Task UpsertTemplatesAsync(AppDbContext db, IEnumerable<Skill> skills, CancellationToken ct)
+    {
+        foreach (var skill in skills)
+        {
+            var keys = ProblemFactory.Default.ForSkill(skill.Slug).Select(g => g.Key).ToHashSet();
+            foreach (var template in skill.Templates) template.Active = keys.Contains(template.GeneratorKey);
+            foreach (var key in keys.Where(k => skill.Templates.All(t => t.GeneratorKey != k)))
+                skill.Templates.Add(new ProblemTemplate { GeneratorKey = key, SkillId = skill.Id });
+        }
+        return Task.CompletedTask;
+    }
+
+    private static async Task UpsertRegionsAsync(
+        AppDbContext db, Subject subject, ContentCatalog.SubjectDef def,
+        Dictionary<string, Level> levels, Dictionary<string, Skill> skills, CancellationToken ct)
+    {
+        var regions = await db.Regions.Include(r => r.Stages).Where(r => r.SubjectId == subject.Id).ToDictionaryAsync(r => r.Slug, ct);
+        var regionOrder = 0;
+        foreach (var regionDef in def.Regions)
+        {
+            if (!regions.TryGetValue(regionDef.Slug, out var region))
+            {
+                region = new Region { Slug = regionDef.Slug, Name = regionDef.Name, SubjectId = subject.Id };
+                db.Regions.Add(region);
+            }
+            region.Name = regionDef.Name;
+            region.Description = regionDef.Description;
+            region.Icon = regionDef.Icon;
+            region.LevelId = levels[regionDef.Level].Id;
+            region.Order = ++regionOrder;
+
+            var stageOrder = 0;
+            foreach (var stageDef in regionDef.Stages)
+            {
+                var stage = region.Stages.SingleOrDefault(s => s.Slug == stageDef.Slug);
+                if (stage is null)
                 {
-                    level = new Level { Slug = def.Slug, Name = def.Name };
-                    subject.Levels.Add(level);
+                    stage = new Stage { Slug = stageDef.Slug, Name = stageDef.Name };
+                    region.Stages.Add(stage);
                 }
-                level.Name = def.Name;
-                level.Icon = def.Icon;
-                level.Order = def.Order;
-                level.MinRating = def.MinRating;
+                stage.Name = stageDef.Name;
+                stage.Order = ++stageOrder;
+                stage.ProblemCount = stageDef.ProblemCount;
+                stage.SkillIds = [.. stageDef.Skills.Select(slug => skills[slug].Id)];
             }
         }
-
-        await db.SaveChangesAsync(ct);
     }
 }

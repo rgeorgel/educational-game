@@ -1,57 +1,93 @@
-// Fase 0: verifica se API e banco estão no ar e lista os tópicos.
+// Ponto de entrada: monta o cabeçalho, registra as rotas e verifica a sessão do usuário.
+import "./components/index.js";
+import { api, onUnauthorized } from "./api.js";
+import { h } from "./dom.js";
+import { authPage } from "./pages/auth.js";
+import { homePage } from "./pages/home.js";
+import { mapPage } from "./pages/map.js";
+import { profilesPage } from "./pages/profiles.js";
+import { progressPage } from "./pages/progress.js";
+import { sessionPage } from "./pages/session.js";
+import { summaryPage } from "./pages/summary.js";
+import { currentPath, navigate, route, setGuard, start } from "./router.js";
+import { store } from "./store.js";
 
-/** Cria um elemento com texto (sem innerHTML, para evitar injeção). */
-function el(tag, { className, text } = {}, children = []) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  node.append(...children);
-  return node;
-}
+const PUBLIC = ["/entrar"];
+const NO_PROFILE_NEEDED = ["/perfis"];
 
-function statusItem(label, ok) {
-  return el("li", {}, [
-    el("span", { className: `dot ${ok ? "ok" : "fail"}` }),
-    el("span", { text: `${label}: ${ok ? "ok" : "indisponível"}` }),
-  ]);
-}
+route("/", homePage, { title: "Início" });
+route("/entrar", authPage, { title: "Entrar" });
+route("/perfis", profilesPage, { title: "Perfis" });
+route("/mapa/:subject", mapPage, { title: "Mapa" });
+route("/jogar/:sessionId", sessionPage, { title: "Jogando" });
+route("/resultado/:sessionId", summaryPage, { title: "Resultado" });
+route("/progresso", progressPage, { title: "Progresso" });
 
-async function loadHealth() {
-  const list = document.getElementById("health");
-  try {
-    const res = await fetch("/api/health");
-    const data = await res.json();
-    list.replaceChildren(
-      statusItem("API", true),
-      ...data.checks.map((c) => statusItem(c.name === "database" ? "Banco de dados" : c.name, c.status === "Healthy")),
+setGuard((path) => {
+  if (!store.state.me) return PUBLIC.includes(path) ? null : "/entrar";
+  if (PUBLIC.includes(path)) return "/perfis";
+  if (!store.profile && !NO_PROFILE_NEEDED.includes(path)) return "/perfis";
+  return null;
+});
+
+onUnauthorized(() => {
+  store.signOut();
+  navigate("/entrar");
+});
+
+// ---------- Cabeçalho ----------
+const header = document.getElementById("app-header");
+
+function renderHeader() {
+  const { me } = store.state;
+  const profile = store.profile;
+  const path = currentPath();
+  const playing = path.startsWith("/jogar/");
+
+  const nav = [];
+  if (me && profile && !playing) {
+    nav.push(
+      h("a", { href: "#/", class: "nav-link", "aria-current": path === "/" ? "page" : null }, "Início"),
+      h("a", { href: "#/progresso", class: "nav-link", "aria-current": path === "/progresso" ? "page" : null }, "Progresso"),
+      h("a", { href: "#/perfis", class: "profile-chip", title: "Trocar de perfil" }, h("span", { "aria-hidden": "true" }, profile.avatar), h("span", {}, profile.nickname)),
     );
-  } catch {
-    list.replaceChildren(statusItem("API", false));
+  }
+  if (me && !playing) {
+    nav.push(h("button", { type: "button", class: "btn btn-ghost btn-small", onClick: logout }, "Sair"));
+  }
+
+  header.replaceChildren(
+    h(
+      "div",
+      { class: "container header-inner" },
+      h("a", { href: "#/", class: "brand" }, h("span", { "aria-hidden": "true" }, "🧭"), " Expedição Numérica"),
+      h("nav", { class: "header-nav", "aria-label": "Principal" }, nav),
+    ),
+  );
+  document.body.classList.toggle("is-playing", playing);
+}
+
+async function logout() {
+  try {
+    await api.logout();
+  } finally {
+    store.signOut();
+    navigate("/entrar");
   }
 }
 
-async function loadSubjects() {
-  const box = document.getElementById("subjects");
+store.subscribe(renderHeader);
+window.addEventListener("hashchange", renderHeader);
+
+// ---------- Inicialização ----------
+async function boot() {
   try {
-    const res = await fetch("/api/subjects");
-    if (!res.ok) throw new Error(res.statusText);
-    const subjects = await res.json();
-    box.replaceChildren(
-      ...subjects.map((s) =>
-        el("div", {}, [
-          el("h3", { text: `${s.icon} ${s.name}` }),
-          el(
-            "ul",
-            {},
-            s.levels.map((l) => el("li", { text: `${l.icon} ${l.name} (rating ${l.minRating}+)` })),
-          ),
-        ]),
-      ),
-    );
+    store.setMe(await api.me());
   } catch {
-    box.textContent = "Não foi possível carregar os tópicos.";
+    store.setMe(null);
   }
+  renderHeader();
+  start(document.getElementById("app"));
 }
 
-loadHealth();
-loadSubjects();
+boot();

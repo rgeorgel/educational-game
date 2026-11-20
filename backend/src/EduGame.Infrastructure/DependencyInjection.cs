@@ -1,4 +1,7 @@
+using EduGame.Infrastructure.Identity;
 using EduGame.Infrastructure.Seeding;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +19,27 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(o => o
             .UseNpgsql(connectionString)
             .UseSnakeCaseNamingConvention());
+
+        services
+            .AddIdentityCore<AppUser>(o =>
+            {
+                o.User.RequireUniqueEmail = true;
+                o.Password.RequiredLength = 8;
+                o.Password.RequireDigit = false;
+                o.Password.RequireLowercase = false;
+                o.Password.RequireUppercase = false;
+                o.Password.RequireNonAlphanumeric = false;
+                o.Lockout.MaxFailedAccessAttempts = 8;
+                o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+            })
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddSignInManager()
+            .AddDefaultTokenProviders();
+
+        // Chaves de criptografia dos cookies no banco: o login sobrevive a reinícios do container.
+        services.AddDataProtection()
+            .SetApplicationName("edugame")
+            .PersistKeysToDbContext<AppDbContext>();
 
         return services;
     }

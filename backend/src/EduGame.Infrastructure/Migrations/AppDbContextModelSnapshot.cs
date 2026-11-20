@@ -986,6 +986,26 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("security_stamp");
 
+                    b.Property<string>("SignupCampaign")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("signup_campaign");
+
+                    b.Property<string>("SignupMedium")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("signup_medium");
+
+                    b.Property<string>("SignupReferrer")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("signup_referrer");
+
+                    b.Property<string>("SignupSource")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("signup_source");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("two_factor_enabled");
@@ -1004,6 +1024,9 @@ namespace EduGame.Infrastructure.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
+
+                    b.HasIndex("SignupSource")
+                        .HasDatabaseName("ix_users_signup_source");
 
                     b.ToTable("users", (string)null);
                 });

@@ -1,4 +1,5 @@
 // Cliente da API. Mesma origem (nginx faz o proxy de /api), autenticação por cookie HttpOnly.
+import { originForSignup } from "./origin.js";
 
 export class ApiError extends Error {
   constructor(status, problem) {
@@ -48,9 +49,9 @@ const del = (p) => request("DELETE", p);
 
 export const api = {
   me: () => get("/me"),
-  register: (email, password, acceptTerms) => post("/auth/register", { email, password, acceptTerms }),
+  register: (email, password, acceptTerms) => post("/auth/register", { email, password, acceptTerms, origin: originForSignup() }),
   login: (email, password) => post("/auth/login", { email, password }),
-  startAsGuest: (nickname, avatar) => post("/auth/guest", { nickname, avatar }),
+  startAsGuest: (nickname, avatar) => post("/auth/guest", { nickname, avatar, origin: originForSignup() }),
   saveProgress: (email, password, acceptTerms) => post("/auth/upgrade", { email, password, acceptTerms }),
   logout: () => post("/auth/logout"),
 

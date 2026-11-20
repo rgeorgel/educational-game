@@ -70,7 +70,9 @@ public sealed record SessionSummary(
     bool? GuardianPassed,
     LevelDto? ResultLevel,
     IReadOnlyList<AchievementDto> Achievements,
-    SubjectProgressDto Progress);
+    SubjectProgressDto Progress,
+    IReadOnlyList<string> Marks,
+    DateOnly? DailyDate);
 
 public enum SessionError { NotFound, Locked, Finished, AlreadyAnswered, NotServed, NoHintsLeft, NotAvailable }
 
@@ -609,6 +611,16 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
             .Select(a => a.Slug).ToListAsync(ct);
         var achievements = (await progress.AchievementsAsync(session.ProfileId, ct)).Where(a => earnedSlugs.Contains(a.Slug)).ToList();
 
+        // Resultado de cada problema, em ordem, para o "compartilhar" (sem revelar enunciados nem respostas):
+        // "certo", "dica" (certo com dica), "erro" ou "pendente".
+        var marks = (await LoadProblemsAsync(session.Id, ct)).Select(p => p.Attempt switch
+        {
+            null => "pendente",
+            { IsCorrect: false } => "erro",
+            { HintsUsed: > 0 } => "dica",
+            _ => "certo",
+        }).ToList();
+
         return new SessionSummary(
             session.Id,
             session.Mode,
@@ -627,7 +639,9 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
             session.Mode == SessionModes.Guardian && session.IsFinished ? Guardian.Passed(session.CorrectCount, session.ProblemCount) : null,
             resultLevel,
             achievements,
-            subjectProgress);
+            subjectProgress,
+            marks,
+            session.DailyDate);
     }
 
     // ---------- Auxiliares ----------

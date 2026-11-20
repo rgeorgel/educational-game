@@ -20,4 +20,11 @@ public class AppUser : IdentityUser<Guid>
 
     /// <summary>Último acesso (atualizado no máximo de hora em hora). Usado para apagar convidados abandonados.</summary>
     public DateTimeOffset? LastSeenAt { get; set; }
+
+    // De onde a pessoa veio no primeiro acesso (utm_source/medium/campaign e domínio de origem).
+    // Serve para medir os canais de divulgação no painel admin. Nada pessoal.
+    public string? SignupSource { get; set; }
+    public string? SignupMedium { get; set; }
+    public string? SignupCampaign { get; set; }
+    public string? SignupReferrer { get; set; }
 }

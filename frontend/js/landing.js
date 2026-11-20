@@ -1,6 +1,10 @@
 // Página inicial (landing). Mantém só o essencial:
 // 1. links antigos do jogo (/#/...) continuam funcionando, levando para /jogar;
-// 2. quem já está jogando neste aparelho vê "Continuar jogando" em vez de "Jogar agora".
+// 2. quem já está jogando neste aparelho vê "Continuar jogando" em vez de "Jogar agora";
+// 3. guarda de onde a pessoa veio (utm/indicação), enviado depois no cadastro.
+import { captureOrigin } from "./origin.js";
+
+captureOrigin();
 
 if (location.hash.startsWith("#/")) {
   location.replace(`/jogar${location.hash}`);
@@ -18,6 +22,11 @@ async function personalize() {
     }
     for (const link of document.querySelectorAll('[data-cta="login"], [data-cta="signup"]')) {
       link.hidden = true;
+    }
+    // Página de professores: quem já tem conta vai direto para as turmas.
+    for (const link of document.querySelectorAll('[data-cta="teacher"]')) {
+      link.href = me.isGuest ? "/jogar#/salvar" : "/jogar#/turmas";
+      link.textContent = me.isGuest ? "Salvar progresso e criar turma" : "Ir para minhas turmas";
     }
   } catch {
     /* sem conexão ou API fora: a página continua funcionando com os links padrão */

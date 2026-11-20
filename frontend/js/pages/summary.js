@@ -3,6 +3,7 @@ import { h } from "../dom.js";
 import { store } from "../store.js";
 import { confetti, countUp } from "../effects.js";
 import { levelBadge, levelProgress, startAndPlay } from "./shared.js";
+import { canShare, shareBox } from "../share.js";
 
 const TITLES = ["Continue praticando!", "Boa! Etapa concluída!", "Muito bem!", "Perfeito!"];
 
@@ -43,6 +44,7 @@ export async function summaryPage({ sessionId }) {
     "section",
     { class: "page-narrow summary" },
     main,
+    canShare(s) ? h("section", { class: "card" }, h("h2", {}, "Desafie os amigos"), shareBox(s)) : null,
     guestNudge,
     s.achievements.length
       ? h(

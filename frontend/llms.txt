@@ -4,6 +4,8 @@
 
 - Site: https://educa-game.georgel.ca/
 - Jogar: https://educa-game.georgel.ca/jogar
+- Para professores: https://educa-game.georgel.ca/professores
+- Currículo e alinhamento à BNCC: https://educa-game.georgel.ca/jogar#/bncc (dados em https://educa-game.georgel.ca/api/curriculum)
 - Idioma: português (pt-BR)
 - Preço: grátis, sem anúncios e sem compras dentro do jogo
 - Plataformas: navegador do celular, tablet ou computador; instalável como app (PWA)
@@ -37,3 +39,10 @@ Duas trilhas (Matemática e Lógica), quatro níveis e mais de 40 habilidades:
 ## Privacidade
 
 O jogo guarda só apelido, avatar, ano escolar (opcional) e o progresso. Nada de nome completo, foto ou localização. A conta é do adulto responsável, que pode apagar tudo a qualquer momento.
+
+## Para professores
+
+- Grátis para usar com a turma, sem anúncios e sem compras.
+- O professor cria a turma e passa um código; cada família coloca o perfil do filho na turma. O professor vê só apelido e progresso.
+- Relatório da turma com o nível de cada aluno e "o que a turma mais precisa praticar", com os códigos da BNCC.
+- Alinhado à BNCC: Matemática do 1º ao 9º ano (e algumas habilidades do Ensino Médio) e o eixo de pensamento computacional da BNCC de Computação.

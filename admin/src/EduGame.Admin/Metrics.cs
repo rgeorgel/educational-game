@@ -17,6 +17,7 @@ public static class Metrics
         api.MapGet("/users/{id:guid}", UserDetail);
         api.MapGet("/ranking", Ranking);
         api.MapGet("/insights", Insights);
+        api.MapGet("/origins", Origins);
     }
 
     private static string Tz(IConfiguration c) => c["Admin:TimeZone"] is { Length: > 0 } tz ? tz : "America/Sao_Paulo";
@@ -199,7 +200,7 @@ public static class Metrics
         var like = "%" + search.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_") + "%";
 
         var sql = $"""
-            SELECT u.id, u.email, u.is_guest, u.created_at, u.last_seen_at,
+            SELECT u.id, u.email, u.is_guest, u.created_at, u.last_seen_at, u.signup_source,
                    (NOT u.is_guest AND u.consent_accepted_at > u.created_at + interval '1 minute') AS converted,
                    coalesce(p.names, '') AS nicknames, coalesce(p.avatars, '') AS avatars, coalesce(p.n, 0) AS profiles,
                    coalesce(a.solved, 0) AS solved, coalesce(a.correct, 0) AS correct, coalesce(a.xp, 0) AS xp, a.last_day,
@@ -232,6 +233,7 @@ public static class Metrics
                 converted = r.GetBoolean(r.GetOrdinal("converted")),
                 createdAt = r.Time("created_at"),
                 lastSeenAt = r.Time("last_seen_at"),
+                source = r.Str("signup_source"),
                 nicknames = r.Str("nicknames"),
                 avatars = r.Str("avatars"),
                 profiles = r.Long("profiles"),
@@ -252,6 +254,7 @@ public static class Metrics
         var tz = Tz(config);
         var user = await ds.SingleAsync("""
             SELECT u.id, u.email, u.is_guest, u.created_at, u.last_seen_at, u.consent_accepted_at,
+                   u.signup_source, u.signup_medium, u.signup_campaign, u.signup_referrer,
                    (NOT u.is_guest AND u.consent_accepted_at > u.created_at + interval '1 minute') AS converted,
                    (SELECT coalesce(sum(visits), 0) FROM daily_visits WHERE user_id = u.id) AS visits_total,
                    (SELECT count(*) FROM daily_visits WHERE user_id = u.id AND date > (now() AT TIME ZONE @tz)::date - 30) AS days_30d,
@@ -266,6 +269,10 @@ public static class Metrics
             createdAt = r.Time("created_at"),
             lastSeenAt = r.Time("last_seen_at"),
             consentAcceptedAt = r.Time("consent_accepted_at"),
+            source = r.Str("signup_source"),
+            medium = r.Str("signup_medium"),
+            campaign = r.Str("signup_campaign"),
+            referrer = r.Str("signup_referrer"),
             visitsTotal = r.Long("visits_total"),
             days30d = r.Long("days_30d"),
             classroomsOwned = r.Long("classrooms_owned"),
@@ -342,6 +349,52 @@ public static class Metrics
         }, ct, ("id", id));
 
         return Results.Ok(new { user, profiles, activity, sessions });
+    }
+
+    /// <summary>Canais de divulgação: quem chegou por cada origem e quantos jogaram e voltaram.</summary>
+    private static async Task<IResult> Origins(NpgsqlDataSource ds, IConfiguration config, CancellationToken ct, int days = 30)
+    {
+        days = Math.Clamp(days, 1, 365);
+        const string cte = """
+            WITH t AS (SELECT (((now() AT TIME ZONE @tz)::date - (@days - 1))::timestamp AT TIME ZONE @tz) AS since),
+            u AS (
+              SELECT u.id, u.is_guest, coalesce(u.signup_source, '(sem registro)') AS source,
+                     u.signup_medium AS medium, u.signup_campaign AS campaign,
+                     EXISTS (SELECT 1 FROM daily_activity da JOIN player_profiles p ON p.id = da.profile_id
+                             WHERE p.user_id = u.id AND da.problems_solved > 0) AS played,
+                     (SELECT count(*) FROM daily_visits v WHERE v.user_id = u.id) >= 2 AS returned
+              FROM users u, t WHERE u.created_at >= t.since)
+            """;
+        var sources = await ds.ListAsync(cte + """
+            SELECT source, count(*) AS users, count(*) FILTER (WHERE NOT is_guest) AS accounts, count(*) FILTER (WHERE is_guest) AS guests,
+                   count(*) FILTER (WHERE played) AS played, count(*) FILTER (WHERE returned) AS returned
+            FROM u GROUP BY source ORDER BY users DESC, source
+            """, r => new
+        {
+            source = r.Str("source"),
+            users = r.Long("users"),
+            accounts = r.Long("accounts"),
+            guests = r.Long("guests"),
+            played = r.Long("played"),
+            returned = r.Long("returned"),
+        }, ct, ("tz", Tz(config)), ("days", days));
+
+        var campaigns = await ds.ListAsync(cte + """
+            SELECT source, coalesce(medium, '') AS medium, coalesce(campaign, '') AS campaign, count(*) AS users,
+                   count(*) FILTER (WHERE played) AS played, count(*) FILTER (WHERE returned) AS returned
+            FROM u WHERE medium IS NOT NULL OR campaign IS NOT NULL
+            GROUP BY source, medium, campaign ORDER BY users DESC LIMIT 20
+            """, r => new
+        {
+            source = r.Str("source"),
+            medium = r.Str("medium"),
+            campaign = r.Str("campaign"),
+            users = r.Long("users"),
+            played = r.Long("played"),
+            returned = r.Long("returned"),
+        }, ct, ("tz", Tz(config)), ("days", days));
+
+        return Results.Ok(new { days, sources, campaigns });
     }
 
     private static readonly Dictionary<string, string> RankingOrders = new()

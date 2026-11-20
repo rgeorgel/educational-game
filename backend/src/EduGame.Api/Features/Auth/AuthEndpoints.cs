@@ -15,20 +15,21 @@ public static class AuthEndpoints
     /// <summary>Por quanto tempo o aparelho "lembra" do convidado (renovado a cada acesso).</summary>
     public static readonly TimeSpan GuestCookieLifetime = TimeSpan.FromDays(365);
 
-    public sealed record RegisterRequest(string Email, string Password, bool AcceptTerms);
+    public sealed record RegisterRequest(string Email, string Password, bool AcceptTerms, OriginRequest? Origin = null);
     public sealed record LoginRequest(string Email, string Password);
-    public sealed record GuestRequest(string Nickname, string Avatar);
+    public sealed record GuestRequest(string Nickname, string Avatar, OriginRequest? Origin = null);
     public sealed record MeResponse(string? Email, bool IsGuest, IReadOnlyList<ProfileEndpoints.ProfileDto> Profiles);
 
     public static void MapAuth(this RouteGroupBuilder api)
     {
         var auth = api.MapGroup("/auth").WithTags("Auth").RequireRateLimiting(RateLimits.Auth);
 
-        auth.MapPost("/register", async (RegisterRequest req, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, GameClock clock, CancellationToken ct) =>
+        auth.MapPost("/register", async (RegisterRequest req, HttpContext http, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, GameClock clock, CancellationToken ct) =>
         {
             if (ValidateAccountData(req.Email, req.AcceptTerms, out var email) is { } invalid) return invalid;
 
             var user = new AppUser { UserName = email, Email = email, ConsentAcceptedAt = DateTimeOffset.UtcNow, LastSeenAt = DateTimeOffset.UtcNow };
+            SignupOrigin.Apply(user, req.Origin, http.Request.Host.Host);
             var result = await users.CreateAsync(user, req.Password ?? "");
             if (!result.Succeeded) return IdentityError(result);
 
@@ -38,12 +39,13 @@ public static class AuthEndpoints
         });
 
         // Jogar sem cadastro: cria uma conta de convidado (só apelido) presa a este aparelho.
-        api.MapPost("/auth/guest", async (GuestRequest req, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, GameClock clock, CancellationToken ct) =>
+        api.MapPost("/auth/guest", async (GuestRequest req, HttpContext http, UserManager<AppUser> users, SignInManager<AppUser> signIn, AppDbContext db, GameClock clock, CancellationToken ct) =>
         {
             var nickname = (req.Nickname ?? "").Trim();
             if (ProfileEndpoints.ValidateNicknameAndAvatar(nickname, req.Avatar) is { } invalid) return invalid;
 
             var user = new AppUser { UserName = $"convidado-{Guid.NewGuid():N}", IsGuest = true, LastSeenAt = DateTimeOffset.UtcNow };
+            SignupOrigin.Apply(user, req.Origin, http.Request.Host.Host);
             var result = await users.CreateAsync(user);
             if (!result.Succeeded) return IdentityError(result);
 

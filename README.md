@@ -33,6 +33,11 @@ Jogo educacional de **matemática e lógica** para crianças e adolescentes, com
   - Página pública "Currículo e BNCC" (`/jogar#/bncc`) e API `GET /api/curriculum`.
   - O relatório da turma mostra os códigos das habilidades que pedem atenção; o painel admin também mostra os códigos.
   - O mapeamento é uma referência e deve ser revisado por professores.
+- [x] **Divulgação:**
+  - "Compartilhar resultado" no desafio do dia, nas etapas com estrela e no Guardião: quadradinhos 🟩🟨🟥, sem apelido e sem respostas, mais o link.
+  - Origem de cada cadastro: `utm_source`/`utm_medium`/`utm_campaign` ou `?ref=` no primeiro acesso; sem isso, o domínio do site de origem.
+  - O painel admin mostra "De onde vêm as pessoas", com quantos jogaram e quantos voltaram.
+  - Página `/professores`, no sitemap e no `llms.txt`.
 - [ ] Fase 4 — Novos tópicos.
 
 ## Stack

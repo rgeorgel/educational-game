@@ -29,5 +29,6 @@ export const api = {
   users: (params) => request("GET", `/api/users?${qs(params)}`),
   user: (id) => request("GET", `/api/users/${encodeURIComponent(id)}`),
   ranking: (params) => request("GET", `/api/ranking?${qs(params)}`),
+  origins: (days) => request("GET", `/api/origins?${qs({ days })}`),
   insights: (days) => request("GET", `/api/insights?${qs({ days })}`),
 };

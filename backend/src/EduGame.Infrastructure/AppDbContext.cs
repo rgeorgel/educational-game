@@ -57,7 +57,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         base.OnModelCreating(b);
 
         // Tabelas do Identity em snake_case, como o resto do banco.
-        b.Entity<AppUser>().ToTable("users");
+        b.Entity<AppUser>(e =>
+        {
+            e.ToTable("users");
+            e.Property(x => x.SignupSource).HasMaxLength(64);
+            e.Property(x => x.SignupMedium).HasMaxLength(64);
+            e.Property(x => x.SignupCampaign).HasMaxLength(64);
+            e.Property(x => x.SignupReferrer).HasMaxLength(64);
+            e.HasIndex(x => x.SignupSource);
+        });
         b.Entity<IdentityRole<Guid>>().ToTable("roles");
         b.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
         b.Entity<IdentityUserClaim<Guid>>().ToTable("user_claims");

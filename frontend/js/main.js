@@ -3,6 +3,7 @@ import "./components/index.js";
 import { api, onUnauthorized } from "./api.js";
 import { h } from "./dom.js";
 import { applyPrefs } from "./prefs.js";
+import { captureOrigin } from "./origin.js";
 import { authPage, saveProgressPage } from "./pages/auth.js";
 import { avatarPage } from "./pages/avatar.js";
 import { bnccPage } from "./pages/bncc.js";
@@ -21,6 +22,7 @@ import { currentPath, navigate, route, setGuard, start } from "./router.js";
 import { store } from "./store.js";
 
 applyPrefs();
+captureOrigin();
 
 const PUBLIC = ["/entrar", "/conta", "/cadastro"];
 // Páginas do adulto: não exigem escolher um perfil de jogador.

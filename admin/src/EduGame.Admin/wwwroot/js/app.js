@@ -3,6 +3,8 @@ import { columnChart, meter } from "./charts.js";
 import { ago, dateTime, day, h, localDay, num, pct, shortDay, weekday } from "./dom.js";
 
 const root = document.getElementById("app");
+const SOURCES = { direto: "Acesso direto", compartilhar: "Compartilhado no jogo", "(sem registro)": "Antes do registro de origem" };
+const sourceLabel = (source) => SOURCES[source] ?? source ?? "—";
 const MODES = { etapa: "Etapas", guardiao: "Desafio do guardião", nivelamento: "Nivelamento", diario: "Desafio do dia", revisao: "Revisão" };
 const prefs = loadPrefs();
 
@@ -219,7 +221,7 @@ function emptyRow(cols, text) {
 // ---------- Visão geral ----------
 async function overviewPage() {
   const days = prefs.days ?? 30;
-  const [o, s] = await Promise.all([api.overview(), api.series(days, 12)]);
+  const [o, s, origins] = await Promise.all([api.overview(), api.series(days, 12), api.origins(days)]);
   const accuracy = pct(o.correct7d, o.answers7d);
 
   const tiles = h(
@@ -306,7 +308,77 @@ async function overviewPage() {
       card("Pessoas ativas por dia", activeDaily, { sub: "Pessoas diferentes que abriram o jogo" }),
       card("Novos cadastros por dia", signups, { sub: "Contas com e-mail e convidados (só apelido)" }),
       card("Respostas por horário do dia", hours, { sub: "Últimos 30 dias, horário de Brasília" }),
+      card("De onde vêm as pessoas", originsView(origins), {
+        sub: `Novos usuários dos últimos ${days} dias, pela origem do primeiro acesso (utm_source, indicação ou site de origem)`,
+        wide: true,
+      }),
     ),
+  );
+}
+
+function originsView({ sources, campaigns }) {
+  const total = sources.reduce((a, x) => a + x.users, 0);
+  const max = Math.max(1, ...sources.map((x) => x.users));
+  const table = h(
+    "div",
+    { class: "table-scroll" },
+    h(
+      "table",
+      { class: "data" },
+      h(
+        "thead",
+        {},
+        h("tr", {}, h("th", {}, "Origem"), h("th", { class: "n" }, "Novos"), h("th", { class: "n" }, "Contas"), h("th", { class: "n" }, "Convidados"), h("th", { class: "n" }, "Jogaram"), h("th", { class: "n" }, "Voltaram")),
+      ),
+      h(
+        "tbody",
+        {},
+        sources.length
+          ? sources.map((x) =>
+              h(
+                "tr",
+                {},
+                h("td", {}, h("strong", {}, sourceLabel(x.source))),
+                h("td", { class: "n" }, h("span", { class: "acc" }, `${num(x.users)} · ${pct(x.users, total)}`, meter((x.users / max) * 100, 100, `${x.users} novos`))),
+                h("td", { class: "n" }, num(x.accounts)),
+                h("td", { class: "n" }, num(x.guests)),
+                h("td", { class: "n" }, pct(x.played, x.users)),
+                h("td", { class: "n" }, pct(x.returned, x.users)),
+              ),
+            )
+          : emptyRow(6, "Ninguém novo no período."),
+      ),
+    ),
+  );
+  const campaignTable = campaigns.length
+    ? h(
+        "details",
+        { class: "table-view" },
+        h("summary", {}, `Campanhas (utm_medium / utm_campaign): ${campaigns.length}`),
+        h(
+          "div",
+          { class: "table-scroll" },
+          h(
+            "table",
+            {},
+            h("thead", {}, h("tr", {}, h("th", {}, "Origem"), h("th", {}, "Meio"), h("th", {}, "Campanha"), h("th", { class: "n" }, "Novos"), h("th", { class: "n" }, "Jogaram"), h("th", { class: "n" }, "Voltaram"))),
+            h(
+              "tbody",
+              {},
+              campaigns.map((c) =>
+                h("tr", {}, h("td", {}, sourceLabel(c.source)), h("td", {}, c.medium || "—"), h("td", {}, c.campaign || "—"), h("td", { class: "n" }, num(c.users)), h("td", { class: "n" }, pct(c.played, c.users)), h("td", { class: "n" }, pct(c.returned, c.users))),
+              ),
+            ),
+          ),
+        ),
+      )
+    : null;
+  return h(
+    "div",
+    {},
+    table,
+    h("p", { class: "muted small" }, "Jogaram = responderam pelo menos uma pergunta. Voltaram = abriram o jogo em 2 dias ou mais. Para marcar um link: ?utm_source=whatsapp&utm_campaign=grupo-professores"),
+    campaignTable,
   );
 }
 
@@ -345,7 +417,7 @@ async function usersPage() {
       { class: "clickable", tabindex: 0, onclick: () => (location.hash = `#/usuarios/${u.id}`), onkeydown: (e) => e.key === "Enter" && (location.hash = `#/usuarios/${u.id}`) },
       h("td", {}, who(u), u.profiles > 1 ? h("div", { class: "muted small" }, `${u.profiles} perfis`) : null),
       h("td", {}, u.email ?? h("span", { class: "muted" }, "—")),
-      h("td", {}, localDay(u.createdAt), h("div", { class: "muted small" }, ago(u.createdAt))),
+      h("td", {}, localDay(u.createdAt), h("div", { class: "muted small" }, `${ago(u.createdAt)}${u.source ? ` · ${sourceLabel(u.source)}` : ""}`)),
       h("td", {}, ago(u.lastSeenAt)),
       h("td", { class: "n" }, num(u.solved)),
       h("td", { class: "n" }, pct(u.correct, u.solved)),
@@ -424,6 +496,9 @@ async function userPage(id) {
       { class: "page-head" },
       h("h1", {}, user.email ?? profiles[0]?.nickname ?? "Convidado", " ", accountBadge(user)),
       h("p", { class: "muted small" }, `Cadastro em ${dateTime(user.createdAt)} · último acesso ${ago(user.lastSeenAt)}${user.consentAcceptedAt ? ` · termos aceitos em ${dateTime(user.consentAcceptedAt)}` : ""}`),
+      user.source
+        ? h("p", { class: "muted small" }, `Origem: ${sourceLabel(user.source)}${user.medium ? ` · meio ${user.medium}` : ""}${user.campaign ? ` · campanha ${user.campaign}` : ""}${user.referrer ? ` · veio de ${user.referrer}` : ""}`)
+        : null,
     ),
     h(
       "div",

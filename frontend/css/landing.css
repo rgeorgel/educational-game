@@ -695,3 +695,7 @@
     font-size: 0.95rem;
   }
 }
+
+/* Página para professores */
+.lp-class-needs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 0.95rem; }
+.lp-class-needs li { padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg); }

@@ -25,6 +25,8 @@ builder.Services.AddHostedService<CalibrationService>();
 builder.Services.AddHostedService<GuestCleanupService>();
 builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<ClassroomInsights>();
+builder.Services.AddScoped<EduGame.Api.Features.Billing.PlanService>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
@@ -85,6 +87,13 @@ app.UseStatusCodePages();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
+
+// Comando de terminal (ex.: "dotnet EduGame.Api.dll plano listar"): roda e sai, sem subir o servidor.
+if (EduGame.Api.Features.Billing.PlanCommand.IsInvoked(args))
+{
+    Environment.ExitCode = await EduGame.Api.Features.Billing.PlanCommand.RunAsync(app.Services, args, Console.Out);
+    return;
+}
 
 await app.Services.InitializeDatabaseAsync(
     migrate: app.Configuration.GetValue("Database:MigrateOnStartup", true));
@@ -148,6 +157,24 @@ api.MapGet("/curriculum", async (AppDbContext db, HttpContext http, Cancellation
     }));
 })
     .WithName("Curriculum")
+    .WithTags("Content");
+
+// Catálogo de etapas (para o professor escolher a etapa de uma tarefa).
+api.MapGet("/catalog/stages", async (AppDbContext db, CancellationToken ct) =>
+{
+    var stages = await db.Stages.AsNoTracking()
+        .Select(s => new
+        {
+            s.Id, s.Name, s.Order, s.ProblemCount,
+            RegionName = s.Region!.Name, RegionIcon = s.Region.Icon, RegionOrder = s.Region.Order,
+            LevelSlug = s.Region.Level!.Slug, LevelName = s.Region.Level.Name, LevelIcon = s.Region.Level.Icon, LevelOrder = s.Region.Level.Order,
+            SubjectSlug = s.Region.Subject!.Slug, SubjectName = s.Region.Subject.Name, SubjectIcon = s.Region.Subject.Icon, SubjectOrder = s.Region.Subject.Order,
+        })
+        .ToListAsync(ct);
+    return Results.Ok(stages.OrderBy(s => s.SubjectOrder).ThenBy(s => s.LevelOrder).ThenBy(s => s.RegionOrder).ThenBy(s => s.Order)
+        .Select(s => new { s.Id, s.Name, s.ProblemCount, s.RegionName, s.RegionIcon, s.LevelSlug, s.LevelName, s.LevelIcon, s.SubjectSlug, s.SubjectName, s.SubjectIcon }));
+})
+    .WithName("StageCatalog")
     .WithTags("Content");
 
 api.MapAuth();

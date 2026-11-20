@@ -23,6 +23,49 @@ namespace EduGame.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("EduGame.Domain.Billing.Subscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("EndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ends_at");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("plan");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subscriptions");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_subscriptions_user_id");
+
+                    b.ToTable("subscriptions", (string)null);
+                });
+
             modelBuilder.Entity("EduGame.Domain.Content.BnccSkill", b =>
                 {
                     b.Property<string>("Code")
@@ -437,6 +480,50 @@ namespace EduGame.Infrastructure.Migrations
                         .HasDatabaseName("ix_classrooms_owner_user_id");
 
                     b.ToTable("classrooms", (string)null);
+                });
+
+            modelBuilder.Entity("EduGame.Domain.Players.ClassroomAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClassroomId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("classroom_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<int>("MinStars")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_stars");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)")
+                        .HasColumnName("note");
+
+                    b.Property<int>("StageId")
+                        .HasColumnType("integer")
+                        .HasColumnName("stage_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_classroom_assignments");
+
+                    b.HasIndex("StageId")
+                        .HasDatabaseName("ix_classroom_assignments_stage_id");
+
+                    b.HasIndex("ClassroomId", "CreatedAt")
+                        .HasDatabaseName("ix_classroom_assignments_classroom_id_created_at");
+
+                    b.ToTable("classroom_assignments", (string)null);
                 });
 
             modelBuilder.Entity("EduGame.Domain.Players.ClassroomMember", b =>
@@ -1216,6 +1303,16 @@ namespace EduGame.Infrastructure.Migrations
                     b.ToTable("user_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("EduGame.Domain.Billing.Subscription", b =>
+                {
+                    b.HasOne("EduGame.Infrastructure.Identity.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscriptions_users_user_id");
+                });
+
             modelBuilder.Entity("EduGame.Domain.Content.CuratedProblem", b =>
                 {
                     b.HasOne("EduGame.Domain.Content.Skill", null)
@@ -1312,6 +1409,23 @@ namespace EduGame.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_classrooms_users_owner_user_id");
+                });
+
+            modelBuilder.Entity("EduGame.Domain.Players.ClassroomAssignment", b =>
+                {
+                    b.HasOne("EduGame.Domain.Players.Classroom", null)
+                        .WithMany()
+                        .HasForeignKey("ClassroomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_classroom_assignments_classrooms_classroom_id");
+
+                    b.HasOne("EduGame.Domain.Content.Stage", null)
+                        .WithMany()
+                        .HasForeignKey("StageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_classroom_assignments_stages_stage_id");
                 });
 
             modelBuilder.Entity("EduGame.Domain.Players.ClassroomMember", b =>

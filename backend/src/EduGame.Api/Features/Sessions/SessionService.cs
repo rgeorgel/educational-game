@@ -102,7 +102,8 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         var bestStars = await BestStarsAsync(profile.Id, ct);
         var current = await progress.CurrentLevelAsync(profile.Id, subjectId, ct);
         var index = ordered.FindIndex(s => s.Id == stage.Id);
-        if (!StageOrder.IsUnlocked(ordered, index, bestStars, current.Order))
+        // Etapa pedida pelo professor (tarefa de uma turma do aluno) pode ser jogada mesmo bloqueada no mapa.
+        if (!StageOrder.IsUnlocked(ordered, index, bestStars, current.Order) && !await IsAssignedAsync(profile.Id, stage.Id, ct))
             throw new SessionException(SessionError.Locked, "Esta etapa ainda está bloqueada. Conclua a anterior primeiro!");
 
         return await CreateAsync(new GameSession
@@ -645,6 +646,10 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
     }
 
     // ---------- Auxiliares ----------
+
+    private Task<bool> IsAssignedAsync(Guid profileId, int stageId, CancellationToken ct) =>
+        db.ClassroomAssignments.AnyAsync(a => a.StageId == stageId
+            && db.ClassroomMembers.Any(m => m.ClassroomId == a.ClassroomId && m.ProfileId == profileId), ct);
 
     private Task<Dictionary<int, int>> BestStarsAsync(Guid profileId, CancellationToken ct) =>
         db.StageProgresses.Where(p => p.ProfileId == profileId).ToDictionaryAsync(p => p.StageId, p => p.BestStars, ct);

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using EduGame.Api.Common;
 using EduGame.Api.Features.Auth;
+using EduGame.Api.Features.Billing;
 using EduGame.Domain.Players;
 using EduGame.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -14,14 +15,22 @@ namespace EduGame.Api.Features.Reports;
 /// </summary>
 public static class ClassroomEndpoints
 {
-    public const int MaxClassroomsPerUser = 20;
     private const string CodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sem 0/O, 1/I
 
     public sealed record CreateClassroomRequest(string Name);
     public sealed record JoinRequest(string Code);
     public sealed record ClassroomDto(Guid Id, string Name, string Code, int Members, DateTimeOffset CreatedAt);
     public sealed record JoinedClassroomDto(Guid Id, string Name, DateTimeOffset JoinedAt);
-    public sealed record ClassroomReport(Guid Id, string Name, string Code, IReadOnlyList<ProfileReport> Students);
+    public sealed record ClassroomReport(
+        Guid Id,
+        string Name,
+        string Code,
+        IReadOnlyList<ProfileReport> Students,
+        IReadOnlyList<AssignmentDto> Assignments,
+        IReadOnlyList<SkillClassDto> Skills,
+        PlanInfo Plan);
+
+    public sealed record CreateAssignmentRequest(int StageId, int MinStars = 1, DateOnly? DueDate = null, string? Note = null);
 
     public static string NewCode() =>
         string.Concat(Enumerable.Range(0, 8).Select(_ => CodeAlphabet[RandomNumberGenerator.GetInt32(CodeAlphabet.Length)]));
@@ -47,7 +56,7 @@ public static class ClassroomEndpoints
                 .ToListAsync(ct);
         });
 
-        classes.MapPost("/", async (CreateClassroomRequest req, HttpContext http, AppDbContext db, CancellationToken ct) =>
+        classes.MapPost("/", async (CreateClassroomRequest req, HttpContext http, AppDbContext db, PlanService plans, CancellationToken ct) =>
         {
             var userId = http.User.UserId();
             if (await db.IsGuestAsync(userId, ct))
@@ -55,8 +64,10 @@ public static class ClassroomEndpoints
             var name = (req.Name ?? "").Trim();
             if (name.Length is < 2 or > 60)
                 return ApiResults.Validation("name", "O nome da turma deve ter de 2 a 60 caracteres.");
-            if (await db.Classrooms.CountAsync(c => c.OwnerUserId == userId, ct) >= MaxClassroomsPerUser)
-                return ApiResults.Conflict($"Cada conta pode ter até {MaxClassroomsPerUser} turmas.");
+            var plan = await plans.ForUserAsync(userId, ct);
+            var limit = plan.MaxClassrooms;
+            if (await db.Classrooms.CountAsync(c => c.OwnerUserId == userId, ct) >= limit)
+                return ApiResults.Conflict(PlanService.LimitMessage(plan, $"Sua conta pode ter até {limit} {(limit == 1 ? "turma" : "turmas")}."));
 
             string code;
             do code = NewCode(); while (await db.Classrooms.AnyAsync(c => c.Code == code, ct));
@@ -66,12 +77,77 @@ public static class ClassroomEndpoints
             return Results.Created($"/api/classrooms/{classroom.Id}", new ClassroomDto(classroom.Id, classroom.Name, classroom.Code, 0, classroom.CreatedAt));
         });
 
-        classes.MapGet("/{classroomId:guid}/report", async (Guid classroomId, HttpContext http, AppDbContext db, ReportService reports, CancellationToken ct) =>
+        classes.MapGet("/{classroomId:guid}/report", async (Guid classroomId, HttpContext http, AppDbContext db, ReportService reports,
+            ClassroomInsights insights, PlanService plans, CancellationToken ct) =>
         {
             var classroom = await OwnedAsync(db, http, classroomId, ct);
             if (classroom is null) return ApiResults.NotFound("Turma não encontrada.");
-            var ids = await db.ClassroomMembers.Where(m => m.ClassroomId == classroomId).Select(m => m.ProfileId).ToListAsync(ct);
-            return Results.Ok(new ClassroomReport(classroom.Id, classroom.Name, classroom.Code, await reports.BuildAsync(ids, ct)));
+            var students = await StudentsAsync(db, classroomId, ct);
+            var ids = students.Select(p => p.Id).ToList();
+            return Results.Ok(new ClassroomReport(classroom.Id, classroom.Name, classroom.Code,
+                await reports.BuildAsync(ids, ct),
+                await insights.AssignmentsAsync(classroomId, students, ct),
+                await insights.SkillsAsync(ids, ct),
+                await plans.ForUserAsync(classroom.OwnerUserId, ct)));
+        });
+
+        // ---------- Tarefas da turma ----------
+        classes.MapPost("/{classroomId:guid}/assignments", async (Guid classroomId, CreateAssignmentRequest req, HttpContext http, AppDbContext db,
+            PlanService plans, GameClock clock, CancellationToken ct) =>
+        {
+            var classroom = await OwnedAsync(db, http, classroomId, ct);
+            if (classroom is null) return ApiResults.NotFound("Turma não encontrada.");
+            if (!await db.Stages.AnyAsync(s => s.Id == req.StageId, ct)) return ApiResults.Validation("stageId", "Etapa não encontrada.");
+            if (req.MinStars is < 1 or > 3) return ApiResults.Validation("minStars", "Escolha de 1 a 3 estrelas.");
+            var today = clock.Today;
+            if (req.DueDate is { } due && (due < today || due > today.AddYears(1)))
+                return ApiResults.Validation("dueDate", "O prazo deve ser de hoje até daqui a um ano.");
+            var note = req.Note?.Trim();
+            if (note is { Length: > 140 }) return ApiResults.Validation("note", "O recado pode ter até 140 caracteres.");
+
+            var plan = await plans.ForUserAsync(classroom.OwnerUserId, ct);
+            var active = await db.ClassroomAssignments.CountAsync(a => a.ClassroomId == classroomId && (a.DueDate == null || a.DueDate >= today), ct);
+            if (active >= plan.MaxActiveAssignmentsPerClassroom)
+                return ApiResults.Conflict(PlanService.LimitMessage(plan, $"Esta turma já tem {active} tarefas em aberto (o limite é {plan.MaxActiveAssignmentsPerClassroom})."));
+
+            var assignment = new ClassroomAssignment
+            {
+                ClassroomId = classroomId,
+                StageId = req.StageId,
+                MinStars = req.MinStars,
+                DueDate = req.DueDate,
+                Note = string.IsNullOrEmpty(note) ? null : note,
+            };
+            db.ClassroomAssignments.Add(assignment);
+            await db.SaveChangesAsync(ct);
+            return Results.Created($"/api/classrooms/{classroomId}/assignments/{assignment.Id}", new { assignment.Id });
+        });
+
+        classes.MapDelete("/{classroomId:guid}/assignments/{assignmentId:guid}", async (Guid classroomId, Guid assignmentId, HttpContext http, AppDbContext db, CancellationToken ct) =>
+        {
+            var classroom = await OwnedAsync(db, http, classroomId, ct);
+            if (classroom is null) return ApiResults.NotFound("Turma não encontrada.");
+            await db.ClassroomAssignments.Where(a => a.Id == assignmentId && a.ClassroomId == classroomId).ExecuteDeleteAsync(ct);
+            return Results.NoContent();
+        });
+
+        // ---------- Exportar (planilha) ----------
+        classes.MapGet("/{classroomId:guid}/export.csv", async (Guid classroomId, string? tipo, HttpContext http, AppDbContext db,
+            ReportService reports, ClassroomInsights insights, PlanService plans, CancellationToken ct) =>
+        {
+            var classroom = await OwnedAsync(db, http, classroomId, ct);
+            if (classroom is null) return ApiResults.NotFound("Turma não encontrada.");
+            var plan = await plans.ForUserAsync(classroom.OwnerUserId, ct);
+            if (!plan.CanExport) return ApiResults.Forbidden(PlanService.LimitMessage(plan, "Exportar a planilha da turma é um recurso do Professor Pro."));
+
+            var students = await StudentsAsync(db, classroomId, ct);
+            var ids = students.Select(p => p.Id).ToList();
+            var kind = tipo == "habilidades" ? "habilidades" : "alunos";
+            var csv = kind == "habilidades"
+                ? ClassroomCsv.Skills(await insights.SkillsAsync(ids, ct))
+                : ClassroomCsv.Students(await reports.BuildAsync(ids, ct), await insights.AssignmentsAsync(classroomId, students, ct));
+            var file = $"turma-{ClassroomCsv.Slug(classroom.Name)}-{kind}-{DateTime.UtcNow:yyyy-MM-dd}.csv";
+            return Results.File(csv, "text/csv; charset=utf-8", file);
         });
 
         classes.MapDelete("/{classroomId:guid}", async (Guid classroomId, HttpContext http, AppDbContext db, CancellationToken ct) =>
@@ -103,6 +179,18 @@ public static class ClassroomEndpoints
                 .ToListAsync(ct));
         });
 
+        // Tarefas das turmas em que o perfil está (aparecem na tela inicial do aluno).
+        api.MapGet("/profiles/{profileId:guid}/assignments", async (Guid profileId, HttpContext http, AppDbContext db, ClassroomInsights insights, CancellationToken ct) =>
+        {
+            var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
+            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            return Results.Ok(await insights.ForStudentAsync(profileId, ct));
+        }).RequireAuthorization().WithTags("Classrooms");
+
+        // Plano da conta (a interface mostra limites só quando a cobrança estiver ligada).
+        api.MapGet("/me/plan", async (HttpContext http, PlanService plans, CancellationToken ct) =>
+            Results.Ok(await plans.ForUserAsync(http.User.UserId(), ct))).RequireAuthorization().WithTags("Billing");
+
         memberships.MapPost("/", async (Guid profileId, JoinRequest req, HttpContext http, AppDbContext db, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
@@ -128,6 +216,11 @@ public static class ClassroomEndpoints
             return Results.NoContent();
         });
     }
+
+    private static Task<List<PlayerProfile>> StudentsAsync(AppDbContext db, Guid classroomId, CancellationToken ct) =>
+        db.ClassroomMembers.Where(m => m.ClassroomId == classroomId)
+            .Join(db.Profiles, m => m.ProfileId, p => p.Id, (m, p) => p)
+            .OrderBy(p => p.Nickname).AsNoTracking().ToListAsync(ct);
 
     private static Task<Classroom?> OwnedAsync(AppDbContext db, HttpContext http, Guid classroomId, CancellationToken ct)
     {

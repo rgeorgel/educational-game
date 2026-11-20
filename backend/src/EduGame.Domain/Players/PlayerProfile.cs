@@ -86,6 +86,24 @@ public class Classroom
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 
+/// <summary>
+/// Tarefa da turma: o professor pede uma etapa com um mínimo de estrelas, com prazo opcional.
+/// Conta como feita quando o aluno termina a etapa com as estrelas pedidas depois que a tarefa foi criada.
+/// </summary>
+public class ClassroomAssignment
+{
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid ClassroomId { get; set; }
+    public int StageId { get; set; }
+    public int MinStars { get; set; } = 1;
+    public DateOnly? DueDate { get; set; }
+    public string? Note { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>Ainda vale (sem prazo ou prazo de hoje em diante).</summary>
+    public bool IsActive(DateOnly today) => DueDate is null || DueDate >= today;
+}
+
 public class ClassroomMember
 {
     public Guid ClassroomId { get; set; }

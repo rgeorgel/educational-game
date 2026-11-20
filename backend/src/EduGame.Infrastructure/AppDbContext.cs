@@ -20,6 +20,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Level> Levels => Set<Level>();
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<BnccSkill> BnccSkills => Set<BnccSkill>();
+    public DbSet<ClassroomAssignment> ClassroomAssignments => Set<ClassroomAssignment>();
+    public DbSet<Domain.Billing.Subscription> Subscriptions => Set<Domain.Billing.Subscription>();
     public DbSet<ProblemTemplate> ProblemTemplates => Set<ProblemTemplate>();
     public DbSet<CuratedProblem> CuratedProblems => Set<CuratedProblem>();
     public DbSet<Classroom> Classrooms => Set<Classroom>();
@@ -211,6 +213,25 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasKey(x => new { x.ClassroomId, x.ProfileId });
             e.HasOne<Classroom>().WithMany().HasForeignKey(x => x.ClassroomId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<ClassroomAssignment>(e =>
+        {
+            e.ToTable("classroom_assignments");
+            e.HasIndex(x => new { x.ClassroomId, x.CreatedAt });
+            e.HasIndex(x => x.StageId);
+            e.Property(x => x.Note).HasMaxLength(140);
+            e.HasOne<Classroom>().WithMany().HasForeignKey(x => x.ClassroomId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Stage>().WithMany().HasForeignKey(x => x.StageId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<Domain.Billing.Subscription>(e =>
+        {
+            e.ToTable("subscriptions");
+            e.HasIndex(x => x.UserId);
+            e.Property(x => x.Plan).HasMaxLength(32);
+            e.Property(x => x.Note).HasMaxLength(200);
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         b.Entity<Analytics.DailyVisit>(e =>

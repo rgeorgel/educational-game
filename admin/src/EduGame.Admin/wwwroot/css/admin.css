@@ -167,6 +167,7 @@ td.place { font-size: 1.05rem; width: 44px; }
 .meter-fill { display: block; height: 100%; background: var(--series-1); border-radius: 3px; }
 
 .bncc { color: var(--ink-2); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.plain-list { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; font-size: 0.9rem; }
 .facts dt { color: var(--muted); }
 .facts dd { margin: 0; }

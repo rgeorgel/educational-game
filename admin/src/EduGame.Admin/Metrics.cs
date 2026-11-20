@@ -66,6 +66,9 @@ public static class Metrics
               (SELECT count(*) FROM game_sessions WHERE started_at >= b.d7 AND finished_at IS NOT NULL) AS finished_7d,
               (SELECT count(*) FROM classrooms)                                                        AS classrooms,
               (SELECT count(*) FROM classroom_members)                                                 AS classroom_members,
+              (SELECT count(*) FROM classroom_assignments)                                             AS assignments,
+              (SELECT count(DISTINCT user_id) FROM subscriptions
+                WHERE starts_at <= now() AND (ends_at IS NULL OR ends_at > now()))                     AS paying,
               (SELECT min(date) FROM daily_visits)                                                     AS visits_since
             FROM b
             """;
@@ -99,6 +102,8 @@ public static class Metrics
             finished7d = r.Long("finished_7d"),
             classrooms = r.Long("classrooms"),
             classroomMembers = r.Long("classroom_members"),
+            assignments = r.Long("assignments"),
+            paying = r.Long("paying"),
             visitsSince = r["visits_since"] is DBNull ? (DateOnly?)null : r.Date("visits_since"),
         }, ct, ("tz", Tz(config)));
         return Results.Ok(row);
@@ -348,7 +353,19 @@ public static class Metrics
             stage = r.Str("stage"),
         }, ct, ("id", id));
 
-        return Results.Ok(new { user, profiles, activity, sessions });
+        var subscriptions = await ds.ListAsync("""
+            SELECT plan, starts_at, ends_at, note, (starts_at <= now() AND (ends_at IS NULL OR ends_at > now())) AS active
+            FROM subscriptions WHERE user_id = @id ORDER BY starts_at DESC
+            """, r => new
+        {
+            plan = r.Str("plan"),
+            startsAt = r.Time("starts_at"),
+            endsAt = r.Time("ends_at"),
+            note = r.Str("note"),
+            active = r.GetBoolean(r.GetOrdinal("active")),
+        }, ct, ("id", id));
+
+        return Results.Ok(new { user, profiles, activity, sessions, subscriptions });
     }
 
     /// <summary>Canais de divulgação: quem chegou por cada origem e quantos jogaram e voltaram.</summary>

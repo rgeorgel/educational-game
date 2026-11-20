@@ -80,6 +80,11 @@ export const api = {
   classroomReport: (id) => get(`/classrooms/${id}/report`),
   deleteClassroom: (id) => del(`/classrooms/${id}`),
   removeStudent: (id, profileId) => del(`/classrooms/${id}/members/${profileId}`),
+  createAssignment: (id, body) => post(`/classrooms/${id}/assignments`, body),
+  deleteAssignment: (id, assignmentId) => del(`/classrooms/${id}/assignments/${assignmentId}`),
+  stageCatalog: () => get("/catalog/stages"),
+  profileAssignments: (profileId) => get(`/profiles/${profileId}/assignments`),
+  myPlan: () => get("/me/plan"),
   deleteAccount: () => del("/me"),
 
   history: (profileId, days = 14) => get(`/profiles/${profileId}/history?days=${days}`),

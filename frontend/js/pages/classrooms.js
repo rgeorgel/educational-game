@@ -3,6 +3,7 @@ import { errorMessage, formData, h } from "../dom.js";
 import { navigate } from "../router.js";
 import { store } from "../store.js";
 import { profileReportCard } from "./guardian.js";
+import { assignmentsSection, exportSection, planBanner, skillsSection } from "./assignments.js";
 
 export async function classroomsPage() {
   if (store.state.me?.isGuest) {
@@ -13,7 +14,7 @@ export async function classroomsPage() {
       h("p", { class: "card" }, "Para criar turmas, primeiro ", h("a", { href: "#/salvar" }, "crie uma conta"), ". Contas de convidado não podem criar turmas."),
     );
   }
-  const classes = await api.classrooms();
+  const [classes, plan] = await Promise.all([api.classrooms(), api.myPlan().catch(() => null)]);
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
 
   const form = h(
@@ -42,6 +43,7 @@ export async function classroomsPage() {
     h("h1", {}, "Minhas turmas"),
     h("p", { class: "muted" }, "Crie uma turma e passe o código para as famílias. Cada responsável decide se o perfil do filho entra na turma."),
     h("p", { class: "muted small" }, "Todas as habilidades do jogo estão ligadas à BNCC: ", h("a", { href: "#/bncc" }, "ver currículo e BNCC"), "."),
+    planBanner(plan),
     h("div", { class: "card stack" }, form, error),
     classes.length
       ? h(
@@ -66,6 +68,7 @@ export async function classroomsPage() {
 
 export async function classroomPage({ id }) {
   const report = await api.classroomReport(id);
+  const assignments = await assignmentsSection(report);
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
 
   const del = h("button", { type: "button", class: "btn btn-danger btn-small" }, "Apagar turma");
@@ -106,10 +109,13 @@ export async function classroomPage({ id }) {
       h("p", { class: "code-big" }, report.code),
       h("p", { class: "muted small" }, "Na Área do responsável, em cada perfil: \"Turmas da escola\" → digite o código."),
     ),
+    assignments,
     counts.length
       ? h("section", { class: "card" }, h("h2", {}, "O que a turma mais precisa praticar"), h("ul", {}, counts.map(([skill, n]) => h("li", {}, `${skill} — ${n} ${n === 1 ? "aluno" : "alunos"}`, bnccBySkill[skill]?.length ? h("span", { class: "muted small" }, ` · BNCC: ${bnccBySkill[skill].join(", ")}`) : null))))
       : null,
+    skillsSection(report),
     students.length ? h("div", { class: "report-grid" }, students) : h("p", { class: "card muted" }, "Nenhum aluno entrou ainda."),
+    exportSection(report),
     error,
     h("div", { class: "actions-left" }, del),
   );

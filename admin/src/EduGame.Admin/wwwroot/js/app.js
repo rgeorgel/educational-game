@@ -235,7 +235,9 @@ async function overviewPage() {
     tile("Acertos em 7 dias", accuracy, o.avgSeconds7d != null ? `${String(o.avgSeconds7d).replace(".", ",")} s por resposta, em média` : "sem respostas"),
     tile("Novos em 7 dias", num(o.newAccounts7d + o.newGuests7d), `${num(o.newAccounts7d)} contas · ${num(o.newGuests7d)} convidados`),
     tile("Convidados que salvaram", num(o.converted), o.converted + o.guests ? `${pct(o.converted, o.converted + o.guests)} dos que começaram como convidado` : "nenhum convidado ainda"),
-    tile("Partidas em 7 dias", num(o.sessions7d), `${pct(o.finished7d, o.sessions7d)} concluídas · ${num(o.classrooms)} turmas`),
+    tile("Partidas em 7 dias", num(o.sessions7d), `${pct(o.finished7d, o.sessions7d)} concluídas`),
+    tile("Turmas", num(o.classrooms), `${num(o.classroomMembers)} alunos · ${num(o.assignments)} tarefas`),
+    tile("Planos pagos ativos", num(o.paying), "concedidos com o comando \"plano\""),
   );
 
   const visitsNote =
@@ -475,7 +477,7 @@ async function usersPage() {
 }
 
 async function userPage(id) {
-  const { user, profiles, activity, sessions } = await api.user(id);
+  const { user, profiles, activity, sessions, subscriptions } = await api.user(id);
   const solved = profiles.reduce((a, p) => a + p.solved, 0);
   const correct = profiles.reduce((a, p) => a + p.correct, 0);
 
@@ -508,6 +510,13 @@ async function userPage(id) {
       tile("Perfis", num(profiles.length), user.classroomsOwned ? `${user.classroomsOwned} turmas criadas` : "nenhuma turma criada"),
     ),
     card("Últimos 30 dias", chart, { wide: true }),
+    subscriptions?.length
+      ? card(
+          "Planos",
+          h("ul", { class: "plain-list" }, subscriptions.map((s) => h("li", {}, h("strong", {}, s.plan), ` · ${s.active ? "ativo" : "encerrado"} · desde ${localDay(s.startsAt)}${s.endsAt ? ` até ${localDay(s.endsAt)}` : " sem fim"}${s.note ? ` · ${s.note}` : ""}`))),
+          { wide: true },
+        )
+      : null,
     h(
       "div",
       { class: "grid" },

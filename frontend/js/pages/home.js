@@ -2,10 +2,15 @@ import { api } from "../api.js";
 import { h } from "../dom.js";
 import { store } from "../store.js";
 import { avatarView, levelProgress, startAndPlay } from "./shared.js";
+import { dueText, starsText } from "./assignments.js";
 
 export async function homePage() {
   const profile = store.profile;
-  const [data, daily] = await Promise.all([api.progress(profile.id), api.daily(profile.id)]);
+  const [data, daily, tasks] = await Promise.all([
+    api.progress(profile.id),
+    api.daily(profile.id),
+    store.state.me?.isGuest ? [] : api.profileAssignments(profile.id).catch(() => []),
+  ]);
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
 
   const dailyCards = daily.map((d) => {
@@ -40,6 +45,7 @@ export async function homePage() {
           h("a", { href: "#/salvar", class: "btn btn-primary btn-small" }, "💾 Salvar progresso"),
         )
       : null,
+    tasks.length ? tasksCard(tasks, profile.id, error) : null,
     h("section", { class: "card daily" }, h("h2", {}, "📆 Desafio do dia"), h("div", { class: "daily-list" }, dailyCards), error),
     h("p", { class: "muted" }, "Escolha uma trilha para continuar a expedição."),
     h(
@@ -66,6 +72,35 @@ export async function homePage() {
       h("div", { class: "tile" }, h("strong", {}, data.totals.problemsSolved), h("span", {}, "problemas resolvidos")),
       h("div", { class: "tile" }, h("strong", {}, `🏅 ${data.totals.achievements}`), h("span", {}, "medalhas")),
       h("a", { class: "tile tile-link", href: "#/progresso" }, h("strong", {}, "📈"), h("span", {}, "Ver meu progresso")),
+    ),
+  );
+}
+
+/** Tarefas que o professor passou para a turma do aluno. */
+function tasksCard(tasks, profileId, error) {
+  const pending = tasks.filter((t) => !t.done).length;
+  return h(
+    "section",
+    { class: "card daily tasks" },
+    h("h2", {}, "📚 Tarefas da turma", pending ? h("span", { class: "badge-count" }, String(pending)) : null),
+    h(
+      "div",
+      { class: "daily-list" },
+      tasks.map((t) => {
+        const info = `${t.classroomName} · ${starsText(t.minStars)} · ${dueText(t.dueDate)}${t.overdue ? " · atrasada" : ""}`;
+        if (t.done) {
+          return h("div", { class: "daily-item done" }, h("span", { class: "daily-icon", "aria-hidden": "true" }, "✅"), h("span", {}, h("strong", {}, t.stage.name), h("span", { class: "muted small" }, ` · ${info}`)));
+        }
+        const btn = h("button", { type: "button", class: "btn btn-primary btn-small" }, "Jogar");
+        btn.addEventListener("click", () => startAndPlay(() => api.startSession(profileId, t.stage.id), btn, error));
+        return h(
+          "div",
+          { class: "daily-item" },
+          h("span", { class: "daily-icon", "aria-hidden": "true" }, t.stage.subjectIcon),
+          h("span", {}, h("strong", {}, t.stage.name), h("span", { class: "muted small" }, ` · ${info}`), t.note ? h("span", { class: "small task-note" }, `“${t.note}”`) : null),
+          btn,
+        );
+      }),
     ),
   );
 }

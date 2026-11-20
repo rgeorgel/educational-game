@@ -38,6 +38,13 @@ Jogo educacional de **matemática e lógica** para crianças e adolescentes, com
   - Origem de cada cadastro: `utm_source`/`utm_medium`/`utm_campaign` ou `?ref=` no primeiro acesso; sem isso, o domínio do site de origem.
   - O painel admin mostra "De onde vêm as pessoas", com quantos jogaram e quantos voltaram.
   - Página `/professores`, no sitemap e no `llms.txt`.
+- [x] **Para professores (primeira versão paga):**
+  - **Tarefas da turma:** o professor pede uma etapa, com estrelas mínimas, prazo e recado.
+    - O aluno vê a tarefa na tela inicial e pode jogar a etapa mesmo bloqueada no mapa.
+    - O professor vê quem fez, quem tentou e quem não começou.
+  - **Relatório da turma por habilidade**, com os códigos da BNCC.
+  - **Planilhas (CSV):** de alunos e de habilidades, que abrem no Excel ou no Google Planilhas.
+  - **Planos** Grátis, Professor Pro e Escola, com limites que só valem com `PLANS_ENFORCE=true`.
 - [ ] Fase 4 — Novos tópicos.
 
 ## Stack
@@ -111,6 +118,31 @@ docker compose up -d --build
   se o Coolify pedir a porta, use `http://seu-dominio:80`.
 - Depois de alterar domínio ou variáveis, clique em **Redeploy** (enquanto aparecer "Changes pending", a mudança
   ainda não foi aplicada e o proxy responde 503).
+
+## Planos (professores e escolas)
+
+Jogar é sempre grátis. Os planos valem para o adulto que cria turmas:
+
+| Plano | Turmas | Tarefas em aberto por turma | Planilhas |
+|---|---|---|---|
+| Grátis | 1 | 2 | não |
+| Professor Pro | 20 | 50 | sim |
+| Escola | 300 | 50 | sim |
+
+Enquanto `PLANS_ENFORCE=false` (padrão), todo mundo tem o Professor Pro, então nada muda para quem já usa.
+Ao ligar (`PLANS_ENFORCE=true` e Redeploy), quem não tem assinatura passa para o Grátis.
+
+Não há cobrança automática ainda. Os planos são concedidos à mão, com um comando no container da API
+(no Coolify: **Terminal** do serviço `edugame-api`; localmente: `docker compose exec edugame-api …`):
+
+```bash
+dotnet EduGame.Api.dll plano listar
+dotnet EduGame.Api.dll plano conceder professora@escola.com professor 365 "Pix 11/2026"
+dotnet EduGame.Api.dll plano conceder coordenacao@escola.com escola        # sem data para acabar
+dotnet EduGame.Api.dll plano remover professora@escola.com
+```
+
+As assinaturas ficam na tabela `subscriptions`, e o painel admin mostra quem tem plano.
 
 ## Painel de super admin
 

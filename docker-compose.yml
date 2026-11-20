@@ -44,6 +44,8 @@ services:
       Database__Password: ${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}
       Database__SslMode: ${DB_SSL_MODE:-Prefer}
       Database__MigrateOnStartup: ${DB_MIGRATE_ON_STARTUP:-${DATABASE_MIGRATE_ON_STARTUP:-true}}
+      # Planos (Grátis / Professor Pro / Escola). Desligado = ninguém é limitado.
+      Plans__Enforce: ${PLANS_ENFORCE:-false}
     extra_hosts:
       # Permite usar Host=host.docker.internal para um Postgres instalado no próprio servidor (Linux).
       - "host.docker.internal:host-gateway"

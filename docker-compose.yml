@@ -1,13 +1,23 @@
 name: edugame
 
+# Dois modos de banco de dados:
+#
+# - Local (desenvolvimento): o Postgres roda num container. Ative o perfil "local-db"
+#   no .env com COMPOSE_PROFILES=local-db (o .env.example já vem assim).
+#
+# - Servidor: o Postgres fica fora do Docker. Não ative o perfil e informe a conexão em
+#   DATABASE_CONNECTION_STRING no .env. O container "db" nem é criado.
+
 services:
   db:
     image: postgres:17-alpine
+    profiles: ["local-db"]
     restart: unless-stopped
     environment:
       POSTGRES_DB: edugame
       POSTGRES_USER: edugame
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no arquivo .env}
+      # Sem valor o Postgres se recusa a iniciar (erro claro no log).
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -23,10 +33,17 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      ConnectionStrings__Default: Host=db;Port=5432;Database=edugame;Username=edugame;Password=${POSTGRES_PASSWORD}
+      # Servidor: defina DATABASE_CONNECTION_STRING. Local: usa o container "db".
+      ConnectionStrings__Default: ${DATABASE_CONNECTION_STRING:-Host=db;Port=5432;Database=edugame;Username=edugame;Password=${POSTGRES_PASSWORD:-}}
+      Database__MigrateOnStartup: ${DATABASE_MIGRATE_ON_STARTUP:-true}
+    extra_hosts:
+      # Permite usar Host=host.docker.internal para um Postgres instalado no próprio servidor (Linux).
+      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy
+        # Sem o perfil "local-db" o container do banco não existe; a API conecta no banco externo.
+        required: false
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/health"]
       interval: 10s

@@ -1,5 +1,6 @@
 import { api } from "../api.js";
 import { errorMessage, h } from "../dom.js";
+import { store } from "../store.js";
 import { avatarView, levelBadge } from "./shared.js";
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long" });
@@ -55,6 +56,15 @@ export function profileReportCard(r, extra = null) {
 }
 
 function classroomManager(profileId) {
+  if (store.state.me?.isGuest) {
+    return h(
+      "p",
+      { class: "muted small" },
+      "Para participar de turmas da escola, um responsável precisa ",
+      h("a", { href: "#/salvar" }, "salvar o progresso com uma conta"),
+      ".",
+    );
+  }
   const list = h("ul", { class: "class-list" });
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
   const input = h("input", { name: "code", maxlength: "12", autocomplete: "off", placeholder: "Código da turma", "aria-label": "Código da turma" });

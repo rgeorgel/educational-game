@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using EduGame.Api.Common;
+using EduGame.Api.Features.Auth;
 using EduGame.Domain.Players;
 using EduGame.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,8 @@ public static class ClassroomEndpoints
         classes.MapPost("/", async (CreateClassroomRequest req, HttpContext http, AppDbContext db, CancellationToken ct) =>
         {
             var userId = http.User.UserId();
+            if (await db.IsGuestAsync(userId, ct))
+                return ApiResults.Forbidden("Para criar turmas, crie uma conta (salve o progresso) primeiro.");
             var name = (req.Name ?? "").Trim();
             if (name.Length is < 2 or > 60)
                 return ApiResults.Validation("name", "O nome da turma deve ter de 2 a 60 caracteres.");
@@ -104,6 +107,8 @@ public static class ClassroomEndpoints
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
             if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (await db.IsGuestAsync(http.User.UserId(), ct))
+                return ApiResults.Forbidden("Para entrar numa turma, um responsável precisa criar a conta (salvar o progresso) e autorizar.");
             var code = (req.Code ?? "").Trim().ToUpperInvariant().Replace("-", "").Replace(" ", "");
             var classroom = await db.Classrooms.SingleOrDefaultAsync(c => c.Code == code, ct);
             if (classroom is null) return ApiResults.Validation("code", "Código de turma não encontrado. Confira com o professor.");

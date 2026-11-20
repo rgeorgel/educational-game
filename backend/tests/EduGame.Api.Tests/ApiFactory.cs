@@ -23,6 +23,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("ConnectionStrings:Default", _db.GetConnectionString());
         builder.UseSetting("RateLimits:AuthPerMinute", "10000");
         builder.UseSetting("Calibration:Enabled", "false");
+        builder.UseSetting("Guests:CleanupEnabled", "false");
+        builder.UseSetting("RateLimits:GuestPerMinute", "10000");
     }
 }
 

@@ -1,9 +1,18 @@
 import { api } from "../api.js";
 import { errorMessage, formData, h } from "../dom.js";
 import { navigate } from "../router.js";
+import { store } from "../store.js";
 import { profileReportCard } from "./guardian.js";
 
 export async function classroomsPage() {
+  if (store.state.me?.isGuest) {
+    return h(
+      "section",
+      { class: "page-narrow" },
+      h("h1", {}, "Minhas turmas"),
+      h("p", { class: "card" }, "Para criar turmas, primeiro ", h("a", { href: "#/salvar" }, "crie uma conta"), ". Contas de convidado não podem criar turmas."),
+    );
+  }
   const classes = await api.classrooms();
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
 

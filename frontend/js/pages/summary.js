@@ -18,10 +18,22 @@ export async function summaryPage({ sessionId }) {
   else if (s.mode === "revisao") main = reviewResult(s, profileId, error, mapLink);
   else main = stageResult(s, profileId, error, mapLink);
 
+  // Momento bom para lembrar o convidado de salvar: acabou de conquistar algo.
+  const guestNudge =
+    store.state.me?.isGuest && (s.stars > 0 || s.achievements.length > 0 || s.guardianPassed || s.resultLevel)
+      ? h(
+          "div",
+          { class: "card guest-banner" },
+          h("p", {}, h("strong", {}, "Não perca essa conquista! "), "Salve o progresso com uma conta para guardar tudo e jogar em outros aparelhos."),
+          h("a", { href: "#/salvar", class: "btn btn-primary btn-small" }, "💾 Salvar progresso"),
+        )
+      : null;
+
   return h(
     "section",
     { class: "page-narrow summary" },
     main,
+    guestNudge,
     s.achievements.length
       ? h(
           "section",

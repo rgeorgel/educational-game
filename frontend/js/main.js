@@ -3,7 +3,7 @@ import "./components/index.js";
 import { api, onUnauthorized } from "./api.js";
 import { h } from "./dom.js";
 import { applyPrefs } from "./prefs.js";
-import { authPage } from "./pages/auth.js";
+import { authPage, saveProgressPage } from "./pages/auth.js";
 import { avatarPage } from "./pages/avatar.js";
 import { classroomPage, classroomsPage } from "./pages/classrooms.js";
 import { guardianPage } from "./pages/guardian.js";
@@ -23,7 +23,7 @@ applyPrefs();
 
 const PUBLIC = ["/entrar"];
 // Páginas do adulto: não exigem escolher um perfil de jogador.
-const NO_PROFILE_NEEDED = ["/perfis", "/responsavel", "/turmas", "/config"];
+const NO_PROFILE_NEEDED = ["/perfis", "/responsavel", "/turmas", "/config", "/salvar"];
 
 route("/", homePage, { title: "Início" });
 route("/entrar", authPage, { title: "Entrar" });
@@ -33,6 +33,7 @@ route("/jogar/:sessionId", sessionPage, { title: "Jogando" });
 route("/resultado/:sessionId", summaryPage, { title: "Resultado" });
 route("/progresso", progressPage, { title: "Progresso" });
 route("/avatar", avatarPage, { title: "Meu avatar" });
+route("/salvar", saveProgressPage, { title: "Salvar progresso" });
 route("/config", settingsPage, { title: "Configurações" });
 route("/responsavel", guardianPage, { title: "Área do responsável" });
 route("/turmas", classroomsPage, { title: "Turmas" });
@@ -68,6 +69,9 @@ function renderHeader() {
     );
   }
   if (me && !playing) {
+    if (me.isGuest) {
+      nav.push(h("a", { href: "#/salvar", class: "btn btn-primary btn-small save-btn", "aria-current": path === "/salvar" ? "page" : null }, "💾 Salvar progresso"));
+    }
     nav.push(
       h("a", { href: "#/perfis", class: "nav-link", "aria-current": path === "/perfis" ? "page" : null, title: "Trocar de perfil" }, "Perfis"),
       h("a", { href: "#/responsavel", class: "nav-link", "aria-current": path.startsWith("/responsavel") || path.startsWith("/turmas") ? "page" : null }, "Responsável"),
@@ -88,6 +92,18 @@ function renderHeader() {
 }
 
 async function logout() {
+  // Convidado não tem como entrar de novo: sair apaga o progresso deste aparelho.
+  if (store.state.me?.isGuest) {
+    const ok = confirm("Você está jogando sem conta. Se sair, o progresso deste aparelho será APAGADO e não dá para recuperar.\n\nPara guardar, cancele e use \"Salvar progresso\".\n\nSair e apagar mesmo assim?");
+    if (!ok) return;
+    try {
+      await api.deleteAccount();
+    } finally {
+      store.signOut();
+      navigate("/entrar");
+    }
+    return;
+  }
   try {
     await api.logout();
     // Aparelhos compartilhados: apaga os dados de progresso guardados para uso offline.

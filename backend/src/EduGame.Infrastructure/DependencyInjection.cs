@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace EduGame.Infrastructure;
@@ -34,6 +35,10 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
+
+        // Convidados não têm e-mail: troca o validador padrão por um que entende isso.
+        services.RemoveAll<IUserValidator<AppUser>>();
+        services.AddScoped<IUserValidator<AppUser>, GuestAwareUserValidator>();
 
         // Chaves de criptografia dos cookies no banco: o login sobrevive a reinícios do container.
         services.AddDataProtection()

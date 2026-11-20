@@ -862,7 +862,7 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("concurrency_stamp");
 
-                    b.Property<DateTimeOffset>("ConsentAcceptedAt")
+                    b.Property<DateTimeOffset?>("ConsentAcceptedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("consent_accepted_at");
 
@@ -878,6 +878,14 @@ namespace EduGame.Infrastructure.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("email_confirmed");
+
+                    b.Property<bool>("IsGuest")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_guest");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean")

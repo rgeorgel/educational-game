@@ -138,6 +138,10 @@ dotnet ef migrations add NomeDaMigration -p src/EduGame.Infrastructure -s src/Ed
   A estimativa começa pela série escolar, sobe a cada acerto e desce a cada erro, com passos cada vez menores.
 - **Calibração:** um serviço em segundo plano (`Calibration:IntervalMinutes`, padrão 60) compara o resultado esperado
   com o real de cada gerador nos últimos 30 dias (mínimo de 50 respostas) e ajusta a dificuldade aos poucos (±50 por rodada, até ±300).
+- **Jogar sem conta (convidado):** na tela inicial basta um apelido. É criada uma conta de convidado presa ao aparelho
+  por um cookie de 1 ano (renovado a cada acesso). "Salvar progresso" transforma essa conta numa conta com e-mail e
+  senha, mantendo tudo. Convidados não criam nem entram em turmas, e convidados sem acesso há mais de
+  `Guests:RetentionDays` (padrão 180) dias são apagados automaticamente.
 - **Fuso horário:** a sequência de dias e o desafio do dia usam `Game:TimeZone` (padrão `America/Sao_Paulo`).
 - **Problemas curados:** além dos geradores, há problemas escritos à mão em
   `backend/src/EduGame.Problems/Curated/*.json` (validados por teste e copiados para o banco ao subir a API).

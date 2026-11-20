@@ -22,6 +22,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<GameClock>();
 builder.Services.AddScoped<ProgressService>();
 builder.Services.AddHostedService<CalibrationService>();
+builder.Services.AddHostedService<GuestCleanupService>();
 builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<ReportService>();
 
@@ -56,6 +57,9 @@ builder.Services.AddRateLimiter(o =>
     o.AddPolicy(RateLimits.Auth, ctx => RateLimitPartition.GetFixedWindowLimiter(
         ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = builder.Configuration.GetValue("RateLimits:AuthPerMinute", 20), Window = TimeSpan.FromMinutes(1) }));
+    o.AddPolicy(RateLimits.Guest, ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = builder.Configuration.GetValue("RateLimits:GuestPerMinute", 120), Window = TimeSpan.FromMinutes(1) }));
 });
 
 // O nginx repassa IP e protocolo originais.

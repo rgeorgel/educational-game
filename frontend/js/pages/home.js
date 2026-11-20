@@ -32,6 +32,14 @@ export async function homePage() {
     "section",
     { class: "page" },
     h("div", { class: "greeting" }, h("a", { href: "#/avatar", title: "Personalizar avatar" }, avatarView(profile, "lg")), h("h1", {}, `Olá, ${profile.nickname}!`)),
+    store.state.me?.isGuest
+      ? h(
+          "div",
+          { class: "card guest-banner" },
+          h("p", {}, h("strong", {}, "Você está jogando sem conta. "), "O progresso fica só neste aparelho."),
+          h("a", { href: "#/salvar", class: "btn btn-primary btn-small" }, "💾 Salvar progresso"),
+        )
+      : null,
     h("section", { class: "card daily" }, h("h2", {}, "📆 Desafio do dia"), h("div", { class: "daily-list" }, dailyCards), error),
     h("p", { class: "muted" }, "Escolha uma trilha para continuar a expedição."),
     h(

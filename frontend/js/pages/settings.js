@@ -41,9 +41,10 @@ export function settingsPage() {
     : h("section", { class: "card" }, h("h2", {}, "Leitura em voz alta"), h("p", { class: "muted" }, "Este navegador não oferece leitura em voz alta."));
 
   const deleteError = h("p", { class: "form-error", role: "alert", hidden: true });
-  const deleteBtn = h("button", { type: "button", class: "btn btn-danger" }, "Apagar minha conta e todos os dados");
+  const guest = store.state.me?.isGuest;
+  const deleteBtn = h("button", { type: "button", class: "btn btn-danger" }, guest ? "Apagar o progresso deste aparelho" : "Apagar minha conta e todos os dados");
   deleteBtn.addEventListener("click", async () => {
-    if (!confirm("Isso apaga a conta do responsável e o progresso de TODOS os perfis. Não dá para desfazer. Continuar?")) return;
+    if (!confirm(guest ? "Isso apaga todo o progresso deste convidado. Não dá para desfazer. Continuar?" : "Isso apaga a conta do responsável e o progresso de TODOS os perfis. Não dá para desfazer. Continuar?")) return;
     deleteBtn.disabled = true;
     try {
       await api.deleteAccount();

@@ -50,6 +50,8 @@ export const api = {
   me: () => get("/me"),
   register: (email, password, acceptTerms) => post("/auth/register", { email, password, acceptTerms }),
   login: (email, password) => post("/auth/login", { email, password }),
+  startAsGuest: (nickname, avatar) => post("/auth/guest", { nickname, avatar }),
+  saveProgress: (email, password, acceptTerms) => post("/auth/upgrade", { email, password, acceptTerms }),
   logout: () => post("/auth/logout"),
 
   avatars: () => get("/profiles/avatars"),

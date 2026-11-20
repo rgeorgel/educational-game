@@ -34,19 +34,15 @@ public static class ProfileEndpoints
 
         group.MapGet("/", (HttpContext http, AppDbContext db, CancellationToken ct) => ListAsync(db, http.User.UserId(), ct));
 
-        group.MapGet("/avatars", () => Avatars);
+        // Público: a tela "Jogar agora" mostra os avatares antes de existir qualquer conta.
+        group.MapGet("/avatars", () => Avatars).AllowAnonymous();
 
         group.MapPost("/", async (CreateProfileRequest req, HttpContext http, AppDbContext db, CancellationToken ct) =>
         {
             var userId = http.User.UserId();
             var nickname = (req.Nickname ?? "").Trim();
 
-            if (nickname.Length is < 2 or > 20 || !nickname.All(c => char.IsLetterOrDigit(c) || c == ' '))
-                return ApiResults.Validation("nickname", "O apelido deve ter de 2 a 20 letras ou números.");
-            if (IsBlocked(nickname))
-                return ApiResults.Validation("nickname", "Escolha outro apelido.");
-            if (!Avatars.Contains(req.Avatar))
-                return ApiResults.Validation("avatar", "Escolha um dos avatares disponíveis.");
+            if (ValidateNicknameAndAvatar(nickname, req.Avatar) is { } invalid) return invalid;
             var year = DateTime.UtcNow.Year;
             if (req.BirthYear is { } by && (by < year - 20 || by > year - 4))
                 return ApiResults.Validation("birthYear", "Ano de nascimento fora da faixa esperada.");
@@ -115,6 +111,18 @@ public static class ProfileEndpoints
 
     private static async Task<int> TotalXpAsync(AppDbContext db, Guid profileId, CancellationToken ct) =>
         await db.SubjectProgresses.Where(p => p.ProfileId == profileId).SumAsync(p => p.Xp, ct);
+
+    /// <summary>Valida apelido e avatar (usado ao criar perfil e ao começar como convidado).</summary>
+    public static IResult? ValidateNicknameAndAvatar(string nickname, string? avatar)
+    {
+        if (nickname.Length is < 2 or > 20 || !nickname.All(c => char.IsLetterOrDigit(c) || c == ' '))
+            return ApiResults.Validation("nickname", "O apelido deve ter de 2 a 20 letras ou números.");
+        if (IsBlocked(nickname))
+            return ApiResults.Validation("nickname", "Escolha outro apelido.");
+        if (avatar is null || !Avatars.Contains(avatar))
+            return ApiResults.Validation("avatar", "Escolha um dos avatares disponíveis.");
+        return null;
+    }
 
     private static bool IsBlocked(string nickname)
     {

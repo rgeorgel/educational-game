@@ -957,3 +957,39 @@ details.level-section[open] {
   letter-spacing: 0.15em;
   margin: var(--space-2) 0 !important;
 }
+
+/* ---------- Convidado ---------- */
+.guest-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  border: 2px solid var(--primary);
+}
+
+.guest-banner p {
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.save-btn {
+  white-space: nowrap;
+}
+
+.btn-big {
+  min-height: 56px;
+  font-size: 1.15rem;
+}
+
+.benefits {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: var(--space-1);
+}
+
+.auth .tabs .tab {
+  padding: 0 var(--space-2);
+}

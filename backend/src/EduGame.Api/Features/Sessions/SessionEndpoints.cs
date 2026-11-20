@@ -31,6 +31,12 @@ public static class SessionEndpoints
         subjectGroup.MapPost("/placement", (Guid profileId, string slug, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
             WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) => Created(await sessions.StartPlacementAsync(profile, subject, ct))));
 
+        subjectGroup.MapPost("/daily", (Guid profileId, string slug, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
+            WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) => Created(await sessions.StartDailyAsync(profile, subject, ct))));
+
+        subjectGroup.MapPost("/review", (Guid profileId, string slug, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
+            WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) => Created(await sessions.StartReviewAsync(profile, subject, ct))));
+
         subjectGroup.MapPost("/placement/skip", (Guid profileId, string slug, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
             WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) =>
             {

@@ -31,6 +31,8 @@ public sealed record SubjectProgressDto(
     bool ReadyForNextLevel,
     bool GuardianAvailable,
     bool PlacementAvailable,
+    bool ReviewAvailable,
+    int NeedsReviewSkills,
     int MasteredSkills,
     int TotalSkills,
     int Xp,
@@ -83,7 +85,7 @@ public sealed class ProgressService(AppDbContext db, GameClock clock)
         var result = LevelProgress.Compute(levelDef, [.. skillDtos.Select(s => s.Rating)]);
         var maxContent = await MaxContentLevelOrderAsync(subject.Id, ct);
         var next = result.Next is { } n ? new LevelDto(n.Slug, n.Name, n.Icon) : null;
-        var hasAttempts = await db.SkillMasteries.AnyAsync(m => m.ProfileId == profileId && db.Skills.Any(s => s.Id == m.SkillId && s.SubjectId == subject.Id), ct);
+        var hasAttempts = await db.SkillMasteries.AnyAsync(m => m.ProfileId == profileId && m.AttemptsCount > 0 && db.Skills.Any(s => s.Id == m.SkillId && s.SubjectId == subject.Id), ct);
 
         return new SubjectProgressDto(
             subject.Slug, subject.Name, subject.Icon,
@@ -94,6 +96,8 @@ public sealed class ProgressService(AppDbContext db, GameClock clock)
             result.ReadyForNextLevel,
             GuardianAvailable: result.ReadyForNextLevel && result.Next is { } nx && nx.Order <= maxContent,
             PlacementAvailable: !(progress?.PlacementDone ?? false) && !hasAttempts,
+            ReviewAvailable: hasAttempts,
+            NeedsReviewSkills: skillDtos.Count(s => s.Status == SkillStatus.NeedsReview),
             result.MasteredSkills,
             result.TotalSkills,
             progress?.Xp ?? 0,
@@ -144,7 +148,9 @@ public sealed class ProgressService(AppDbContext db, GameClock clock)
             Streak: Streaks.Best(active),
             MasteredSkills: masteries.Count(m => m.Rating >= LevelProgress.TargetRating(LevelDefinitions.All.Single(l => l.Order == m.LevelOrder))),
             SubjectsPlayed: masteries.Select(m => m.SubjectId).Distinct().Count(),
-            HighestLevelOrder: highestLevel);
+            HighestLevelOrder: highestLevel,
+            DailyChallenges: await finished.CountAsync(s => s.Mode == Domain.Sessions.SessionModes.Daily, ct),
+            ReviewsCompleted: await finished.CountAsync(s => s.Mode == Domain.Sessions.SessionModes.Review, ct));
 
         var already = await db.ProfileAchievements.Where(a => a.ProfileId == profileId).Select(a => a.Slug).ToListAsync(ct);
         var fresh = Achievements.EarnedBy(stats).Where(a => !already.Contains(a.Slug)).Select(a => a.Slug).ToList();

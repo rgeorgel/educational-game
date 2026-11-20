@@ -7,6 +7,7 @@ using EduGame.Api.Features.Calibration;
 using EduGame.Api.Features.Map;
 using EduGame.Api.Features.Profiles;
 using EduGame.Api.Features.Progress;
+using EduGame.Api.Features.Reports;
 using EduGame.Api.Features.Sessions;
 using EduGame.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -22,6 +23,7 @@ builder.Services.AddSingleton<GameClock>();
 builder.Services.AddScoped<ProgressService>();
 builder.Services.AddHostedService<CalibrationService>();
 builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<ReportService>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
@@ -112,6 +114,7 @@ api.MapProfiles();
 api.MapMap();
 api.MapSessions();
 api.MapProgress();
+api.MapReports();
 
 app.Run();
 

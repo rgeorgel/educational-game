@@ -757,3 +757,203 @@ details.level-section[open] {
   display: grid;
   gap: var(--space-4);
 }
+
+/* ---------- Fase 3 ---------- */
+.nav-icon {
+  font-size: 1.1rem;
+}
+
+.profile-chip {
+  padding-left: var(--space-1);
+}
+
+.greeting {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.greeting h1 {
+  margin: 0;
+}
+
+.greeting a {
+  text-decoration: none;
+}
+
+.daily h2 {
+  margin-bottom: var(--space-3);
+}
+
+.daily-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.daily-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.daily-item > span:nth-child(2) {
+  flex: 1;
+}
+
+.daily-item.done {
+  background: var(--success-bg);
+  border-color: transparent;
+}
+
+.daily-icon {
+  font-size: 1.5rem;
+}
+
+.review-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.review-bar p {
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: var(--space-4);
+}
+
+.report-card {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.report-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.report-head h2,
+.report-head p {
+  margin: 0;
+}
+
+.report-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.report-stats div {
+  display: grid;
+}
+
+.report-stats strong {
+  font-size: 1.3rem;
+}
+
+.report-subjects {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.report-subjects li {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.report-subjects p {
+  margin: 0;
+}
+
+.report-subject-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.attention {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--warning-bg);
+  font-size: 0.9rem;
+}
+
+.class-manager summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.class-manager[open] {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.class-manager p {
+  margin: 0;
+}
+
+.class-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.class-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.class-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.class-card {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.class-card:hover {
+  border-color: var(--primary);
+}
+
+.class-code {
+  text-align: center;
+}
+
+.class-code p {
+  margin: 0;
+}
+
+.code-big {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  margin: var(--space-2) 0 !important;
+}

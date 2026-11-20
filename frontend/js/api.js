@@ -59,6 +59,24 @@ export const api = {
   map: (profileId, subject) => get(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/map`),
   progress: (profileId) => get(`/profiles/${profileId}/progress`),
 
+  daily: (profileId) => get(`/profiles/${profileId}/daily`),
+  startDaily: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/daily`),
+  startReview: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/review`),
+
+  avatarOptions: (profileId) => get(`/profiles/${profileId}/avatar`),
+  updateAvatar: (profileId, avatar) => request("PUT", `/profiles/${profileId}/avatar`, avatar),
+
+  guardianReport: () => get("/guardian/report"),
+  profileClassrooms: (profileId) => get(`/profiles/${profileId}/classrooms`),
+  joinClassroom: (profileId, code) => post(`/profiles/${profileId}/classrooms`, { code }),
+  leaveClassroom: (profileId, classroomId) => del(`/profiles/${profileId}/classrooms/${classroomId}`),
+  classrooms: () => get("/classrooms"),
+  createClassroom: (name) => post("/classrooms", { name }),
+  classroomReport: (id) => get(`/classrooms/${id}/report`),
+  deleteClassroom: (id) => del(`/classrooms/${id}`),
+  removeStudent: (id, profileId) => del(`/classrooms/${id}/members/${profileId}`),
+  deleteAccount: () => del("/me"),
+
   history: (profileId, days = 14) => get(`/profiles/${profileId}/history?days=${days}`),
   achievements: (profileId) => get(`/profiles/${profileId}/achievements`),
 

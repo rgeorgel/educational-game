@@ -69,6 +69,26 @@ export async function mapPage({ subject }) {
     );
   }
 
+  // ---------- Revisão inteligente ----------
+  let review = null;
+  if (progress.reviewAvailable) {
+    const btn = h("button", { type: "button", class: "btn" }, "🧩 Revisar");
+    btn.addEventListener("click", () => startAndPlay(() => api.startReview(profile.id, subject), btn, error));
+    review = h(
+      "div",
+      { class: "card review-bar" },
+      h(
+        "p",
+        {},
+        progress.needsReviewSkills > 0
+          ? `${progress.needsReviewSkills} ${progress.needsReviewSkills === 1 ? "habilidade pede" : "habilidades pedem"} revisão. `
+          : "Treine o que você mais precisa: ",
+        h("span", { class: "muted small" }, "8 problemas das habilidades em que você está mais fraco ou que não pratica há tempo."),
+      ),
+      btn,
+    );
+  }
+
   let stageNumber = 0;
   const levels = map.levels.map((section) => {
     const levelStages = section.regions.flatMap((r) => r.stages);
@@ -144,6 +164,7 @@ export async function mapPage({ subject }) {
     error,
     placement,
     guardian,
+    review,
     levels,
     h("p", { class: "muted small center" }, "Ganhe pelo menos 1 estrela para liberar a próxima etapa. Domine 80% das habilidades do nível para enfrentar o Guardião."),
   );

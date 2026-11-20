@@ -110,7 +110,7 @@ public class GameFlowTests(ApiFactory factory)
         var map = await MapAsync(client, profileId);
         var stages = Stages(map);
 
-        Assert.Equal(27, stages.Count);
+        Assert.Equal(34, stages.Count);
         Assert.True(stages[0].GetProperty("unlocked").GetBoolean());
         Assert.All(stages.Skip(1), s => Assert.False(s.GetProperty("unlocked").GetBoolean()));
         Assert.Equal("iniciante", map.GetProperty("progress").GetProperty("level").GetProperty("slug").GetString());
@@ -269,7 +269,7 @@ public class GameFlowTests(ApiFactory factory)
         var (client, profileId) = await NewPlayerAsync();
         var map = await MapAsync(client, profileId, "logica");
 
-        Assert.Equal(20, Stages(map).Count);
+        Assert.Equal(26, Stages(map).Count);
         Assert.Equal(4, map.GetProperty("progress").GetProperty("totalSkills").GetInt32());
         Assert.Equal("notStarted", map.GetProperty("progress").GetProperty("skills")[0].GetProperty("status").GetString());
     }

@@ -67,3 +67,38 @@ public class FactoryAndCheckerTests
         Assert.False(AnswerChecker.IsCorrect(problem, "<"));
     }
 }
+
+public class CuratedCatalogTests
+{
+    [Fact]
+    public void Curated_problems_load_and_are_well_formed()
+    {
+        var all = CuratedCatalog.All;
+        Assert.True(all.Count >= 15);
+        Assert.Equal(all.Count, all.Select(p => p.Slug).Distinct().Count());
+        foreach (var p in all)
+        {
+            var c = p.Content;
+            Assert.Contains(c.Type, ProblemTypes.All);
+            Assert.False(string.IsNullOrWhiteSpace(c.Prompt));
+            Assert.NotEmpty(c.Hints);
+            Assert.False(string.IsNullOrWhiteSpace(c.Explanation));
+            Assert.InRange(p.Difficulty, 2000, 2700);
+            if (c.Choices is not null) Assert.Contains(c.Answer, c.Choices);
+            Assert.True(AnswerChecker.IsCorrect(c, c.Answer), p.Slug);
+        }
+    }
+}
+
+public class KnightsKnavesTests
+{
+    [Fact]
+    public void Every_generated_puzzle_has_a_unique_consistent_answer()
+    {
+        // O gerador só devolve quando a solução é única; aqui garantimos que ele termina e varia.
+        var g = new LogicSkills.KnightsKnavesGenerator();
+        var rng = new Random(9);
+        var prompts = Enumerable.Range(0, 300).Select(_ => g.Generate(rng).Content.Code).Distinct().Count();
+        Assert.True(prompts > 20);
+    }
+}

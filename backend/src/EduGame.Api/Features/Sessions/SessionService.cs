@@ -25,6 +25,7 @@ public sealed record ProblemDto(
     string? Visual,
     IReadOnlyList<string>? Choices,
     IReadOnlyList<string?>? Sequence,
+    string? Code,
     GridPuzzle? Grid,
     FractionFigure? Figure,
     bool AcceptsNegative,
@@ -150,6 +151,57 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         }, ct);
     }
 
+    /// <summary>Desafio diário do tópico (um por dia). Se já começou hoje e não terminou, retoma.</summary>
+    public async Task<GameSession> StartDailyAsync(PlayerProfile profile, Subject subject, CancellationToken ct)
+    {
+        var today = clock.Today;
+        var existing = await db.GameSessions.SingleOrDefaultAsync(s => s.ProfileId == profile.Id && s.SubjectId == subject.Id && s.DailyDate == today, ct);
+        if (existing is not null)
+        {
+            if (existing.IsFinished)
+                throw new SessionException(SessionError.Finished, "Você já fez o desafio de hoje. Volte amanhã para um novo!");
+            return existing;
+        }
+
+        var level = await progress.CurrentLevelAsync(profile.Id, subject.Id, ct);
+        var skills = await db.Skills.Where(s => s.SubjectId == subject.Id && s.LevelId == level.Id).Select(s => s.Id).ToListAsync(ct);
+        return await CreateAsync(new GameSession
+        {
+            ProfileId = profile.Id,
+            SubjectId = subject.Id,
+            LevelId = level.Id,
+            Mode = SessionModes.Daily,
+            SkillIds = skills,
+            ProblemCount = 1,
+            DailyDate = today,
+        }, ct);
+    }
+
+    /// <summary>Revisão: 8 problemas das habilidades que mais precisam de prática.</summary>
+    public async Task<GameSession> StartReviewAsync(PlayerProfile profile, Subject subject, CancellationToken ct)
+    {
+        var current = await progress.CurrentLevelAsync(profile.Id, subject.Id, ct);
+        var rows = await db.SkillMasteries
+            .Where(m => m.ProfileId == profile.Id)
+            .Join(db.Skills, m => m.SkillId, s => s.Id, (m, s) => new { m, s.SubjectId, LevelSlug = s.Level!.Slug, LevelOrder = s.Level.Order })
+            .Where(x => x.SubjectId == subject.Id && x.LevelOrder <= current.Order)
+            .ToListAsync(ct);
+        var picked = Review.PickSkills(
+            rows.Select(x => new Review.Candidate(x.m.SkillId, LevelProgress.BySlug(x.LevelSlug), x.m.Rating, x.m.AttemptsCount, x.m.LastPracticedAt)),
+            clock.Now);
+        if (picked.Count == 0)
+            throw new SessionException(SessionError.NotAvailable, "Jogue algumas etapas primeiro: a revisão usa o que você já praticou.");
+
+        return await CreateAsync(new GameSession
+        {
+            ProfileId = profile.Id,
+            SubjectId = subject.Id,
+            Mode = SessionModes.Review,
+            SkillIds = [.. picked],
+            ProblemCount = Review.ProblemCount,
+        }, ct);
+    }
+
     /// <summary>Marca o nivelamento como dispensado: o jogador prefere começar do início.</summary>
     public async Task SkipPlacementAsync(PlayerProfile profile, Subject subject, CancellationToken ct)
     {
@@ -177,13 +229,23 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         if (pending is not null) return new(false, await ToDtoAsync(pending, session, ct));
         if (problems.Count >= session.ProblemCount) return new(true, null);
 
-        var (skillId, generatorKey, target) = await ChooseNextAsync(session, problems, ct);
+        var (skillId, generatorKey, target, fixedSeed) = await ChooseNextAsync(session, problems, ct);
 
         var template = await db.ProblemTemplates.SingleAsync(t => t.SkillId == skillId && t.GeneratorKey == generatorKey, ct);
-        var seed = Random.Shared.Next();
+        var seed = fixedSeed ?? Random.Shared.Next();
         var avoid = problems.Select(p => ProblemFactory.Fingerprint(p.Content)).ToHashSet();
         // A calibração desloca a dificuldade "real" do gerador.
-        var generated = Factory.Generate(generatorKey, target - template.DifficultyOffset, seed, avoid);
+        GeneratedProblem generated;
+        if (generatorKey == ProblemFactory.CuratedKey)
+        {
+            var curated = await PickCuratedAsync(session, skillId, target - template.DifficultyOffset, fixedSeed, ct);
+            seed = curated.Id; // a "semente" de um problema curado é o id dele
+            generated = new GeneratedProblem(curated.Content, curated.Difficulty);
+        }
+        else
+        {
+            generated = Factory.Generate(generatorKey, target - template.DifficultyOffset, seed, avoid);
+        }
 
         var problem = new SessionProblem
         {
@@ -201,13 +263,25 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         return new(false, await ToDtoAsync(problem, session, ct));
     }
 
-    private async Task<(int SkillId, string GeneratorKey, int Target)> ChooseNextAsync(GameSession session, List<SessionProblem> served, CancellationToken ct)
+    private async Task<(int SkillId, string GeneratorKey, int Target, int? Seed)> ChooseNextAsync(GameSession session, List<SessionProblem> served, CancellationToken ct)
     {
         var last = served.LastOrDefault();
 
-        // Etapa: depois de um erro vem um "problema irmão" (mesma habilidade e gerador), um pouco mais fácil.
-        if (session.Mode == SessionModes.Stage && last?.Attempt is { IsCorrect: false })
-            return (last.SkillId, last.GeneratorKey, Math.Max(Rating.Min, last.Difficulty - 100));
+        // Etapa/revisão: depois de um erro vem um "problema irmão" (mesma habilidade e gerador), um pouco mais fácil.
+        if (session.Mode is SessionModes.Stage or SessionModes.Review && last?.Attempt is { IsCorrect: false })
+            return (last.SkillId, last.GeneratorKey, Math.Max(Rating.Min, last.Difficulty - 100), null);
+
+        if (session.Mode == SessionModes.Daily)
+        {
+            // Mesmo problema para todos do nível: habilidade, gerador e semente vêm da data.
+            var level = await db.Levels.SingleAsync(l => l.Id == session.LevelId, ct);
+            var subject = await db.Subjects.SingleAsync(x => x.Id == session.SubjectId, ct);
+            var daySeed = DailyChallenge.Seed(session.DailyDate!.Value, subject.Slug, level.Slug);
+            var skillIds = await db.Skills.Where(x => session.SkillIds.Contains(x.Id)).OrderBy(x => x.Order).Select(x => x.Id).ToListAsync(ct);
+            var dailySkill = skillIds[DailyChallenge.Pick(daySeed, skillIds.Count)];
+            var dailyKeys = await db.ProblemTemplates.Where(t => t.SkillId == dailySkill && t.Active).OrderBy(t => t.GeneratorKey).Select(t => t.GeneratorKey).ToListAsync(ct);
+            return (dailySkill, dailyKeys[DailyChallenge.Pick(daySeed / 7, dailyKeys.Count)], DailyChallenge.TargetDifficulty(LevelProgress.BySlug(level.Slug)), daySeed);
+        }
 
         var candidates = session.SkillIds;
         int? target = null;
@@ -231,7 +305,29 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         var key = keys[Random.Shared.Next(keys.Count)];
 
         target ??= SessionTarget(await RatingOfAsync(session.ProfileId, skillId, ct));
-        return (skillId, key, target.Value);
+        return (skillId, key, target.Value, null);
+    }
+
+    /// <summary>
+    /// Escolhe um problema curado: prefere os que o jogador ainda não viu e, entre eles,
+    /// o de dificuldade mais próxima do alvo. No desafio diário a escolha vem da semente do dia.
+    /// </summary>
+    private async Task<CuratedProblem> PickCuratedAsync(GameSession session, int skillId, int target, int? daySeed, CancellationToken ct)
+    {
+        var all = await db.CuratedProblems.Where(p => p.SkillId == skillId && p.Active).OrderBy(p => p.Id).ToListAsync(ct);
+        if (daySeed is { } ds) return all[DailyChallenge.Pick(ds, all.Count)];
+
+        var seen = await db.SessionProblems
+            .Where(p => p.GeneratorKey == ProblemFactory.CuratedKey && p.SkillId == skillId && db.GameSessions.Any(s => s.Id == p.SessionId && s.ProfileId == session.ProfileId))
+            .Select(p => p.Seed).ToListAsync(ct);
+        var pool = all.Where(p => !seen.Contains(p.Id)).ToList();
+        if (pool.Count == 0)
+        {
+            var inSession = await db.SessionProblems.Where(p => p.SessionId == session.Id).Select(p => p.Seed).ToListAsync(ct);
+            pool = all.Where(p => !inSession.Contains(p.Id)).ToList();
+            if (pool.Count == 0) pool = all;
+        }
+        return pool.OrderBy(p => Math.Abs(p.Difficulty - target)).ThenBy(_ => Random.Shared.Next()).First();
     }
 
     /// <summary>
@@ -314,6 +410,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
 
         // XP e atividade do dia
         var xp = Rewards.Xp(correct, problem.Difficulty, problem.HintsRevealed);
+        if (session.Mode == SessionModes.Daily && correct) xp *= DailyChallenge.XpMultiplier;
         var subjectProgress = await GetOrCreateSubjectProgressAsync(session.ProfileId, session.SubjectId, ct);
         subjectProgress.Xp += xp;
         await AddDailyActivityAsync(session.ProfileId, correct, xp, ct);
@@ -551,7 +648,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         var c = p.Content;
         var hintsTotal = session.Mode == SessionModes.Placement ? 0 : c.Hints.Count;
         return new ProblemDto(
-            p.Id, p.Order + 1, session.ProblemCount, session.Mode, c.Type, c.Prompt, c.Visual, c.Choices, c.Sequence,
+            p.Id, p.Order + 1, session.ProblemCount, session.Mode, c.Type, c.Prompt, c.Visual, c.Choices, c.Sequence, c.Code,
             c.Grid, c.Figure, c.AcceptsNegative, c.AcceptsDecimal,
             hintsTotal, [.. c.Hints.Take(p.HintsRevealed)], skill);
     }

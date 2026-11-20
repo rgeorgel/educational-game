@@ -24,6 +24,7 @@ public static class ContentSeeder
             await db.SaveChangesAsync(ct);
 
             await UpsertTemplatesAsync(db, skills.Values, ct);
+            await UpsertCuratedAsync(db, skills, ct);
             await UpsertRegionsAsync(db, subject, def, levels, skills, ct);
             await db.SaveChangesAsync(ct);
         }
@@ -83,11 +84,29 @@ public static class ContentSeeder
         foreach (var skill in skills)
         {
             var keys = ProblemFactory.Default.ForSkill(skill.Slug).Select(g => g.Key).ToHashSet();
+            if (CuratedCatalog.ForSkill(skill.Slug).Any()) keys.Add(ProblemFactory.CuratedKey);
             foreach (var template in skill.Templates) template.Active = keys.Contains(template.GeneratorKey);
             foreach (var key in keys.Where(k => skill.Templates.All(t => t.GeneratorKey != k)))
                 skill.Templates.Add(new ProblemTemplate { GeneratorKey = key, SkillId = skill.Id });
         }
         return Task.CompletedTask;
+    }
+
+    private static async Task UpsertCuratedAsync(AppDbContext db, Dictionary<string, Skill> skills, CancellationToken ct)
+    {
+        var existing = await db.CuratedProblems.ToDictionaryAsync(p => p.Slug, ct);
+        foreach (var def in CuratedCatalog.All.Where(d => skills.ContainsKey(d.Skill)))
+        {
+            if (!existing.TryGetValue(def.Slug, out var problem))
+            {
+                problem = new CuratedProblem { Slug = def.Slug, Content = def.Content };
+                db.CuratedProblems.Add(problem);
+            }
+            problem.SkillId = skills[def.Skill].Id;
+            problem.Difficulty = def.Difficulty;
+            problem.Content = def.Content;
+            problem.Active = true;
+        }
     }
 
     private static async Task UpsertRegionsAsync(

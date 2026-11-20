@@ -1,0 +1,209 @@
+[
+  {
+    "slug": "travessia-do-rio",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2200,
+    "content": {
+      "type": "numero",
+      "prompt": "Um fazendeiro precisa atravessar um rio com um lobo, uma cabra e um repolho. O barco leva o fazendeiro e mais uma coisa. O lobo não pode ficar sozinho com a cabra, nem a cabra sozinha com o repolho. Qual é o menor número de travessias (contando idas e voltas)?",
+      "answer": "7",
+      "hints": ["A cabra é o problema: ela não pode ficar com nenhum dos outros dois.", "Às vezes é preciso levar algo de volta para a margem de partida."],
+      "explanation": "Leva a cabra; volta sozinho; leva o lobo; volta com a cabra; leva o repolho; volta sozinho; leva a cabra: 7 travessias."
+    }
+  },
+  {
+    "slug": "moeda-pesada",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2300,
+    "content": {
+      "type": "numero",
+      "prompt": "Você tem 9 moedas iguais, mas uma delas é um pouco mais pesada. Com uma balança de dois pratos, qual é o menor número de pesagens que garante encontrar a moeda pesada?",
+      "answer": "2",
+      "hints": ["Cada pesagem tem 3 resultados possíveis: esquerda pesa mais, direita pesa mais ou equilíbrio.", "Divida as moedas em 3 grupos de 3."],
+      "explanation": "Pese 3 contra 3: o grupo pesado (ou o que ficou de fora) tem a moeda. Depois pese 1 contra 1 desse grupo. Bastam 2 pesagens."
+    }
+  },
+  {
+    "slug": "calendario-marco",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2100,
+    "content": {
+      "type": "multipla-escolha",
+      "prompt": "O dia 1º de março de certo ano caiu numa segunda-feira. Em que dia da semana caiu o dia 1º de abril desse ano?",
+      "answer": "Quinta-feira",
+      "choices": ["Segunda-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"],
+      "hints": ["Março tem 31 dias.", "A cada 7 dias o dia da semana se repete. Quanto sobra de 31 ÷ 7?"],
+      "explanation": "31 = 4 × 7 + 3: o dia 1º de abril cai 3 dias da semana depois de segunda-feira, ou seja, quinta-feira."
+    }
+  },
+  {
+    "slug": "idade-pai-filho",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2250,
+    "content": {
+      "type": "numero",
+      "prompt": "Hoje, a idade de um pai é o triplo da idade do filho. Daqui a 12 anos, a idade do pai será o dobro da idade do filho. Quantos anos o filho tem hoje?",
+      "answer": "12",
+      "hints": ["Chame a idade do filho de f. O pai tem 3f.", "Daqui a 12 anos: 3f + 12 = 2 × (f + 12)."],
+      "explanation": "3f + 12 = 2f + 24, então f = 12. O pai tem 36; daqui a 12 anos, 48 = 2 × 24."
+    }
+  },
+  {
+    "slug": "meias-par-qualquer",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2150,
+    "content": {
+      "type": "numero",
+      "prompt": "Numa gaveta escura há 10 meias pretas e 10 meias brancas, todas soltas. Quantas meias você precisa tirar, no mínimo, para ter certeza de formar um par da mesma cor?",
+      "answer": "3",
+      "hints": ["Pense no pior caso: o azar total.", "Com 2 meias, pode sair uma de cada cor."],
+      "explanation": "Com 3 meias e só 2 cores, pelo menos duas têm a mesma cor (princípio das casas dos pombos)."
+    }
+  },
+  {
+    "slug": "meias-par-preto",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2350,
+    "content": {
+      "type": "numero",
+      "prompt": "Na mesma gaveta escura, com 10 meias pretas e 10 brancas, quantas meias você precisa tirar, no mínimo, para ter certeza de ter um par de meias PRETAS?",
+      "answer": "12",
+      "hints": ["No pior caso, saem todas as brancas primeiro.", "Depois das 10 brancas, quantas pretas ainda faltam para um par?"],
+      "explanation": "No pior caso saem as 10 brancas; depois mais 2 pretas: 10 + 2 = 12."
+    }
+  },
+  {
+    "slug": "algarismos-do-livro",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2400,
+    "content": {
+      "type": "numero",
+      "prompt": "Para numerar as páginas de um livro, da página 1 até a página 120, quantos algarismos são escritos ao todo?",
+      "answer": "252",
+      "hints": ["Separe as páginas de 1 algarismo, de 2 algarismos e de 3 algarismos.", "Páginas 1 a 9: 9 algarismos. Páginas 10 a 99: 90 páginas com 2 algarismos cada."],
+      "explanation": "9 × 1 + 90 × 2 + 21 × 3 = 9 + 180 + 63 = 252 algarismos."
+    }
+  },
+  {
+    "slug": "caramujo-no-poco",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2300,
+    "content": {
+      "type": "numero",
+      "prompt": "Um caramujo está no fundo de um poço de 10 metros. Durante o dia ele sobe 3 metros e, à noite, escorrega 2 metros. Em que dia ele chega ao topo?",
+      "answer": "8",
+      "hints": ["Ao fim de cada dia e noite completos, ele avança só 1 metro.", "Cuidado: no dia em que chega ao topo, ele não escorrega mais."],
+      "explanation": "Depois de 7 dias e 7 noites ele está a 7 m. No 8º dia sobe 3 m e chega aos 10 m."
+    }
+  },
+  {
+    "slug": "torneio-eliminatorio",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2250,
+    "content": {
+      "type": "numero",
+      "prompt": "Num torneio de eliminação simples com 32 times (quem perde sai e não há empate), quantos jogos acontecem até sair o campeão?",
+      "answer": "31",
+      "hints": ["Cada jogo elimina exatamente um time.", "Quantos times precisam ser eliminados?"],
+      "explanation": "Todos os times menos o campeão são eliminados, um por jogo: 32 − 1 = 31 jogos."
+    }
+  },
+  {
+    "slug": "quadrados-no-tabuleiro",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2350,
+    "content": {
+      "type": "numero",
+      "prompt": "Quantos quadrados, de todos os tamanhos, existem num tabuleiro de 3 × 3 casas?",
+      "answer": "14",
+      "hints": ["Conte separadamente os quadrados 1 × 1, 2 × 2 e 3 × 3.", "Quantas posições diferentes um quadrado 2 × 2 pode ocupar?"],
+      "explanation": "9 quadrados 1 × 1 + 4 quadrados 2 × 2 + 1 quadrado 3 × 3 = 14."
+    }
+  },
+  {
+    "slug": "letras-dos-meses",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2300,
+    "content": {
+      "type": "multipla-escolha",
+      "prompt": "Qual letra continua a sequência: J, F, M, A, M, J, J, …?",
+      "answer": "A",
+      "choices": ["A", "S", "J", "O"],
+      "hints": ["As letras não seguem o alfabeto: pense em algo que tem 12 partes.", "J de janeiro, F de fevereiro…"],
+      "explanation": "São as iniciais dos meses: janeiro, fevereiro, março, abril, maio, junho, julho, agosto."
+    }
+  },
+  {
+    "slug": "caixas-com-rotulos-errados",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2450,
+    "content": {
+      "type": "multipla-escolha",
+      "prompt": "Três caixas têm os rótulos \"Maçãs\", \"Laranjas\" e \"Misturadas\", mas TODOS os rótulos estão errados. Você pode tirar uma única fruta de uma caixa, sem olhar dentro. De qual caixa deve tirar para descobrir o conteúdo de todas?",
+      "answer": "Da caixa \"Misturadas\"",
+      "choices": ["Da caixa \"Maçãs\"", "Da caixa \"Laranjas\"", "Da caixa \"Misturadas\"", "Não é possível descobrir"],
+      "hints": ["Como o rótulo \"Misturadas\" está errado, essa caixa tem só um tipo de fruta.", "Uma fruta dessa caixa revela o que ela contém — e o resto se deduz."],
+      "explanation": "A caixa \"Misturadas\" tem só um tipo de fruta. Se sair maçã, ela é a de maçãs; a caixa \"Laranjas\" não pode ter laranjas, então tem as misturadas, e a \"Maçãs\" tem as laranjas."
+    }
+  },
+  {
+    "slug": "restos-de-vela",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2400,
+    "content": {
+      "type": "numero",
+      "prompt": "Uma vela inteira dura 1 hora. Com os restos de 3 velas já queimadas, você consegue fazer 1 vela nova. Começando com 9 velas, por quantas horas, no máximo, você consegue ter luz?",
+      "answer": "13",
+      "hints": ["Depois de queimar as 9 velas, você tem 9 restos.", "As velas novas também deixam restos!"],
+      "explanation": "9 velas (9 h) → 9 restos = 3 velas (3 h) → 3 restos = 1 vela (1 h). Total: 9 + 3 + 1 = 13 horas."
+    }
+  },
+  {
+    "slug": "menor-numero-soma-20",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2450,
+    "content": {
+      "type": "numero",
+      "prompt": "Qual é o menor número de três algarismos, todos diferentes, cuja soma dos algarismos é 20?",
+      "answer": "389",
+      "hints": ["Para o número ser pequeno, o algarismo das centenas deve ser o menor possível.", "Os outros dois algarismos são no máximo 9 e 8 (diferentes): somam no máximo 17."],
+      "explanation": "Com centena 1 ou 2, os outros dois precisariam somar 19 ou 18 sem repetir — impossível. Com 3: 8 + 9 = 17. O número é 389."
+    }
+  },
+  {
+    "slug": "pesos-1-3-9",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2550,
+    "content": {
+      "type": "numero",
+      "prompt": "Você tem um peso de 1 kg, um de 3 kg e um de 9 kg, e uma balança de dois pratos. Os pesos podem ser colocados em qualquer um dos pratos. Qual é o maior peso inteiro (em kg) que dá para medir?",
+      "answer": "13",
+      "hints": ["Colocar um peso no mesmo prato do objeto é como subtraí-lo.", "Por exemplo, 2 kg = 3 kg de um lado e 1 kg junto do objeto."],
+      "explanation": "O máximo é usar todos do mesmo lado: 1 + 3 + 9 = 13 kg. E todos os valores de 1 a 13 também podem ser medidos."
+    }
+  },
+  {
+    "slug": "trem-no-tunel",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2350,
+    "content": {
+      "type": "numero",
+      "prompt": "Um trem de 200 metros passa por um túnel de 400 metros a 20 metros por segundo. Quantos segundos se passam desde que a frente do trem entra no túnel até a traseira sair?",
+      "answer": "30",
+      "hints": ["A frente do trem precisa andar o túnel inteiro e mais o comprimento do próprio trem.", "Distância total ÷ velocidade = tempo."],
+      "explanation": "A frente percorre 400 + 200 = 600 m; 600 ÷ 20 = 30 segundos."
+    }
+  },
+  {
+    "slug": "angulo-do-relogio",
+    "skill": "desafios-olimpicos",
+    "difficulty": 2500,
+    "content": {
+      "type": "numero",
+      "prompt": "Às 2h30, qual é o menor ângulo, em graus, entre o ponteiro das horas e o dos minutos?",
+      "answer": "105",
+      "hints": ["O ponteiro dos minutos está no 6 (180°). O das horas não está exatamente no 2!", "O ponteiro das horas anda 30° por hora, ou seja, 0,5° por minuto."],
+      "explanation": "Horas: 2 × 30 + 30 × 0,5 = 75°. Minutos: 180°. Diferença: 180 − 75 = 105°."
+    }
+  }
+]

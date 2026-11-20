@@ -59,6 +59,11 @@ export const store = {
     notify();
   },
 
+  updateProfile(profile) {
+    state.me.profiles = state.me.profiles.map((p) => (p.id === profile.id ? profile : p));
+    notify();
+  },
+
   removeProfile(id) {
     state.me.profiles = state.me.profiles.filter((p) => p.id !== id);
     if (state.profileId === id) this.setProfile(null);

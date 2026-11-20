@@ -50,6 +50,9 @@ public sealed record ProblemContent(
     /// <summary>Grade a preencher (tipo <see cref="ProblemTypes.Grade"/>).</summary>
     public GridPuzzle? Grid { get; init; }
 
+    /// <summary>Trecho de pseudocódigo exibido em fonte monoespaçada (pensamento computacional).</summary>
+    public string? Code { get; init; }
+
     /// <summary>Figura dividida em partes (para ler ou pintar frações).</summary>
     public FractionFigure? Figure { get; init; }
 

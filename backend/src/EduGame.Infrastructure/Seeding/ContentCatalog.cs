@@ -42,6 +42,12 @@ public static class ContentCatalog
                 new("fracoes-operacoes", "Operações com frações", "Somar, multiplicar, dividir e simplificar frações.", "avancado"),
                 new("proporcao-porcentagem", "Proporção e porcentagem", "Regra de três, aumentos e descontos.", "avancado"),
                 new("equacoes-1-grau", "Equações do 1º grau", "Encontrar o valor de x em equações e problemas.", "avancado"),
+
+                new("sistemas-equacoes", "Sistemas de equações", "Duas equações, duas incógnitas: idades, preços, rodas e muito mais.", "expert"),
+                new("equacoes-2-grau", "Equações do 2º grau", "Raízes, fatoração, soma e produto.", "expert"),
+                new("juros-porcentagem", "Juros e porcentagens", "Juros simples e compostos, aumentos e descontos seguidos.", "expert"),
+                new("geometria-pitagoras", "Teorema de Pitágoras", "Triângulos retângulos, escadas e distâncias no plano.", "expert"),
+                new("combinatoria", "Contagem", "Combinações, filas, senhas e apertos de mão.", "expert"),
             ],
             Regions:
             [
@@ -101,6 +107,20 @@ public static class ContentCatalog
                     new("equacoes", "Equações", ["equacoes-1-grau"]),
                     new("grande-desafio-avancado", "Grande Desafio", ["numeros-inteiros", "potencias-raizes", "mmc-mdc", "fracoes-operacoes", "proporcao-porcentagem", "equacoes-1-grau"], 12),
                 ]),
+
+                new("ilha-da-algebra", "Ilha da Álgebra", "Sistemas, equações do 2º grau e o dinheiro que cresce.", "🏝️", "expert",
+                [
+                    new("sistemas", "Sistemas de equações", ["sistemas-equacoes"]),
+                    new("segundo-grau", "Equações do 2º grau", ["equacoes-2-grau"]),
+                    new("juros", "Juros e porcentagens", ["juros-porcentagem"]),
+                    new("desafio-da-ilha", "Desafio da Ilha", ["sistemas-equacoes", "equacoes-2-grau", "juros-porcentagem"], 10),
+                ]),
+                new("cume-da-geometria", "Cume da Geometria", "Pitágoras e a arte de contar possibilidades.", "🗻", "expert",
+                [
+                    new("pitagoras", "Teorema de Pitágoras", ["geometria-pitagoras"]),
+                    new("contagem", "Contagem", ["combinatoria"]),
+                    new("grande-desafio-expert", "Grande Desafio", ["sistemas-equacoes", "equacoes-2-grau", "juros-porcentagem", "geometria-pitagoras", "combinatoria"], 12),
+                ]),
             ]),
 
         new("logica", "Lógica", "🧩", 2,
@@ -122,6 +142,11 @@ public static class ContentCatalog
                 new("conjuntos", "Conjuntos", "Diagramas de Venn: só um, os dois ou nenhum.", "avancado"),
                 new("enigmas-simbolos", "Enigmas com símbolos", "Descobrir o valor de cada símbolo a partir de igualdades.", "avancado"),
                 new("quem-e-quem", "Quem é quem", "Cruzar pistas de duas categorias para resolver o enigma.", "avancado"),
+
+                new("tabelas-verdade", "Tabelas-verdade", "Avaliar expressões com ¬, ∧, ∨ e →.", "expert"),
+                new("cavaleiros-mentirosos", "Cavaleiros e mentirosos", "Quem diz a verdade? Quem mente? Deduza pelas falas.", "expert"),
+                new("pensamento-computacional", "Pensamento computacional", "Seguir programas passo a passo: variáveis, repetições e decisões.", "expert"),
+                new("desafios-olimpicos", "Desafios de raciocínio", "Quebra-cabeças clássicos que pedem uma ideia esperta.", "expert"),
             ],
             Regions:
             [
@@ -164,6 +189,19 @@ public static class ContentCatalog
                     new("conjuntos", "Conjuntos", ["conjuntos"]),
                     new("quem-e-quem", "Quem é quem", ["quem-e-quem"]),
                     new("grande-desafio-logica-avancado", "Grande Desafio", ["sudoku-6x6", "proposicoes", "conjuntos", "enigmas-simbolos", "quem-e-quem"], 12),
+                ]),
+
+                new("ilha-dos-cavaleiros", "Ilha dos Cavaleiros", "Onde uns sempre falam a verdade e outros sempre mentem.", "🛡️", "expert",
+                [
+                    new("tabelas-verdade", "Tabelas-verdade", ["tabelas-verdade"]),
+                    new("cavaleiros-e-mentirosos", "Cavaleiros e mentirosos", ["cavaleiros-mentirosos"]),
+                    new("desafio-da-ilha-logica", "Desafio da Ilha", ["tabelas-verdade", "cavaleiros-mentirosos"], 10),
+                ]),
+                new("laboratorio-do-programador", "Laboratório do Programador", "Programas para seguir e enigmas para resolver.", "💻", "expert",
+                [
+                    new("programas", "Pensamento computacional", ["pensamento-computacional"]),
+                    new("desafios-de-raciocinio", "Desafios de raciocínio", ["desafios-olimpicos"], 6),
+                    new("grande-desafio-logica-expert", "Grande Desafio", ["tabelas-verdade", "cavaleiros-mentirosos", "pensamento-computacional", "desafios-olimpicos"], 12),
                 ]),
             ]),
     ];

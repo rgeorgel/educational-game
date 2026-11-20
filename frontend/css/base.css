@@ -87,3 +87,13 @@ select {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Animações reduzidas por escolha do usuário (além da preferência do sistema). */
+:root[data-motion="reduzido"] *,
+:root[data-motion="reduzido"] *::before,
+:root[data-motion="reduzido"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

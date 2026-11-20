@@ -31,7 +31,7 @@ public partial class GeneratorPropertyTests
             Assert.False(string.IsNullOrWhiteSpace(c.Answer));
             Assert.False(string.IsNullOrWhiteSpace(c.Explanation));
             Assert.NotEmpty(c.Hints);
-            Assert.InRange(p.Difficulty, 50, 2300);
+            Assert.InRange(p.Difficulty, 50, 2800);
             Assert.Contains(c.Type, ProblemTypes.All);
 
             if (c.Choices is not null && c.Type != ProblemTypes.Ordenar)
@@ -97,6 +97,7 @@ public partial class GeneratorPropertyTests
             "iniciante" => (350, 900),
             "medio" => (1050, 1400),
             "avancado" => (1550, 1900),
+            "expert" => (2050, 2400),
             _ => throw new InvalidOperationException(level),
         };
         Assert.True(difficulties.Min() <= easy, $"{key}: mínimo {difficulties.Min()}");

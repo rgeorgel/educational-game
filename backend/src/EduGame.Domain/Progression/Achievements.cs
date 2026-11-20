@@ -10,7 +10,9 @@ public sealed record PlayerStats(
     int Streak,
     int MasteredSkills,
     int SubjectsPlayed,
-    int HighestLevelOrder);
+    int HighestLevelOrder,
+    int DailyChallenges = 0,
+    int ReviewsCompleted = 0);
 
 public sealed record AchievementDefinition(string Slug, string Name, string Description, string Icon, Func<PlayerStats, bool> Earned);
 
@@ -34,6 +36,8 @@ public static class Achievements
         new("maratonista", "Maratonista", "Resolveu 500 problemas.", "🏃", s => s.ProblemsSolved >= 500),
         new("nivel-avancado", "Chegou ao Avançado", "Alcançou o nível Avançado em um tópico.", "🌳", s => s.HighestLevelOrder >= 3),
         new("nivel-expert", "Chegou ao Expert", "Alcançou o nível Expert em um tópico.", "🏔️", s => s.HighestLevelOrder >= 4),
+        new("desafiante", "Desafiante", "Completou 5 desafios diários.", "📆", s => s.DailyChallenges >= 5),
+        new("revisor", "Boa memória", "Completou 3 revisões.", "🧩", s => s.ReviewsCompleted >= 3),
     ];
 
     public static IEnumerable<AchievementDefinition> EarnedBy(PlayerStats stats) => All.Where(a => a.Earned(stats));

@@ -52,6 +52,16 @@ public sealed class ProblemFactory
         new SetsGenerator(),
         new SymbolPuzzleGenerator(),
         new WhoIsWhoGenerator(),
+
+        // Expert
+        new SystemsGenerator(),
+        new QuadraticGenerator(),
+        new InterestGenerator(),
+        new PythagorasGenerator(),
+        new CombinatoricsGenerator(),
+        new TruthTableGenerator(),
+        new KnightsKnavesGenerator(),
+        new ComputationalThinkingGenerator(),
     ]);
 
     public IReadOnlyCollection<IProblemGenerator> Generators => _byKey.Values;
@@ -86,5 +96,8 @@ public sealed class ProblemFactory
 
     /// <summary>Identifica um problema para evitar repetições na mesma sessão.</summary>
     public static string Fingerprint(ProblemContent c) =>
-        $"{c.Prompt}|{c.Visual}|{string.Join(',', c.Sequence ?? [])}";
+        $"{c.Prompt}|{c.Visual}|{c.Code}|{string.Join(',', c.Sequence ?? [])}";
+
+    /// <summary>Chave dos problemas curados (escritos à mão, guardados no banco).</summary>
+    public const string CuratedKey = "curado";
 }

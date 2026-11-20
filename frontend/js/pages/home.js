@@ -1,16 +1,38 @@
 import { api } from "../api.js";
 import { h } from "../dom.js";
 import { store } from "../store.js";
-import { levelProgress } from "./shared.js";
+import { avatarView, levelProgress, startAndPlay } from "./shared.js";
 
 export async function homePage() {
   const profile = store.profile;
-  const data = await api.progress(profile.id);
+  const [data, daily] = await Promise.all([api.progress(profile.id), api.daily(profile.id)]);
+  const error = h("p", { class: "form-error", role: "alert", hidden: true });
+
+  const dailyCards = daily.map((d) => {
+    if (d.done) {
+      return h(
+        "div",
+        { class: "daily-item done" },
+        h("span", { class: "daily-icon", "aria-hidden": "true" }, d.icon),
+        h("span", {}, h("strong", {}, d.name), h("span", { class: "muted small" }, d.correct ? " · ✅ vencido hoje" : " · feito hoje")),
+      );
+    }
+    const btn = h("button", { type: "button", class: "btn btn-primary btn-small" }, "Jogar");
+    btn.addEventListener("click", () => startAndPlay(() => api.startDaily(profile.id, d.slug), btn, error));
+    return h(
+      "div",
+      { class: "daily-item" },
+      h("span", { class: "daily-icon", "aria-hidden": "true" }, d.icon),
+      h("span", {}, h("strong", {}, d.name), h("span", { class: "muted small" }, " · 1 problema, XP em dobro")),
+      btn,
+    );
+  });
 
   return h(
     "section",
     { class: "page" },
-    h("h1", {}, `Olá, ${profile.nickname}! `, h("span", { "aria-hidden": "true" }, profile.avatar)),
+    h("div", { class: "greeting" }, h("a", { href: "#/avatar", title: "Personalizar avatar" }, avatarView(profile, "lg")), h("h1", {}, `Olá, ${profile.nickname}!`)),
+    h("section", { class: "card daily" }, h("h2", {}, "📆 Desafio do dia"), h("div", { class: "daily-list" }, dailyCards), error),
     h("p", { class: "muted" }, "Escolha uma trilha para continuar a expedição."),
     h(
       "div",
@@ -23,6 +45,7 @@ export async function homePage() {
           levelProgress(s),
           s.guardianAvailable ? h("p", { class: "callout" }, "🛡️ O Desafio do Guardião está esperando por você!") : null,
           s.placementAvailable ? h("p", { class: "callout" }, "🧭 Faça o teste de nivelamento para começar no nível certo.") : null,
+          s.needsReviewSkills > 0 ? h("p", { class: "callout" }, `🧩 ${s.needsReviewSkills} ${s.needsReviewSkills === 1 ? "habilidade pede" : "habilidades pedem"} revisão.`) : null,
           h("p", { class: "subject-xp" }, `⚡ ${s.xp} XP`),
           h("span", { class: "btn btn-primary" }, "Jogar"),
         ),

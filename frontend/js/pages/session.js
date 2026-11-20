@@ -3,6 +3,8 @@ import { append, errorMessage, h } from "../dom.js";
 import { navigate } from "../router.js";
 import { readOnlyFigure, renderAnswer } from "../problem-types/index.js";
 import { loading } from "./shared.js";
+import { getPrefs } from "../prefs.js";
+import { speak, voiceSupported } from "../voice.js";
 
 const PRAISE = ["Muito bem!", "Isso aí!", "Mandou bem!", "Excelente!", "Certinho!", "Show!"];
 const ENCOURAGE = ["Quase! Vamos ver como faz.", "Não foi dessa vez — errar faz parte de aprender.", "Boa tentativa! Olha a explicação."];
@@ -12,7 +14,19 @@ const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const MODE_LABEL = {
   guardiao: "🛡️ Desafio do Guardião",
   nivelamento: "🧭 Teste de nivelamento",
+  diario: "📆 Desafio do dia · XP em dobro",
+  revisao: "🧩 Revisão",
 };
+
+/** Texto lido em voz alta: enunciado, figuras/código e as opções. */
+function readable(problem) {
+  const parts = [problem.prompt];
+  if (problem.visual) parts.push(problem.visual.replace(/\n/g, ". "));
+  if (problem.code) parts.push(problem.code.replace(/←/g, " recebe ").replace(/\n/g, ". "));
+  if (problem.choices && problem.type !== "ordenar") parts.push(`Opções: ${problem.choices.join(", ")}.`);
+  if (problem.type === "ordenar") parts.push(`Itens: ${problem.choices.join(", ")}.`);
+  return parts.join(" ");
+}
 
 export async function sessionPage({ sessionId }) {
   const results = []; // resultados conhecidos nesta visita (para colorir os pontinhos)
@@ -124,11 +138,11 @@ export async function sessionPage({ sessionId }) {
       feedback.className = `feedback ${result.correct ? "is-correct" : "is-wrong"}`;
       feedback.replaceChildren();
       append(feedback, [
-        h("p", { class: "feedback-title" }, result.correct ? `✅ ${pick(PRAISE)}` : `💭 ${problem.mode === "etapa" ? pick(ENCOURAGE) : "Não foi dessa vez."}`),
+        h("p", { class: "feedback-title" }, result.correct ? `✅ ${pick(PRAISE)}` : `💭 ${problem.mode === "etapa" || problem.mode === "revisao" ? pick(ENCOURAGE) : "Não foi dessa vez."}`),
         result.correct ? null : h("p", {}, "A resposta certa é ", h("strong", {}, result.correctAnswer), "."),
         h("p", { class: "explanation" }, result.explanation),
         h("p", { class: "xp" }, `+${result.xpEarned} XP`),
-        !result.correct && !result.sessionFinished && problem.mode === "etapa" ? h("p", { class: "muted small" }, "Agora vem um parecido para você tentar de novo!") : null,
+        !result.correct && !result.sessionFinished && (problem.mode === "etapa" || problem.mode === "revisao") ? h("p", { class: "muted small" }, "Agora vem um parecido para você tentar de novo!") : null,
         continueBtn,
       ]);
       feedback.hidden = false;
@@ -148,7 +162,9 @@ export async function sessionPage({ sessionId }) {
       MODE_LABEL[problem.mode] ? h("p", { class: `mode-tag mode-${problem.mode}` }, MODE_LABEL[problem.mode]) : null,
       h("p", { class: "skill-tag" }, problem.skill.name),
       h("h1", { id: "prompt", class: "prompt", tabindex: "-1" }, problem.prompt),
+      voiceSupported ? h("button", { type: "button", class: "btn btn-ghost btn-small listen-btn", onClick: () => speak(readable(problem)) }, "🔊 Ouvir") : null,
       problem.visual ? h("p", { class: "visual", "aria-label": "Figura do problema" }, problem.visual) : null,
+      problem.code ? h("pre", { class: "code-block", "aria-label": "Programa" }, h("code", {}, problem.code)) : null,
       problem.figure && problem.type !== "fracao-visual" ? h("div", { class: "figure-wrap" }, readOnlyFigure(problem.figure)) : null,
       h("div", { class: "answer-area" }, answer.node),
       problem.hintsTotal > 0
@@ -158,6 +174,7 @@ export async function sessionPage({ sessionId }) {
 
     body.replaceChildren(card, feedback);
     card.querySelector("#prompt").focus({ preventScroll: true });
+    if (getPrefs().autoRead) speak(readable(problem));
   }
 
   function onKey(e) {

@@ -7,6 +7,7 @@ namespace EduGame.Api.Features.Progress;
 public static class ProgressEndpoints
 {
     public sealed record TotalsDto(int Xp, int ProblemsSolved, int Correct, int Stars, int Streak, int Achievements);
+    public sealed record DailyStatus(string Slug, string Name, string Icon, bool Done, bool? Correct, Guid? SessionId);
     public sealed record ProgressResponse(string Nickname, string Avatar, TotalsDto Totals, IReadOnlyList<SubjectProgressDto> Subjects);
 
     public static void MapProgress(this RouteGroupBuilder api)
@@ -40,6 +41,20 @@ public static class ProgressEndpoints
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
             if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
             return Results.Ok(await progress.HistoryAsync(profileId, Math.Clamp(days ?? 14, 1, 90), ct));
+        });
+
+        group.MapGet("/daily", async (Guid profileId, HttpContext http, AppDbContext db, GameClock clock, CancellationToken ct) =>
+        {
+            var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
+            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            var today = clock.Today;
+            var sessions = await db.GameSessions.Where(s => s.ProfileId == profileId && s.DailyDate == today).ToListAsync(ct);
+            var subjects = await db.Subjects.OrderBy(s => s.Order).ToListAsync(ct);
+            return Results.Ok(subjects.Select(s =>
+            {
+                var session = sessions.SingleOrDefault(x => x.SubjectId == s.Id);
+                return new DailyStatus(s.Slug, s.Name, s.Icon, session?.IsFinished == true, session is { IsFinished: true } ? session.CorrectCount > 0 : null, session?.Id);
+            }));
         });
 
         group.MapGet("/achievements", async (Guid profileId, HttpContext http, AppDbContext db, ProgressService progress, CancellationToken ct) =>

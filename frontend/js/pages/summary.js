@@ -14,6 +14,8 @@ export async function summaryPage({ sessionId }) {
   let main;
   if (s.mode === "guardiao") main = guardianResult(s, profileId, error, mapLink);
   else if (s.mode === "nivelamento") main = placementResult(s, mapLink);
+  else if (s.mode === "diario") main = dailyResult(s);
+  else if (s.mode === "revisao") main = reviewResult(s, profileId, error, mapLink);
   else main = stageResult(s, profileId, error, mapLink);
 
   return h(
@@ -100,6 +102,35 @@ function placementResult(s, mapLink) {
     h("p", { class: "summary-score" }, h("strong", {}, `${s.correct} de ${s.total}`), " certas"),
     h("p", { class: "muted" }, "As habilidades dos níveis anteriores contam como dominadas, mas você pode jogar essas etapas quando quiser."),
     h("div", { class: "actions" }, h("a", { href: `#/mapa/${s.subjectSlug}`, class: "btn btn-primary" }, "Ir para o mapa")),
+  );
+}
+
+function dailyResult(s) {
+  const ok = s.correct > 0;
+  return h(
+    "div",
+    { class: `card center result${ok ? " celebrate" : ""}` },
+    h("p", { class: "result-icon", "aria-hidden": "true" }, ok ? "🌟" : "📆"),
+    h("h1", {}, ok ? "Desafio do dia vencido!" : "Esse foi difícil!"),
+    h("p", { class: "xp" }, `+${s.xpEarned} XP`),
+    h("p", { class: "muted" }, ok ? "Você ganhou XP em dobro. Amanhã tem outro desafio!" : "Veja a explicação e tente o desafio de amanhã. Cada um ensina algo novo."),
+    h("div", { class: "actions" }, h("a", { href: "#/", class: "btn btn-primary" }, "Voltar ao início")),
+  );
+}
+
+function reviewResult(s, profileId, error, mapLink) {
+  const again = h("button", { type: "button", class: "btn" }, "🧩 Revisar de novo");
+  again.addEventListener("click", () => startAndPlay(() => api.startReview(profileId, s.subjectSlug), again, error));
+  return h(
+    "div",
+    { class: "card center result" },
+    h("p", { class: "result-icon", "aria-hidden": "true" }, "🧩"),
+    h("h1", {}, "Revisão concluída!"),
+    h("p", { class: "summary-score" }, h("strong", {}, `${s.correct} de ${s.total}`), " certas"),
+    h("p", { class: "xp" }, `+${s.xpEarned} XP`),
+    h("p", { class: "muted" }, "Revisar de vez em quando ajuda a não esquecer o que você já aprendeu."),
+    error,
+    h("div", { class: "actions" }, again, mapLink),
   );
 }
 

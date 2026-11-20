@@ -2,6 +2,7 @@ import { api } from "../api.js";
 import { errorMessage, formData, h } from "../dom.js";
 import { navigate } from "../router.js";
 import { store } from "../store.js";
+import { avatarView } from "./shared.js";
 
 export async function profilesPage() {
   const avatars = await api.avatars();
@@ -25,7 +26,7 @@ export async function profilesPage() {
               navigate("/");
             },
           },
-          h("span", { class: "avatar", "aria-hidden": "true" }, p.avatar),
+          avatarView(p, "lg"),
           h("span", { class: "profile-name" }, p.nickname),
         ),
       ),

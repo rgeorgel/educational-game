@@ -1,3 +1,5 @@
+using EduGame.Problems;
+
 namespace EduGame.Domain.Content;
 
 /// <summary>Uma habilidade específica (ex.: "adição até 100"). Unidade de medida do domínio do jogador.</summary>
@@ -58,4 +60,15 @@ public class Stage
     public int Order { get; set; }
     public int ProblemCount { get; set; } = 8;
     public List<int> SkillIds { get; set; } = [];
+}
+
+/// <summary>Problema escrito à mão (ver EduGame.Problems.CuratedCatalog), sorteado pela chave "curado".</summary>
+public class CuratedProblem
+{
+    public int Id { get; set; }
+    public int SkillId { get; set; }
+    public required string Slug { get; set; }
+    public int Difficulty { get; set; }
+    public required ProblemContent Content { get; set; }
+    public bool Active { get; set; } = true;
 }

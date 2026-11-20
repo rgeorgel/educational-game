@@ -50,3 +50,20 @@ export async function startAndPlay(start, button, errorBox) {
 export function loading(text = "Carregando…") {
   return h("p", { class: "loading", role: "status" }, text);
 }
+
+/** Avatar do perfil: emoji, acessório no canto e cor de fundo desbloqueada. */
+export function avatarView(profile, size = "md") {
+  return h(
+    "span",
+    { class: `avatar-badge size-${size} color-${profile.color || "padrao"}`, "aria-hidden": "true" },
+    h("span", { class: "avatar-emoji" }, profile.avatar),
+    profile.accessoryIcon ? h("span", { class: `avatar-accessory acc-${accessorySlot(profile.accessoryIcon)}` }, profile.accessoryIcon) : null,
+  );
+}
+
+/** Onde o acessório fica no avatar: na cabeça, no rosto ou no peito. */
+function accessorySlot(icon) {
+  if (icon === "🕶️") return "rosto";
+  if (icon === "🏅") return "peito";
+  return "cabeca";
+}

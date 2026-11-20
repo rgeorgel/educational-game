@@ -148,3 +148,49 @@ public class AchievementTests
         Assert.Equal(Achievements.All.Count, Achievements.All.Select(a => a.Slug).Distinct().Count());
     }
 }
+
+public class EngagementTests
+{
+    private static readonly DateTimeOffset Now = new(2026, 11, 19, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void Daily_seed_is_stable_and_changes_by_day_and_level()
+    {
+        var day = new DateOnly(2026, 11, 19);
+        Assert.Equal(DailyChallenge.Seed(day, "matematica", "medio"), DailyChallenge.Seed(day, "matematica", "medio"));
+        Assert.NotEqual(DailyChallenge.Seed(day, "matematica", "medio"), DailyChallenge.Seed(day.AddDays(1), "matematica", "medio"));
+        Assert.NotEqual(DailyChallenge.Seed(day, "matematica", "medio"), DailyChallenge.Seed(day, "matematica", "avancado"));
+        Assert.True(DailyChallenge.Seed(day, "logica", "expert") >= 0);
+    }
+
+    [Fact]
+    public void Daily_target_is_inside_the_level_band()
+    {
+        foreach (var level in LevelDefinitions.All)
+            Assert.InRange(DailyChallenge.TargetDifficulty(level), Rating.InitialFor(level), LevelProgress.TargetRating(level));
+    }
+
+    [Fact]
+    public void Review_prefers_skills_needing_review_then_weakest()
+    {
+        var level = LevelDefinitions.Iniciante;
+        var picked = Review.PickSkills(
+        [
+            new(1, level, 900, 30, Now.AddDays(-1)),   // forte e recente
+            new(2, level, 400, 10, Now.AddDays(-1)),   // fraca
+            new(3, level, 1100, 40, Now.AddDays(-40)), // dominada, esquecida → revisar
+            new(4, level, 300, 0, null),               // nunca praticada: fora
+        ], Now);
+
+        Assert.Equal([3, 2, 1], picked);
+    }
+
+    [Fact]
+    public void Avatar_items_unlock_with_xp()
+    {
+        Assert.True(AvatarItems.IsUnlocked(AvatarItems.Accessories, "nenhum", 0));
+        Assert.False(AvatarItems.IsUnlocked(AvatarItems.Accessories, "coroa", 100));
+        Assert.True(AvatarItems.IsUnlocked(AvatarItems.Accessories, "coroa", 5000));
+        Assert.False(AvatarItems.IsUnlocked(AvatarItems.Colors, "inexistente", 99999));
+    }
+}

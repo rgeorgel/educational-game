@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EduGame.Infrastructure;
 
@@ -19,6 +20,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Level> Levels => Set<Level>();
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<ProblemTemplate> ProblemTemplates => Set<ProblemTemplate>();
+    public DbSet<CuratedProblem> CuratedProblems => Set<CuratedProblem>();
+    public DbSet<Classroom> Classrooms => Set<Classroom>();
+    public DbSet<ClassroomMember> ClassroomMembers => Set<ClassroomMember>();
     public DbSet<Region> Regions => Set<Region>();
     public DbSet<Stage> Stages => Set<Stage>();
 
@@ -36,6 +40,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     private static readonly JsonSerializerOptions Json = JsonSerializerOptions.Web;
+
+    private static readonly ValueConverter<ProblemContent, string> ContentConverter = new(
+        c => JsonSerializer.Serialize(c, Json),
+        s => JsonSerializer.Deserialize<ProblemContent>(s, Json)!);
+
+    private static readonly ValueComparer<ProblemContent> ContentComparer = new(
+        (a, c) => JsonSerializer.Serialize(a, Json) == JsonSerializer.Serialize(c, Json),
+        c => JsonSerializer.Serialize(c, Json).GetHashCode(),
+        c => c);
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -85,6 +98,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasOne(x => x.Skill).WithMany(s => s.Templates).HasForeignKey(x => x.SkillId);
         });
 
+        b.Entity<CuratedProblem>(e =>
+        {
+            e.HasIndex(x => x.Slug).IsUnique();
+            e.Property(x => x.Slug).HasMaxLength(96);
+            e.HasOne<Skill>().WithMany().HasForeignKey(x => x.SkillId);
+            e.Property(x => x.Content).HasColumnType("jsonb").HasConversion(ContentConverter, ContentComparer);
+        });
+
         b.Entity<Region>(e =>
         {
             e.HasIndex(x => new { x.SubjectId, x.Slug }).IsUnique();
@@ -111,6 +132,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasIndex(x => x.UserId);
             e.Property(x => x.Nickname).HasMaxLength(20);
             e.Property(x => x.Avatar).HasMaxLength(16);
+            e.Property(x => x.Accessory).HasMaxLength(32).HasDefaultValue("nenhum");
+            e.Property(x => x.Color).HasMaxLength(32).HasDefaultValue("padrao");
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -154,10 +177,28 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
         });
 
+        b.Entity<Classroom>(e =>
+        {
+            e.HasIndex(x => x.Code).IsUnique();
+            e.HasIndex(x => x.OwnerUserId);
+            e.Property(x => x.Name).HasMaxLength(60);
+            e.Property(x => x.Code).HasMaxLength(16);
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<ClassroomMember>(e =>
+        {
+            e.HasKey(x => new { x.ClassroomId, x.ProfileId });
+            e.HasOne<Classroom>().WithMany().HasForeignKey(x => x.ClassroomId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         // ---------- Sessões ----------
         b.Entity<GameSession>(e =>
         {
             e.HasIndex(x => new { x.ProfileId, x.StartedAt });
+            // Um desafio diário por tópico por dia.
+            e.HasIndex(x => new { x.ProfileId, x.SubjectId, x.DailyDate }).IsUnique().HasFilter("daily_date IS NOT NULL");
             e.Property(x => x.Mode).HasMaxLength(32);
             e.Ignore(x => x.IsFinished);
             e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
@@ -173,15 +214,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasIndex(x => new { x.SessionId, x.Order }).IsUnique();
             e.Property(x => x.GeneratorKey).HasMaxLength(64);
             e.HasOne<Skill>().WithMany().HasForeignKey(x => x.SkillId);
-            e.Property(x => x.Content)
-                .HasColumnType("jsonb")
-                .HasConversion(
-                    c => JsonSerializer.Serialize(c, Json),
-                    s => JsonSerializer.Deserialize<ProblemContent>(s, Json)!,
-                    new ValueComparer<ProblemContent>(
-                        (a, c) => JsonSerializer.Serialize(a, Json) == JsonSerializer.Serialize(c, Json),
-                        c => JsonSerializer.Serialize(c, Json).GetHashCode(),
-                        c => c));
+            e.Property(x => x.Content).HasColumnType("jsonb").HasConversion(ContentConverter, ContentComparer);
             e.HasOne(x => x.Attempt).WithOne().HasForeignKey<Attempt>(a => a.SessionProblemId).OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -21,7 +21,15 @@ Jogo educacional de **matemática e lógica** para crianças e adolescentes, com
   - Novos tipos de desafio: `verdadeiro-falso`, `ordenar`, `grade` (Sudoku 4×4/6×6 e quadrado mágico) e `fracao-visual`.
   - 15 medalhas, sequência de dias (pode faltar 1 dia) e gráfico dos últimos 14 dias.
   - Calibração automática da dificuldade de cada gerador com base nas respostas reais.
-- [ ] Fase 3 — Nível Expert, desafio diário, revisão inteligente, painel do responsável/professor, PWA.
+- [x] **Fase 3 — Expert e engajamento:**
+  - Nível Expert: 5 habilidades de Matemática (sistemas, 2º grau, juros, Pitágoras, contagem) e 4 de Lógica
+    (tabelas-verdade, cavaleiros e mentirosos, pensamento computacional e desafios de raciocínio escritos à mão).
+  - Desafio do dia (1 problema por tópico, igual para todos do mesmo nível, XP em dobro) e revisão inteligente.
+  - Avatar personalizável com acessórios e cores desbloqueados por XP (sem compras).
+  - Área do responsável (relatório por perfil) e turmas de professor com código; o responsável escolhe quais perfis entram.
+  - PWA instalável com funcionamento offline parcial, leitura em voz alta e configurações de acessibilidade
+    (tema, texto grande, animações reduzidas).
+- [ ] Fase 4 — Novos tópicos.
 
 ## Stack
 
@@ -84,7 +92,14 @@ dotnet ef migrations add NomeDaMigration -p src/EduGame.Infrastructure -s src/Ed
   A estimativa começa pela série escolar, sobe a cada acerto e desce a cada erro, com passos cada vez menores.
 - **Calibração:** um serviço em segundo plano (`Calibration:IntervalMinutes`, padrão 60) compara o resultado esperado
   com o real de cada gerador nos últimos 30 dias (mínimo de 50 respostas) e ajusta a dificuldade aos poucos (±50 por rodada, até ±300).
-- **Fuso horário:** a sequência de dias usa `Game:TimeZone` (padrão `America/Sao_Paulo`).
+- **Fuso horário:** a sequência de dias e o desafio do dia usam `Game:TimeZone` (padrão `America/Sao_Paulo`).
+- **Problemas curados:** além dos geradores, há problemas escritos à mão em
+  `backend/src/EduGame.Problems/Curated/*.json` (validados por teste e copiados para o banco ao subir a API).
+- **Turmas e privacidade:** o professor vê apenas apelido, avatar e progresso dos perfis que os responsáveis
+  colocaram na turma com o código — nunca e-mail. O responsável pode tirar o perfil a qualquer momento.
+- **Offline:** o service worker (`frontend/sw.js`) usa "rede primeiro": com internet tudo vem do servidor;
+  sem internet, abre o app e os últimos dados vistos. Responder problemas exige conexão. Ao sair da conta,
+  o cache de dados é apagado.
 
 ## Estrutura
 

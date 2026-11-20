@@ -63,7 +63,7 @@ public class ChallengeFlowTests(ApiFactory factory)
         await client.GetFromJsonAsync<JsonElement>($"/api/profiles/{profileId}/subjects/{subject}/map");
 
     [Fact]
-    public async Task Placement_with_all_correct_answers_places_player_above_iniciante()
+    public async Task Placement_with_all_correct_answers_places_player_at_the_top_level()
     {
         var (client, profileId) = await NewPlayerAsync(schoolGrade: 5);
         var map = await MapAsync(client, profileId);
@@ -76,17 +76,17 @@ public class ChallengeFlowTests(ApiFactory factory)
 
         var summary = await PlayAsync(client, sessionId, _ => true);
 
-        Assert.Equal("avancado", summary.GetProperty("resultLevel").GetProperty("slug").GetString());
+        Assert.Equal("expert", summary.GetProperty("resultLevel").GetProperty("slug").GetString());
         map = await MapAsync(client, profileId);
         var progress = map.GetProperty("progress");
-        Assert.Equal("avancado", progress.GetProperty("level").GetProperty("slug").GetString());
+        Assert.Equal("expert", progress.GetProperty("level").GetProperty("slug").GetString());
         Assert.False(progress.GetProperty("placementAvailable").GetBoolean());
 
         // Os níveis anteriores ficam abertos e a primeira etapa de cada nível também.
         var levels = map.GetProperty("levels").EnumerateArray().ToList();
-        Assert.All(levels.Take(3), l => Assert.True(l.GetProperty("unlocked").GetBoolean()));
-        Assert.True(levels[2].GetProperty("current").GetBoolean());
-        var avancadoFirstStage = levels[2].GetProperty("regions")[0].GetProperty("stages")[0];
+        Assert.All(levels, l => Assert.True(l.GetProperty("unlocked").GetBoolean()));
+        Assert.True(levels[3].GetProperty("current").GetBoolean());
+        var avancadoFirstStage = levels[3].GetProperty("regions")[0].GetProperty("stages")[0];
         Assert.True(avancadoFirstStage.GetProperty("unlocked").GetBoolean());
     }
 

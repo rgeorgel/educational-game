@@ -12,6 +12,12 @@ public static class SessionModes
 
     /// <summary>Teste de nivelamento.</summary>
     public const string Placement = "nivelamento";
+
+    /// <summary>Desafio diário (1 problema, XP em dobro).</summary>
+    public const string Daily = "diario";
+
+    /// <summary>Revisão inteligente das habilidades que mais precisam de prática.</summary>
+    public const string Review = "revisao";
 }
 
 /// <summary>Uma sessão de jogo: uma etapa, um Desafio do Guardião ou um teste de nivelamento.</summary>
@@ -34,6 +40,9 @@ public class GameSession
 
     /// <summary>Estimativa de rating do teste de nivelamento (atualizada a cada resposta).</summary>
     public int? PlacementEstimate { get; set; }
+
+    /// <summary>Dia do desafio diário (só no modo <see cref="SessionModes.Daily"/>).</summary>
+    public DateOnly? DailyDate { get; set; }
 
     /// <summary>Nível alcançado ao final (Guardião aprovado ou nivelamento).</summary>
     public int? ResultLevelId { get; set; }

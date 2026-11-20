@@ -94,3 +94,36 @@
   --chart-1: #5b8ef5;
   --chart-grid: #333a48;
 }
+
+/* Cores de fundo do avatar (desbloqueáveis) */
+:root {
+  --avatar-padrao: var(--surface-2);
+  --avatar-menta: #c9f0dd;
+  --avatar-lavanda: #e3dbff;
+  --avatar-pessego: #ffe0cc;
+  --avatar-ceu: #d4ecff;
+  --avatar-ouro: #ffe9a8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --avatar-menta: #1f4a3a;
+    --avatar-lavanda: #3a2f5c;
+    --avatar-pessego: #5a3a2a;
+    --avatar-ceu: #1f3d5c;
+    --avatar-ouro: #5a4a14;
+  }
+}
+
+:root[data-theme="dark"] {
+  --avatar-menta: #1f4a3a;
+  --avatar-lavanda: #3a2f5c;
+  --avatar-pessego: #5a3a2a;
+  --avatar-ceu: #1f3d5c;
+  --avatar-ouro: #5a4a14;
+}
+
+/* Preferências de acessibilidade */
+:root[data-text="grande"] {
+  font-size: 118%;
+}

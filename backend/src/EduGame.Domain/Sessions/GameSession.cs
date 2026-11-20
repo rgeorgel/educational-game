@@ -2,13 +2,41 @@ using EduGame.Problems;
 
 namespace EduGame.Domain.Sessions;
 
-/// <summary>Uma sessão de jogo: sequência de problemas de uma etapa.</summary>
+public static class SessionModes
+{
+    /// <summary>Uma etapa do mapa.</summary>
+    public const string Stage = "etapa";
+
+    /// <summary>Desafio do Guardião (prova de fim de nível).</summary>
+    public const string Guardian = "guardiao";
+
+    /// <summary>Teste de nivelamento.</summary>
+    public const string Placement = "nivelamento";
+}
+
+/// <summary>Uma sessão de jogo: uma etapa, um Desafio do Guardião ou um teste de nivelamento.</summary>
 public class GameSession
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid ProfileId { get; set; }
-    public int StageId { get; set; }
-    public string Mode { get; set; } = "etapa";
+    public int SubjectId { get; set; }
+
+    /// <summary>Etapa jogada (só no modo <see cref="SessionModes.Stage"/>).</summary>
+    public int? StageId { get; set; }
+
+    /// <summary>Nível avaliado (modo <see cref="SessionModes.Guardian"/>).</summary>
+    public int? LevelId { get; set; }
+
+    public string Mode { get; set; } = SessionModes.Stage;
+
+    /// <summary>Habilidades sorteadas nesta sessão.</summary>
+    public List<int> SkillIds { get; set; } = [];
+
+    /// <summary>Estimativa de rating do teste de nivelamento (atualizada a cada resposta).</summary>
+    public int? PlacementEstimate { get; set; }
+
+    /// <summary>Nível alcançado ao final (Guardião aprovado ou nivelamento).</summary>
+    public int? ResultLevelId { get; set; }
     public int ProblemCount { get; set; }
     public int CorrectCount { get; set; }
     public int XpEarned { get; set; }

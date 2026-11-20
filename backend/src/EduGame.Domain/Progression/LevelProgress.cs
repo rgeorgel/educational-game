@@ -51,6 +51,8 @@ public static class LevelProgress
     public static LevelDefinition? NextOf(LevelDefinition level) =>
         LevelDefinitions.All.FirstOrDefault(l => l.Order == level.Order + 1);
 
+    public static LevelDefinition BySlug(string slug) => LevelDefinitions.All.Single(l => l.Slug == slug);
+
     /// <summary>
     /// Calcula o progresso dentro do nível atual a partir dos ratings das habilidades desse nível.
     /// Cada habilidade contribui com quanto já andou entre o rating inicial e o rating-alvo.
@@ -61,7 +63,7 @@ public static class LevelProgress
         var total = skillRatings.Count;
         if (total == 0) return new(current, next, 0, 0, 0, false);
 
-        var start = Math.Max(current.MinRating, current.Order == 1 ? Rating.Initial : current.MinRating);
+        var start = Rating.InitialFor(current);
         var target = TargetRating(current);
 
         var mastered = skillRatings.Count(r => r >= target);

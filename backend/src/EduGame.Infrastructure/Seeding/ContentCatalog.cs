@@ -28,6 +28,20 @@ public static class ContentCatalog
                 new("subtracao-ate-100", "Subtração até 100", "Subtrair números até 100, com e sem \"empresta um\".", "iniciante"),
                 new("multiplicacao-grupos", "Grupos iguais", "Primeiros passos na multiplicação: grupos iguais, dobro, triplo e tabuada até 5.", "iniciante"),
                 new("dinheiro-e-horas", "Dinheiro e horas", "Contas com dinheiro, troco, relógio e minutos.", "iniciante"),
+
+                new("tabuada-completa", "Tabuada completa", "Multiplicação até 10 × 10 e o fator que falta.", "medio"),
+                new("divisao", "Divisão", "Divisão exata e com resto, em contas e situações do dia a dia.", "medio"),
+                new("expressoes", "Expressões", "Contas com as quatro operações, parênteses e ordem das operações.", "medio"),
+                new("fracoes-basicas", "Frações", "Ler, pintar, comparar e somar frações; fração de uma quantidade.", "medio"),
+                new("decimais-porcentagem", "Decimais e porcentagem", "Comparar, ordenar e somar decimais; porcentagens simples.", "medio"),
+                new("perimetro-area", "Perímetro e área", "Perímetro e área de retângulos, quadrados e figuras compostas.", "medio"),
+
+                new("numeros-inteiros", "Números inteiros", "Operações com números negativos e situações como temperatura.", "avancado"),
+                new("potencias-raizes", "Potências e raízes", "Potências, quadrados perfeitos e raízes quadradas.", "avancado"),
+                new("mmc-mdc", "MMC e MDC", "Mínimo múltiplo comum e máximo divisor comum, com aplicações.", "avancado"),
+                new("fracoes-operacoes", "Operações com frações", "Somar, multiplicar, dividir e simplificar frações.", "avancado"),
+                new("proporcao-porcentagem", "Proporção e porcentagem", "Regra de três, aumentos e descontos.", "avancado"),
+                new("equacoes-1-grau", "Equações do 1º grau", "Encontrar o valor de x em equações e problemas.", "avancado"),
             ],
             Regions:
             [
@@ -49,6 +63,44 @@ public static class ContentCatalog
                     new("dinheiro-e-horas", "Dinheiro e horas", ["dinheiro-e-horas"]),
                     new("grande-desafio-iniciante", "Grande Desafio", ["contagem-comparacao", "dezenas-unidades", "adicao-ate-100", "subtracao-ate-100", "multiplicacao-grupos", "dinheiro-e-horas"], 12),
                 ]),
+
+                new("cidade-da-multiplicacao", "Cidade da Multiplicação", "Tabuada e divisão para andar pela cidade.", "🏙️", "medio",
+                [
+                    new("tabuada", "Tabuada completa", ["tabuada-completa"]),
+                    new("dividindo", "Dividindo", ["divisao"]),
+                    new("desafio-da-cidade", "Desafio da Cidade", ["tabuada-completa", "divisao"], 10),
+                ]),
+                new("laboratorio-das-fracoes", "Laboratório das Frações", "Partes, pedaços, decimais e porcentagens.", "🧪", "medio",
+                [
+                    new("fracoes", "Frações", ["fracoes-basicas"]),
+                    new("decimais", "Decimais e porcentagem", ["decimais-porcentagem"]),
+                    new("desafio-do-laboratorio", "Desafio do Laboratório", ["fracoes-basicas", "decimais-porcentagem"], 10),
+                ]),
+                new("oficina-das-formas", "Oficina das Formas", "Expressões, medidas e figuras.", "📐", "medio",
+                [
+                    new("expressoes", "Expressões", ["expressoes"]),
+                    new("perimetro-e-area", "Perímetro e área", ["perimetro-area"]),
+                    new("grande-desafio-medio", "Grande Desafio", ["tabuada-completa", "divisao", "expressoes", "fracoes-basicas", "decimais-porcentagem", "perimetro-area"], 12),
+                ]),
+
+                new("montanhas-dos-inteiros", "Montanhas dos Inteiros", "Abaixo de zero e acima das nuvens: inteiros e potências.", "⛰️", "avancado",
+                [
+                    new("inteiros", "Números inteiros", ["numeros-inteiros"]),
+                    new("potencias", "Potências e raízes", ["potencias-raizes"]),
+                    new("desafio-das-montanhas", "Desafio das Montanhas", ["numeros-inteiros", "potencias-raizes"], 10),
+                ]),
+                new("mercado-das-proporcoes", "Mercado das Proporções", "Frações, preços, descontos e regra de três.", "⚖️", "avancado",
+                [
+                    new("operacoes-com-fracoes", "Operações com frações", ["fracoes-operacoes"]),
+                    new("proporcoes", "Proporção e porcentagem", ["proporcao-porcentagem"]),
+                    new("desafio-do-mercado", "Desafio do Mercado", ["fracoes-operacoes", "proporcao-porcentagem"], 10),
+                ]),
+                new("observatorio-da-algebra", "Observatório da Álgebra", "Múltiplos, divisores e equações.", "🔭", "avancado",
+                [
+                    new("mmc-e-mdc", "MMC e MDC", ["mmc-mdc"]),
+                    new("equacoes", "Equações", ["equacoes-1-grau"]),
+                    new("grande-desafio-avancado", "Grande Desafio", ["numeros-inteiros", "potencias-raizes", "mmc-mdc", "fracoes-operacoes", "proporcao-porcentagem", "equacoes-1-grau"], 12),
+                ]),
             ]),
 
         new("logica", "Lógica", "🧩", 2,
@@ -58,6 +110,18 @@ public static class ContentCatalog
                 new("sequencias-simples", "Sequências de números", "Encontrar a regra de uma sequência numérica.", "iniciante"),
                 new("qual-e-diferente", "Qual é o diferente?", "Classificar e achar o item que não segue o grupo.", "iniciante"),
                 new("maior-menor-igual", "Maior, menor ou igual", "Comparar números e contas usando >, < e =.", "iniciante"),
+
+                new("sequencias-compostas", "Sequências compostas", "Sequências com multiplicação, quadrados e diferenças que mudam.", "medio"),
+                new("grades-numericas", "Sudoku e quadrado mágico", "Sudoku 4×4 e quadrados mágicos 3×3.", "medio"),
+                new("verdadeiro-ou-falso", "Verdadeiro ou falso", "Julgar afirmações e encontrar contraexemplos.", "medio"),
+                new("balancas", "Balanças", "Descobrir pesos equivalentes e trocar uma coisa por outra.", "medio"),
+                new("tabelas-logicas", "Tabelas lógicas", "Descobrir quem tem o quê a partir de pistas.", "medio"),
+
+                new("sudoku-6x6", "Sudoku 6×6", "Sudokus maiores, com blocos de 2×3.", "avancado"),
+                new("proposicoes", "Proposições", "E, OU, NÃO e SE…ENTÃO: quando uma frase é verdadeira.", "avancado"),
+                new("conjuntos", "Conjuntos", "Diagramas de Venn: só um, os dois ou nenhum.", "avancado"),
+                new("enigmas-simbolos", "Enigmas com símbolos", "Descobrir o valor de cada símbolo a partir de igualdades.", "avancado"),
+                new("quem-e-quem", "Quem é quem", "Cruzar pistas de duas categorias para resolver o enigma.", "avancado"),
             ],
             Regions:
             [
@@ -72,6 +136,34 @@ public static class ContentCatalog
                     new("qual-e-o-diferente", "Qual é o diferente?", ["qual-e-diferente"]),
                     new("maior-menor-igual", "Maior, menor ou igual", ["maior-menor-igual"]),
                     new("grande-desafio-logica", "Grande Desafio", ["padroes-visuais", "sequencias-simples", "qual-e-diferente", "maior-menor-igual"], 12),
+                ]),
+
+                new("labirinto-dos-numeros", "Labirinto dos Números", "Regras escondidas e grades para completar.", "🌀", "medio",
+                [
+                    new("sequencias-compostas", "Sequências compostas", ["sequencias-compostas"]),
+                    new("sudoku-e-quadrado-magico", "Sudoku e quadrado mágico", ["grades-numericas"]),
+                    new("desafio-do-labirinto", "Desafio do Labirinto", ["sequencias-compostas", "grades-numericas"], 10),
+                ]),
+                new("praca-dos-enigmas", "Praça dos Enigmas", "Verdades, balanças e pistas.", "🎭", "medio",
+                [
+                    new("verdadeiro-ou-falso", "Verdadeiro ou falso", ["verdadeiro-ou-falso"]),
+                    new("balancas", "Balanças", ["balancas"]),
+                    new("tabelas-logicas", "Tabelas lógicas", ["tabelas-logicas"]),
+                    new("grande-desafio-logica-medio", "Grande Desafio", ["sequencias-compostas", "grades-numericas", "verdadeiro-ou-falso", "balancas", "tabelas-logicas"], 12),
+                ]),
+
+                new("castelo-dos-quebra-cabecas", "Castelo dos Quebra-cabeças", "Sudokus grandes e símbolos misteriosos.", "🏰", "avancado",
+                [
+                    new("sudoku-6x6", "Sudoku 6×6", ["sudoku-6x6"]),
+                    new("enigmas-com-simbolos", "Enigmas com símbolos", ["enigmas-simbolos"]),
+                    new("desafio-do-castelo", "Desafio do Castelo", ["sudoku-6x6", "enigmas-simbolos"], 8),
+                ]),
+                new("biblioteca-da-logica", "Biblioteca da Lógica", "Proposições, conjuntos e enigmas de detetive.", "📚", "avancado",
+                [
+                    new("proposicoes", "Proposições", ["proposicoes"]),
+                    new("conjuntos", "Conjuntos", ["conjuntos"]),
+                    new("quem-e-quem", "Quem é quem", ["quem-e-quem"]),
+                    new("grande-desafio-logica-avancado", "Grande Desafio", ["sudoku-6x6", "proposicoes", "conjuntos", "enigmas-simbolos", "quem-e-quem"], 12),
                 ]),
             ]),
     ];

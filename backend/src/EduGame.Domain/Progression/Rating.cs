@@ -6,8 +6,11 @@ namespace EduGame.Domain.Progression;
 /// </summary>
 public static class Rating
 {
-    /// <summary>Rating inicial de uma habilidade nunca praticada.</summary>
+    /// <summary>Rating inicial de uma habilidade do nível Iniciante nunca praticada.</summary>
     public const int Initial = 300;
+
+    /// <summary>Rating inicial de uma habilidade do nível informado (o começo da faixa do nível).</summary>
+    public static int InitialFor(LevelDefinition level) => level.Order == 1 ? Initial : level.MinRating;
 
     public const int Min = 0;
     public const int Max = 3000;

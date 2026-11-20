@@ -15,7 +15,13 @@ Jogo educacional de **matemática e lógica** para crianças e adolescentes, com
   - Sessões com feedback, dicas, explicação e "problema irmão" depois de um erro.
   - Rating por habilidade (estilo Elo), XP e estrelas por etapa; cada etapa desbloqueia a próxima.
   - Tela de progresso com o nível e a barra até o próximo nível.
-- [ ] Fase 2 — Níveis Médio e Avançado, teste de nivelamento, Desafio do Guardião, medalhas.
+- [x] **Fase 2 — Progressão completa:**
+  - Níveis Médio e Avançado: 12 habilidades de Matemática e 10 de Lógica, em 10 novas regiões.
+  - Teste de nivelamento adaptativo (10 perguntas) e Desafio do Guardião (12 problemas, 9 acertos para subir de nível).
+  - Novos tipos de desafio: `verdadeiro-falso`, `ordenar`, `grade` (Sudoku 4×4/6×6 e quadrado mágico) e `fracao-visual`.
+  - 15 medalhas, sequência de dias (pode faltar 1 dia) e gráfico dos últimos 14 dias.
+  - Calibração automática da dificuldade de cada gerador com base nas respostas reais.
+- [ ] Fase 3 — Nível Expert, desafio diário, revisão inteligente, painel do responsável/professor, PWA.
 
 ## Stack
 
@@ -70,8 +76,15 @@ dotnet ef migrations add NomeDaMigration -p src/EduGame.Infrastructure -s src/Ed
   e escolhe o de dificuldade mais próxima do rating do jogador (70% no nível dele, 20% abaixo, 10% acima).
 - **Respostas:** a resposta nunca vai para o navegador. O cliente envia a resposta e o servidor valida, atualiza
   rating e XP e devolve a explicação.
-- **Progresso:** a barra de nível mostra o avanço das habilidades do nível. Uma habilidade conta como dominada com rating ≥ 1000,
-  e o jogador fica pronto para o próximo nível com 80% das habilidades dominadas. O Desafio do Guardião entra na Fase 2.
+- **Progresso:** a barra de nível mostra o avanço das habilidades do nível atual. Uma habilidade conta como dominada
+  quando o rating chega ao início do próximo nível (1000 → Médio, 1500 → Avançado, 2000 → Expert).
+- **Desafio do Guardião:** com 80% das habilidades do nível dominadas, o mapa oferece o Guardião (12 problemas de todo o nível).
+  Acertar 9 ou mais promove o jogador; nunca se perde nível.
+- **Nivelamento:** antes de começar um tópico, o jogador pode fazer um teste adaptativo de 10 perguntas (sem dicas).
+  A estimativa começa pela série escolar, sobe a cada acerto e desce a cada erro, com passos cada vez menores.
+- **Calibração:** um serviço em segundo plano (`Calibration:IntervalMinutes`, padrão 60) compara o resultado esperado
+  com o real de cada gerador nos últimos 30 dias (mínimo de 50 respostas) e ajusta a dificuldade aos poucos (±50 por rodada, até ±300).
+- **Fuso horário:** a sequência de dias usa `Game:TimeZone` (padrão `America/Sao_Paulo`).
 
 ## Estrutura
 

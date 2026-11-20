@@ -1,13 +1,18 @@
 import { api } from "../api.js";
 import { append, errorMessage, h } from "../dom.js";
 import { navigate } from "../router.js";
-import { renderAnswer } from "../problem-types/index.js";
+import { readOnlyFigure, renderAnswer } from "../problem-types/index.js";
 import { loading } from "./shared.js";
 
 const PRAISE = ["Muito bem!", "Isso aí!", "Mandou bem!", "Excelente!", "Certinho!", "Show!"];
 const ENCOURAGE = ["Quase! Vamos ver como faz.", "Não foi dessa vez — errar faz parte de aprender.", "Boa tentativa! Olha a explicação."];
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+const MODE_LABEL = {
+  guardiao: "🛡️ Desafio do Guardião",
+  nivelamento: "🧭 Teste de nivelamento",
+};
 
 export async function sessionPage({ sessionId }) {
   const results = []; // resultados conhecidos nesta visita (para colorir os pontinhos)
@@ -119,11 +124,11 @@ export async function sessionPage({ sessionId }) {
       feedback.className = `feedback ${result.correct ? "is-correct" : "is-wrong"}`;
       feedback.replaceChildren();
       append(feedback, [
-        h("p", { class: "feedback-title" }, result.correct ? `✅ ${pick(PRAISE)}` : `💭 ${pick(ENCOURAGE)}`),
+        h("p", { class: "feedback-title" }, result.correct ? `✅ ${pick(PRAISE)}` : `💭 ${problem.mode === "etapa" ? pick(ENCOURAGE) : "Não foi dessa vez."}`),
         result.correct ? null : h("p", {}, "A resposta certa é ", h("strong", {}, result.correctAnswer), "."),
         h("p", { class: "explanation" }, result.explanation),
         h("p", { class: "xp" }, `+${result.xpEarned} XP`),
-        !result.correct && !result.sessionFinished ? h("p", { class: "muted small" }, "Agora vem um parecido para você tentar de novo!") : null,
+        !result.correct && !result.sessionFinished && problem.mode === "etapa" ? h("p", { class: "muted small" }, "Agora vem um parecido para você tentar de novo!") : null,
         continueBtn,
       ]);
       feedback.hidden = false;
@@ -140,11 +145,15 @@ export async function sessionPage({ sessionId }) {
     const card = h(
       "article",
       { class: "card problem-card", "aria-labelledby": "prompt" },
+      MODE_LABEL[problem.mode] ? h("p", { class: `mode-tag mode-${problem.mode}` }, MODE_LABEL[problem.mode]) : null,
       h("p", { class: "skill-tag" }, problem.skill.name),
       h("h1", { id: "prompt", class: "prompt", tabindex: "-1" }, problem.prompt),
       problem.visual ? h("p", { class: "visual", "aria-label": "Figura do problema" }, problem.visual) : null,
+      problem.figure && problem.type !== "fracao-visual" ? h("div", { class: "figure-wrap" }, readOnlyFigure(problem.figure)) : null,
       h("div", { class: "answer-area" }, answer.node),
-      h("div", { class: "hints" }, hintButton, hintsList),
+      problem.hintsTotal > 0
+        ? h("div", { class: "hints" }, hintButton, hintsList)
+        : h("p", { class: "muted small" }, "No teste de nivelamento não há dicas. Tudo bem não saber — responda o que achar!"),
     );
 
     body.replaceChildren(card, feedback);

@@ -26,6 +26,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SkillMastery> SkillMasteries => Set<SkillMastery>();
     public DbSet<SubjectProgress> SubjectProgresses => Set<SubjectProgress>();
     public DbSet<StageProgress> StageProgresses => Set<StageProgress>();
+    public DbSet<DailyActivity> DailyActivities => Set<DailyActivity>();
+    public DbSet<ProfileAchievement> ProfileAchievements => Set<ProfileAchievement>();
 
     public DbSet<GameSession> GameSessions => Set<GameSession>();
     public DbSet<SessionProblem> SessionProblems => Set<SessionProblem>();
@@ -137,6 +139,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasOne<Stage>().WithMany().HasForeignKey(x => x.StageId);
         });
 
+        b.Entity<DailyActivity>(e =>
+        {
+            e.ToTable("daily_activity");
+            e.HasKey(x => new { x.ProfileId, x.Date });
+            e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<ProfileAchievement>(e =>
+        {
+            e.ToTable("profile_achievements");
+            e.HasKey(x => new { x.ProfileId, x.Slug });
+            e.Property(x => x.Slug).HasMaxLength(64);
+            e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         // ---------- Sessões ----------
         b.Entity<GameSession>(e =>
         {
@@ -144,7 +161,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.Mode).HasMaxLength(32);
             e.Ignore(x => x.IsFinished);
             e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Subject>().WithMany().HasForeignKey(x => x.SubjectId);
             e.HasOne<Stage>().WithMany().HasForeignKey(x => x.StageId);
+            e.HasOne<Level>().WithMany().HasForeignKey(x => x.LevelId);
+            e.HasOne<Level>().WithMany().HasForeignKey(x => x.ResultLevelId);
             e.HasMany(x => x.Problems).WithOne().HasForeignKey(p => p.SessionId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -169,7 +189,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         {
             e.HasIndex(x => x.SessionProblemId).IsUnique();
             e.HasIndex(x => x.CreatedAt);
-            e.Property(x => x.Answer).HasMaxLength(64);
+            e.Property(x => x.Answer).HasMaxLength(256);
         });
     }
 }

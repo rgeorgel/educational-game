@@ -24,6 +24,10 @@ public class ProblemTemplate
     public Skill? Skill { get; set; }
     public required string GeneratorKey { get; set; }
     public bool Active { get; set; } = true;
+
+    /// <summary>Ajuste de dificuldade aprendido com as respostas reais (ver Calibration).</summary>
+    public int DifficultyOffset { get; set; }
+    public DateTimeOffset? CalibratedAt { get; set; }
 }
 
 /// <summary>Uma região do mapa: agrupa etapas de um nível de um tópico.</summary>

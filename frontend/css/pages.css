@@ -615,3 +615,145 @@ body.is-playing .app-header {
     font-size: 1rem;
   }
 }
+
+/* ---------- Fase 2: banners, níveis, resultados ---------- */
+.banner {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.banner h2 {
+  margin-bottom: var(--space-2);
+}
+
+.banner-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.banner-body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.banner-body p {
+  margin: 0;
+}
+
+.banner-guardian {
+  border: 2px solid var(--warning);
+  background: var(--warning-bg);
+}
+
+.banner-placement {
+  border: 2px solid var(--primary);
+}
+
+.actions-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.callout {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--warning-bg);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.level-section {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.level-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.level-section.locked {
+  opacity: 0.7;
+}
+
+.locked-regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.locked-regions li {
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+}
+
+.mode-tag {
+  margin: 0;
+  font-weight: 800;
+}
+
+.mode-guardiao {
+  color: var(--warning);
+}
+
+.mode-nivelamento {
+  color: var(--primary);
+}
+
+.result-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin: 0;
+}
+
+.celebrate .result-icon {
+  animation: pop 0.5s ease both;
+}
+
+.medals-earned h2 {
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 480px) {
+  .banner {
+    flex-direction: column;
+  }
+}
+
+details.level-section > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+details.level-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.level-section > summary .level-head::after {
+  content: "▸ ver etapas";
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+details.level-section[open] > summary .level-head::after {
+  content: "▾ esconder";
+}
+
+details.level-section[open] {
+  display: grid;
+  gap: var(--space-4);
+}

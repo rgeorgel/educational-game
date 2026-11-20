@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using EduGame.Api.Common;
 using EduGame.Api.Features.Auth;
+using EduGame.Api.Features.Calibration;
 using EduGame.Api.Features.Map;
 using EduGame.Api.Features.Profiles;
 using EduGame.Api.Features.Progress;
@@ -17,7 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<GameClock>();
 builder.Services.AddScoped<ProgressService>();
+builder.Services.AddHostedService<CalibrationService>();
 builder.Services.AddScoped<SessionService>();
 
 builder.Services.AddProblemDetails();

@@ -21,6 +21,8 @@ export async function homePage() {
           { class: "card subject-card", href: `#/mapa/${s.slug}` },
           h("div", { class: "subject-head" }, h("span", { class: "subject-icon", "aria-hidden": "true" }, s.icon), h("h2", {}, s.name)),
           levelProgress(s),
+          s.guardianAvailable ? h("p", { class: "callout" }, "🛡️ O Desafio do Guardião está esperando por você!") : null,
+          s.placementAvailable ? h("p", { class: "callout" }, "🧭 Faça o teste de nivelamento para começar no nível certo.") : null,
           h("p", { class: "subject-xp" }, `⚡ ${s.xp} XP`),
           h("span", { class: "btn btn-primary" }, "Jogar"),
         ),
@@ -29,8 +31,9 @@ export async function homePage() {
     h(
       "div",
       { class: "totals" },
+      h("div", { class: "tile" }, h("strong", {}, `🔥 ${data.totals.streak}`), h("span", {}, data.totals.streak === 1 ? "dia de prática" : "dias de prática")),
       h("div", { class: "tile" }, h("strong", {}, data.totals.problemsSolved), h("span", {}, "problemas resolvidos")),
-      h("div", { class: "tile" }, h("strong", {}, data.totals.stars), h("span", {}, "estrelas")),
+      h("div", { class: "tile" }, h("strong", {}, `🏅 ${data.totals.achievements}`), h("span", {}, "medalhas")),
       h("a", { class: "tile tile-link", href: "#/progresso" }, h("strong", {}, "📈"), h("span", {}, "Ver meu progresso")),
     ),
   );

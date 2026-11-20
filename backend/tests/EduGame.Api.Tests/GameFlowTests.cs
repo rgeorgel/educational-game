@@ -27,7 +27,9 @@ public class GameFlowTests(ApiFactory factory)
         await client.GetFromJsonAsync<JsonElement>($"/api/profiles/{profileId}/subjects/{subject}/map");
 
     private static List<JsonElement> Stages(JsonElement map) =>
-        [.. map.GetProperty("regions").EnumerateArray().SelectMany(r => r.GetProperty("stages").EnumerateArray())];
+        [.. map.GetProperty("levels").EnumerateArray()
+            .SelectMany(l => l.GetProperty("regions").EnumerateArray())
+            .SelectMany(r => r.GetProperty("stages").EnumerateArray())];
 
     private async Task<string> CorrectAnswerAsync(Guid problemId)
     {
@@ -108,7 +110,7 @@ public class GameFlowTests(ApiFactory factory)
         var map = await MapAsync(client, profileId);
         var stages = Stages(map);
 
-        Assert.Equal(9, stages.Count);
+        Assert.Equal(27, stages.Count);
         Assert.True(stages[0].GetProperty("unlocked").GetBoolean());
         Assert.All(stages.Skip(1), s => Assert.False(s.GetProperty("unlocked").GetBoolean()));
         Assert.Equal("iniciante", map.GetProperty("progress").GetProperty("level").GetProperty("slug").GetString());
@@ -267,7 +269,7 @@ public class GameFlowTests(ApiFactory factory)
         var (client, profileId) = await NewPlayerAsync();
         var map = await MapAsync(client, profileId, "logica");
 
-        Assert.Equal(6, Stages(map).Count);
+        Assert.Equal(20, Stages(map).Count);
         Assert.Equal(4, map.GetProperty("progress").GetProperty("totalSkills").GetInt32());
         Assert.Equal("notStarted", map.GetProperty("progress").GetProperty("skills")[0].GetProperty("status").GetString());
     }

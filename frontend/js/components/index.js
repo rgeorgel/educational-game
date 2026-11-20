@@ -70,14 +70,18 @@ class NumericKeypad extends HTMLElement {
     this.setAttribute("role", "group");
     this.setAttribute("aria-label", "Teclado numérico");
     const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "back", "0", "ok"];
+    // Teclas extras só quando o problema aceita (para não entregar dicas).
+    if (this.hasAttribute("negative")) keys.push("minus");
+    if (this.hasAttribute("decimal")) keys.push("comma");
+    const labels = { back: "⌫", ok: "OK", minus: "−", comma: "," };
+    const aria = { back: "Apagar", ok: "Confirmar resposta", minus: "Sinal de menos", comma: "Vírgula" };
     for (const key of keys) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = `key key-${key}`;
       btn.dataset.key = key;
-      btn.textContent = key === "back" ? "⌫" : key === "ok" ? "OK" : key;
-      if (key === "back") btn.setAttribute("aria-label", "Apagar");
-      if (key === "ok") btn.setAttribute("aria-label", "Confirmar resposta");
+      btn.textContent = labels[key] ?? key;
+      if (aria[key]) btn.setAttribute("aria-label", aria[key]);
       btn.addEventListener("click", () => this.dispatchEvent(new CustomEvent("keypad", { detail: key, bubbles: true })));
       this.append(btn);
     }

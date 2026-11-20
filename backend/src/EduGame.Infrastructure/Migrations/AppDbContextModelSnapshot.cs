@@ -85,6 +85,14 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("active");
 
+                    b.Property<DateTimeOffset?>("CalibratedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("calibrated_at");
+
+                    b.Property<int>("DifficultyOffset")
+                        .HasColumnType("integer")
+                        .HasColumnName("difficulty_offset");
+
                     b.Property<string>("GeneratorKey")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -304,6 +312,34 @@ namespace EduGame.Infrastructure.Migrations
                     b.ToTable("subjects", (string)null);
                 });
 
+            modelBuilder.Entity("EduGame.Domain.Players.DailyActivity", b =>
+                {
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("profile_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<int>("Correct")
+                        .HasColumnType("integer")
+                        .HasColumnName("correct");
+
+                    b.Property<int>("ProblemsSolved")
+                        .HasColumnType("integer")
+                        .HasColumnName("problems_solved");
+
+                    b.Property<int>("Xp")
+                        .HasColumnType("integer")
+                        .HasColumnName("xp");
+
+                    b.HasKey("ProfileId", "Date")
+                        .HasName("pk_daily_activity");
+
+                    b.ToTable("daily_activity", (string)null);
+                });
+
             modelBuilder.Entity("EduGame.Domain.Players.PlayerProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -346,6 +382,27 @@ namespace EduGame.Infrastructure.Migrations
                         .HasDatabaseName("ix_player_profiles_user_id");
 
                     b.ToTable("player_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("EduGame.Domain.Players.ProfileAchievement", b =>
+                {
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("profile_id");
+
+                    b.Property<string>("Slug")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("slug");
+
+                    b.Property<DateTimeOffset>("EarnedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("earned_at");
+
+                    b.HasKey("ProfileId", "Slug")
+                        .HasName("pk_profile_achievements");
+
+                    b.ToTable("profile_achievements", (string)null);
                 });
 
             modelBuilder.Entity("EduGame.Domain.Players.SkillMastery", b =>
@@ -432,6 +489,10 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("level_reached_at");
 
+                    b.Property<bool>("PlacementDone")
+                        .HasColumnType("boolean")
+                        .HasColumnName("placement_done");
+
                     b.Property<int>("Xp")
                         .HasColumnType("integer")
                         .HasColumnName("xp");
@@ -457,8 +518,8 @@ namespace EduGame.Infrastructure.Migrations
 
                     b.Property<string>("Answer")
                         .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
                         .HasColumnName("answer");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -521,11 +582,19 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("finished_at");
 
+                    b.Property<int?>("LevelId")
+                        .HasColumnType("integer")
+                        .HasColumnName("level_id");
+
                     b.Property<string>("Mode")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)")
                         .HasColumnName("mode");
+
+                    b.Property<int?>("PlacementEstimate")
+                        .HasColumnType("integer")
+                        .HasColumnName("placement_estimate");
 
                     b.Property<int>("ProblemCount")
                         .HasColumnType("integer")
@@ -535,7 +604,16 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("profile_id");
 
-                    b.Property<int>("StageId")
+                    b.Property<int?>("ResultLevelId")
+                        .HasColumnType("integer")
+                        .HasColumnName("result_level_id");
+
+                    b.PrimitiveCollection<List<int>>("SkillIds")
+                        .IsRequired()
+                        .HasColumnType("integer[]")
+                        .HasColumnName("skill_ids");
+
+                    b.Property<int?>("StageId")
                         .HasColumnType("integer")
                         .HasColumnName("stage_id");
 
@@ -547,6 +625,10 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("started_at");
 
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("integer")
+                        .HasColumnName("subject_id");
+
                     b.Property<int>("XpEarned")
                         .HasColumnType("integer")
                         .HasColumnName("xp_earned");
@@ -554,8 +636,17 @@ namespace EduGame.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_game_sessions");
 
+                    b.HasIndex("LevelId")
+                        .HasDatabaseName("ix_game_sessions_level_id");
+
+                    b.HasIndex("ResultLevelId")
+                        .HasDatabaseName("ix_game_sessions_result_level_id");
+
                     b.HasIndex("StageId")
                         .HasDatabaseName("ix_game_sessions_stage_id");
+
+                    b.HasIndex("SubjectId")
+                        .HasDatabaseName("ix_game_sessions_subject_id");
 
                     b.HasIndex("ProfileId", "StartedAt")
                         .HasDatabaseName("ix_game_sessions_profile_id_started_at");
@@ -974,6 +1065,16 @@ namespace EduGame.Infrastructure.Migrations
                     b.Navigation("Region");
                 });
 
+            modelBuilder.Entity("EduGame.Domain.Players.DailyActivity", b =>
+                {
+                    b.HasOne("EduGame.Domain.Players.PlayerProfile", null)
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_daily_activity_player_profiles_profile_id");
+                });
+
             modelBuilder.Entity("EduGame.Domain.Players.PlayerProfile", b =>
                 {
                     b.HasOne("EduGame.Infrastructure.Identity.AppUser", null)
@@ -982,6 +1083,16 @@ namespace EduGame.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_player_profiles_users_user_id");
+                });
+
+            modelBuilder.Entity("EduGame.Domain.Players.ProfileAchievement", b =>
+                {
+                    b.HasOne("EduGame.Domain.Players.PlayerProfile", null)
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_profile_achievements_player_profiles_profile_id");
                 });
 
             modelBuilder.Entity("EduGame.Domain.Players.SkillMastery", b =>
@@ -1054,6 +1165,11 @@ namespace EduGame.Infrastructure.Migrations
 
             modelBuilder.Entity("EduGame.Domain.Sessions.GameSession", b =>
                 {
+                    b.HasOne("EduGame.Domain.Content.Level", null)
+                        .WithMany()
+                        .HasForeignKey("LevelId")
+                        .HasConstraintName("fk_game_sessions_levels_level_id");
+
                     b.HasOne("EduGame.Domain.Players.PlayerProfile", null)
                         .WithMany()
                         .HasForeignKey("ProfileId")
@@ -1061,12 +1177,22 @@ namespace EduGame.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_game_sessions_player_profiles_profile_id");
 
+                    b.HasOne("EduGame.Domain.Content.Level", null)
+                        .WithMany()
+                        .HasForeignKey("ResultLevelId")
+                        .HasConstraintName("fk_game_sessions_levels_result_level_id");
+
                     b.HasOne("EduGame.Domain.Content.Stage", null)
                         .WithMany()
                         .HasForeignKey("StageId")
+                        .HasConstraintName("fk_game_sessions_stages_stage_id");
+
+                    b.HasOne("EduGame.Domain.Content.Subject", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_game_sessions_stages_stage_id");
+                        .HasConstraintName("fk_game_sessions_subjects_subject_id");
                 });
 
             modelBuilder.Entity("EduGame.Domain.Sessions.SessionProblem", b =>

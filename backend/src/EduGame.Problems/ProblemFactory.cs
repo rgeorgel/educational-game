@@ -26,6 +26,32 @@ public sealed class ProblemFactory
         new VisualPatternGenerator(),
         new OddOneOutGenerator(),
         new ComparisonGenerator(),
+
+        // Médio
+        new TimesTableGenerator(),
+        new DivisionGenerator(),
+        new ExpressionsGenerator(),
+        new FractionsGenerator(),
+        new DecimalsPercentGenerator(),
+        new PerimeterAreaGenerator(),
+        new CompositeSequenceGenerator(),
+        new NumberGridGenerator(),
+        new TrueFalseGenerator(),
+        new BalanceGenerator(),
+        new LogicTableGenerator(),
+
+        // Avançado
+        new IntegersGenerator(),
+        new PowersRootsGenerator(),
+        new GcdLcmGenerator(),
+        new FractionOperationsGenerator(),
+        new ProportionGenerator(),
+        new LinearEquationsGenerator(),
+        new Sudoku6Generator(),
+        new PropositionsGenerator(),
+        new SetsGenerator(),
+        new SymbolPuzzleGenerator(),
+        new WhoIsWhoGenerator(),
     ]);
 
     public IReadOnlyCollection<IProblemGenerator> Generators => _byKey.Values;

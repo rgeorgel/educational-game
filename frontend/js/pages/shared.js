@@ -1,4 +1,4 @@
-import { h } from "../dom.js";
+import { errorMessage, h } from "../dom.js";
 
 /** Selo do nível (Iniciante, Médio…) com a cor do nível. */
 export function levelBadge(level) {
@@ -8,9 +8,11 @@ export function levelBadge(level) {
 /** Barra "x% para o próximo nível". */
 export function levelProgress(progress) {
   const label = progress.nextLevel
-    ? progress.readyForNextLevel
-      ? `Pronto para o Desafio do Guardião (${progress.nextLevel.name}) — em breve!`
-      : `${progress.percent}% para ${progress.nextLevel.name}`
+    ? progress.guardianAvailable
+      ? `Pronto para o Desafio do Guardião!`
+      : progress.readyForNextLevel
+        ? `Pronto para ${progress.nextLevel.name} — conteúdo em breve!`
+        : `${progress.percent}% para ${progress.nextLevel.name}`
     : "Nível máximo!";
   return h(
     "div",
@@ -30,6 +32,19 @@ export const STATUS_LABEL = {
 
 export function statusChip(status) {
   return h("span", { class: `chip status-${status}` }, STATUS_LABEL[status] ?? status);
+}
+
+/** Inicia uma sessão (etapa, Guardião ou nivelamento) e vai para a tela de jogo. */
+export async function startAndPlay(start, button, errorBox) {
+  button.disabled = true;
+  try {
+    const session = await start();
+    location.hash = `#/jogar/${session.sessionId}`;
+  } catch (err) {
+    errorBox.textContent = errorMessage(err);
+    errorBox.hidden = false;
+    button.disabled = false;
+  }
 }
 
 export function loading(text = "Carregando…") {

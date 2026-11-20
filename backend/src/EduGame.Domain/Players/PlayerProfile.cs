@@ -34,6 +34,27 @@ public class SubjectProgress
     public int CurrentLevelId { get; set; }
     public int Xp { get; set; }
     public DateTimeOffset LevelReachedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>O jogador já fez (ou dispensou) o teste de nivelamento deste tópico.</summary>
+    public bool PlacementDone { get; set; }
+}
+
+/// <summary>Atividade de um dia (para sequência de dias e gráfico de histórico).</summary>
+public class DailyActivity
+{
+    public Guid ProfileId { get; set; }
+    public DateOnly Date { get; set; }
+    public int ProblemsSolved { get; set; }
+    public int Correct { get; set; }
+    public int Xp { get; set; }
+}
+
+/// <summary>Medalha conquistada (o catálogo fica em EduGame.Domain.Progression.Achievements).</summary>
+public class ProfileAchievement
+{
+    public Guid ProfileId { get; set; }
+    public required string Slug { get; set; }
+    public DateTimeOffset EarnedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 
 /// <summary>Melhor resultado do jogador numa etapa.</summary>

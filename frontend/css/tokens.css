@@ -23,6 +23,10 @@
   --warning: #b9770e;
   --warning-bg: #fdf1dc;
 
+  /* Gráficos (validado contra a superfície clara) */
+  --chart-1: #2f6fde;
+  --chart-grid: #e2ddd0;
+
   /* Cores por nível */
   --level-iniciante: #3fa45b;
   --level-medio: #2f8f83;
@@ -64,6 +68,8 @@
     --warning: #f2b54a;
     --warning-bg: #3a2c12;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.3);
+    --chart-1: #5b8ef5;
+    --chart-grid: #333a48;
   }
 }
 
@@ -85,4 +91,6 @@
   --warning: #f2b54a;
   --warning-bg: #3a2c12;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.3);
+  --chart-1: #5b8ef5;
+  --chart-grid: #333a48;
 }

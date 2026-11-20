@@ -59,7 +59,13 @@ export const api = {
   map: (profileId, subject) => get(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/map`),
   progress: (profileId) => get(`/profiles/${profileId}/progress`),
 
+  history: (profileId, days = 14) => get(`/profiles/${profileId}/history?days=${days}`),
+  achievements: (profileId) => get(`/profiles/${profileId}/achievements`),
+
   startSession: (profileId, stageId) => post(`/profiles/${profileId}/sessions`, { stageId }),
+  startGuardian: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/guardian`),
+  startPlacement: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/placement`),
+  skipPlacement: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/placement/skip`),
   next: (sessionId) => get(`/sessions/${sessionId}/next`),
   hint: (sessionId, problemId) => post(`/sessions/${sessionId}/problems/${problemId}/hint`),
   answer: (sessionId, problemId, answer) => post(`/sessions/${sessionId}/problems/${problemId}/answer`, { answer }),

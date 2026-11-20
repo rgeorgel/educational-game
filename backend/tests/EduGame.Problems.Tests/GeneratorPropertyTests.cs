@@ -31,10 +31,10 @@ public partial class GeneratorPropertyTests
             Assert.False(string.IsNullOrWhiteSpace(c.Answer));
             Assert.False(string.IsNullOrWhiteSpace(c.Explanation));
             Assert.NotEmpty(c.Hints);
-            Assert.InRange(p.Difficulty, 50, 1300);
-            Assert.Contains(c.Type, new[] { ProblemTypes.Numero, ProblemTypes.MultiplaEscolha, ProblemTypes.CompletarSequencia });
+            Assert.InRange(p.Difficulty, 50, 2300);
+            Assert.Contains(c.Type, ProblemTypes.All);
 
-            if (c.Choices is not null)
+            if (c.Choices is not null && c.Type != ProblemTypes.Ordenar)
             {
                 Assert.InRange(c.Choices.Count, 2, 4);
                 Assert.Contains(c.Answer, c.Choices);
@@ -50,10 +50,34 @@ public partial class GeneratorPropertyTests
                 Assert.True(c.Sequence.Count >= 5);
             }
 
-            if (c.Type == ProblemTypes.Numero || (c.Type == ProblemTypes.CompletarSequencia && c.Choices is null))
+            if (c.Type == ProblemTypes.Numero || c.Type == ProblemTypes.FracaoVisual || (c.Type == ProblemTypes.CompletarSequencia && c.Choices is null))
             {
                 Assert.True(AnswerChecker.TryParseNumber(c.Answer, out var n), $"Resposta não numérica: {c.Answer}");
-                Assert.True(n >= 0, $"Resposta negativa em {key}: {c.Prompt}");
+                // O teclado precisa permitir digitar a resposta.
+                Assert.True(n >= 0 || c.AcceptsNegative, $"Resposta negativa sem teclado com '−' em {key}: {c.Prompt}");
+                Assert.True(n == decimal.Truncate(n) || c.AcceptsDecimal, $"Resposta decimal sem teclado com ',' em {key}: {c.Prompt}");
+            }
+
+            if (c.Type == ProblemTypes.VerdadeiroFalso)
+                Assert.Contains(c.Answer, new[] { ProblemTypes.True, ProblemTypes.False });
+
+            if (c.Type == ProblemTypes.Ordenar)
+            {
+                Assert.NotNull(c.Choices);
+                Assert.Equal(c.Choices.Order(), c.Answer.Split('|').Order());
+            }
+
+            if (c.Type == ProblemTypes.FracaoVisual)
+            {
+                Assert.NotNull(c.Figure);
+                Assert.InRange(int.Parse(c.Answer), 1, c.Figure.Parts - 1);
+            }
+
+            if (c.Type == ProblemTypes.Grade)
+            {
+                Assert.NotNull(c.Grid);
+                Assert.Equal(c.Grid.Size * c.Grid.Size, c.Grid.Cells.Count);
+                Assert.Contains(c.Grid.Cells, cell => cell is null);
             }
 
             Assert.True(AnswerChecker.IsCorrect(c, c.Answer));
@@ -63,12 +87,53 @@ public partial class GeneratorPropertyTests
     [Theory, MemberData(nameof(GeneratorKeys))]
     public void Difficulty_spans_easy_to_hard(string key)
     {
+        var level = ProblemFactory.Default.Get(key).Level;
         var difficulties = Sample(key).Select(p => p.Difficulty).ToList();
 
-        // Cada habilidade precisa ter problemas fáceis (início) e difíceis o bastante para levar ao domínio (~1000).
-        Assert.True(difficulties.Min() <= 350, $"{key}: mínimo {difficulties.Min()}");
-        Assert.True(difficulties.Max() >= 900, $"{key}: máximo {difficulties.Max()}");
+        // Cada habilidade precisa ter problemas perto do rating inicial do nível
+        // e difíceis o bastante para levar ao domínio (rating do próximo nível).
+        var (easy, hard) = level switch
+        {
+            "iniciante" => (350, 900),
+            "medio" => (1050, 1400),
+            "avancado" => (1550, 1900),
+            _ => throw new InvalidOperationException(level),
+        };
+        Assert.True(difficulties.Min() <= easy, $"{key}: mínimo {difficulties.Min()}");
+        Assert.True(difficulties.Max() >= hard, $"{key}: máximo {difficulties.Max()}");
     }
+
+    [Fact]
+    public void Sudokus_have_exactly_one_solution()
+    {
+        foreach (var key in new[] { "log.grades", "log.sudoku-6x6" })
+        {
+            foreach (var p in Sample(key).Take(300).Where(p => p.Content.Grid!.Kind == GridKinds.Sudoku))
+            {
+                var g = p.Content.Grid!;
+                var cells = g.Cells.Select(c => c ?? 0).ToArray();
+                Assert.Equal(1, Tools.SudokuTools.CountSolutions(cells, g.BoxRows, g.BoxCols, 3));
+            }
+        }
+    }
+
+    [Fact]
+    public void Linear_equations_answers_satisfy_the_equation()
+    {
+        foreach (var p in Sample("mat.equacoes"))
+        {
+            var m = SimpleEquation().Match(p.Content.Prompt);
+            if (!m.Success) continue;
+            var x = int.Parse(p.Content.Answer.Replace('−', '-'));
+            var a = m.Groups["a"].Success ? int.Parse(m.Groups["a"].Value) : 1;
+            var b = m.Groups["b"].Success ? int.Parse(m.Groups["b"].Value) : 0;
+            var rhs = int.Parse(m.Groups["c"].Value.Replace('−', '-'));
+            Assert.Equal(rhs, a * x + b);
+        }
+    }
+
+    [GeneratedRegex(@"^Resolva a equação: (?<a>\d+)?x(?: \+ (?<b>\d+))? = (?<c>−?\d+)\. Quanto vale x\?$")]
+    private static partial Regex SimpleEquation();
 
     [Fact]
     public void Arithmetic_prompts_have_correct_answers()

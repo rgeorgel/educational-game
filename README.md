@@ -160,7 +160,8 @@ dotnet EduGame.Api.dll plano conceder coordenacao@escola.com escola        # sem
 dotnet EduGame.Api.dll plano remover professora@escola.com
 ```
 
-As assinaturas ficam na tabela `subscriptions`, e o painel admin mostra quem tem plano.
+As assinaturas ficam na tabela `subscriptions`. Pelo **painel admin** dá para fazer o mesmo sem terminal
+e também dar **testes grátis** (7, 14, 30 dias ou outro prazo), sem a pessoa assinar nada (veja "Planos no painel" abaixo).
 
 ## Pagamentos (Stripe)
 
@@ -217,12 +218,13 @@ Veja também [docs/MONETIZACAO.md](docs/MONETIZACAO.md) (CNPJ, nota fiscal, term
 
 ## Painel de super admin
 
-Um painel para acompanhar o uso do jogo. Ele roda como um **serviço separado** (`edugame-admin`, pasta `admin/`):
+Um painel para acompanhar o uso do jogo e gerenciar os planos das pessoas. Ele roda como um **serviço separado** (`edugame-admin`, pasta `admin/`):
 - não usa o código do jogo nem a API do jogo;
 - tem login próprio;
-- só **lê** o banco.
+- só **lê** o banco, com uma exceção: a tabela `subscriptions` (planos).
 
 Toda conexão do painel abre em modo somente leitura e cada consulta tem limite de 20 segundos. O `/health` do painel confirma esse modo.
+Só as ações de plano abrem, de propósito, uma transação de leitura e escrita, e elas só mexem em `subscriptions`.
 
 O que mostra:
 
@@ -238,7 +240,7 @@ O que mostra:
   - pessoas ativas por dia;
   - novos cadastros (contas × convidados);
   - respostas por horário do dia.
-- **Usuários:** busca por e-mail ou apelido e filtro conta/convidado. Ao clicar em alguém, abre o detalhe: perfis, níveis, últimos 30 dias e partidas recentes.
+- **Usuários:** busca por e-mail ou apelido, filtro conta/convidado e filtro de plano (com plano, em teste, pagantes, sem plano). A coluna **Plano** mostra os planos ativos e até quando valem. Ao clicar em alguém, abre o detalhe: planos, perfis, níveis, últimos 30 dias e partidas recentes.
 - **Ranking:** os 50 primeiros por XP, respostas, % de acertos (mínimo de 20 respostas) ou dias jogando. Períodos: sempre, 7, 30 ou 90 dias, com ou sem convidados.
 - **Conteúdo:**
   - habilidades mais difíceis e mais praticadas;
@@ -246,6 +248,20 @@ O que mostra:
   - modos de jogo;
   - jogadores por nível;
   - medalhas.
+
+### Planos no painel
+
+No detalhe de uma conta, o cartão **Planos** mostra os planos ativos (e o histórico) e permite:
+- **Teste grátis:** Professor Pro, Família ou Escola por 7, 14, 30 dias (ou outro prazo). A pessoa não assina nada; no fim do prazo o plano acaba sozinho. Na página de planos do jogo ela vê "Teste grátis até dd/mm" e, com o Stripe ligado, o botão "Assinar". Se assinar, o teste daquele plano é encerrado.
+- **Concessão:** o mesmo, para cortesias, Pix ou escolas, com prazo ou sem data para acabar.
+- **+7 dias / +30 dias** e **Encerrar agora** em testes, concessões e escolhas do lançamento.
+
+Regras:
+- Dar um plano que a conta já tem em teste ou concessão troca o anterior pelo novo (não duplica).
+- Assinaturas **pagas pelo Stripe** só aparecem; para cancelar ou mudar, use o painel do Stripe.
+- Convidados não recebem plano: a pessoa precisa salvar o progresso antes.
+- Tudo fica registrado em `subscriptions` (`source = teste` ou `manual`, nota com o usuário do admin) e no log do painel.
+- Lembre que, com `PLANS_ENFORCE=false`, todos já têm tudo liberado: os testes passam a fazer diferença quando a cobrança for ligada.
 
 Os dias são contados no horário de Brasília (`Admin__TimeZone` muda isso). Os **acessos** vêm da tabela `daily_visits`, que o jogo preenche:
 - conta 1 acesso cada vez que alguém abre o jogo, entra ou cria conta;
@@ -273,7 +289,11 @@ GRANT CONNECT ON DATABASE edugame TO edugame_leitura;
 GRANT USAGE ON SCHEMA public TO edugame_leitura;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO edugame_leitura;
 ALTER DEFAULT PRIVILEGES FOR ROLE edugame IN SCHEMA public GRANT SELECT ON TABLES TO edugame_leitura;
+-- Para gerenciar planos pelo painel (única escrita do painel):
+GRANT INSERT, UPDATE ON subscriptions TO edugame_leitura;
 ```
+
+Sem esse último `GRANT`, o painel continua funcionando, mas as ações de plano mostram um aviso pedindo a permissão.
 
 No **Coolify**:
 1. Cadastre `ADMIN_USERNAME` e `ADMIN_PASSWORD` (e, se quiser, `ADMIN_DB_USER` e `ADMIN_DB_PASSWORD`) nas variáveis do recurso.
@@ -349,7 +369,7 @@ backend/
   src/EduGame.Infrastructure/  EF Core, migrations, seed de conteúdo
   tests/                       testes unitários e de integração
 frontend/                      HTML, CSS e JS servidos pelo nginx (index.html = landing, jogar.html = jogo)
-admin/                         painel de super admin: serviço .NET separado, só leitura no banco (wwwroot = interface)
+admin/                         painel de super admin: serviço .NET separado, lê o banco e só escreve planos (wwwroot = interface)
 nginx/                         configuração do proxy reverso
 docs/                          plano e documentação
 ```

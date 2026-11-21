@@ -31,4 +31,8 @@ export const api = {
   ranking: (params) => request("GET", `/api/ranking?${qs(params)}`),
   origins: (days) => request("GET", `/api/origins?${qs({ days })}`),
   insights: (days) => request("GET", `/api/insights?${qs({ days })}`),
+  planCatalog: () => request("GET", "/api/plans"),
+  grantPlan: (userId, body) => request("POST", `/api/users/${encodeURIComponent(userId)}/plans`, body),
+  extendPlan: (userId, subId, days) => request("POST", `/api/users/${encodeURIComponent(userId)}/plans/${encodeURIComponent(subId)}/extend`, { days }),
+  endPlan: (userId, subId) => request("POST", `/api/users/${encodeURIComponent(userId)}/plans/${encodeURIComponent(subId)}/end`, {}),
 };

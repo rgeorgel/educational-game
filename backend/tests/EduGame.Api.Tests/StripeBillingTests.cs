@@ -213,10 +213,17 @@ public class StripeBillingTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Paying_ends_the_free_launch_choice()
+    public async Task Paying_ends_the_free_launch_choice_and_the_trial_of_that_plan()
     {
         var (client, userId) = await AccountAsync(factory);
         Assert.Equal(HttpStatusCode.OK, (await client.PutAsJsonAsync("/api/me/plan", new { plan = "familia" })).StatusCode); // escolha do lançamento
+        using (var seed = factory.Services.CreateScope())
+        {
+            var seedDb = seed.ServiceProvider.GetRequiredService<AppDbContext>();
+            seedDb.Subscriptions.Add(new Subscription { UserId = userId, Plan = "familia", Source = SubscriptionSources.Trial, EndsAt = DateTimeOffset.UtcNow.AddDays(14) });
+            seedDb.Subscriptions.Add(new Subscription { UserId = userId, Plan = "professor", Source = SubscriptionSources.Trial, EndsAt = DateTimeOffset.UtcNow.AddDays(7) });
+            await seedDb.SaveChangesAsync();
+        }
 
         using var app = Stripe();
         var subId = $"sub_{Guid.NewGuid():N}";
@@ -227,6 +234,9 @@ public class StripeBillingTests(ApiFactory factory)
         var subs = await db.Subscriptions.Where(s => s.UserId == userId).ToListAsync();
         Assert.Contains(subs, s => s.Source == SubscriptionSources.Stripe && s.EndsAt == null);
         Assert.All(subs.Where(s => s.Source == SubscriptionSources.Choice), s => Assert.True(s.EndsAt <= DateTimeOffset.UtcNow));
+        // O teste do plano assinado acaba; o teste de outro plano continua.
+        Assert.True(subs.Single(s => s.Source == SubscriptionSources.Trial && s.Plan == "familia").EndsAt <= DateTimeOffset.UtcNow);
+        Assert.True(subs.Single(s => s.Source == SubscriptionSources.Trial && s.Plan == "professor").EndsAt > DateTimeOffset.UtcNow);
     }
 
     [Fact]

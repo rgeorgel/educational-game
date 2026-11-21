@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using EduGame.Domain.Billing;
 using EduGame.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,6 +66,29 @@ public class FamilyPlanTests(ApiFactory factory)
         var guest = factory.CreateClient();
         await guest.PostAsJsonAsync("/api/auth/guest", new { nickname = "Conv", avatar = "🐼" });
         Assert.Equal(HttpStatusCode.Forbidden, (await guest.PutAsJsonAsync("/api/me/plan", new { plan = "familia" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Trial_from_the_admin_panel_shows_until_when_it_lasts()
+    {
+        var (client, kidId) = await FamilyAsync();
+        var endsAt = DateTimeOffset.UtcNow.AddDays(14);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var userId = await db.Profiles.Where(p => p.Id == kidId).Select(p => p.UserId).SingleAsync();
+            db.Subscriptions.Add(new Subscription { UserId = userId, Plan = "familia", Source = SubscriptionSources.Trial, EndsAt = endsAt });
+            db.Subscriptions.Add(new Subscription { UserId = userId, Plan = "professor", Source = SubscriptionSources.Trial,
+                StartsAt = DateTimeOffset.UtcNow.AddDays(-10), EndsAt = DateTimeOffset.UtcNow.AddDays(-3) }); // teste que já acabou
+            await db.SaveChangesAsync();
+        }
+
+        var plan = await client.GetFromJsonAsync<JsonElement>("/api/me/plan");
+        Assert.Equal("familia", plan.GetProperty("slug").GetString());
+        var trial = Assert.Single(plan.GetProperty("trials").EnumerateArray());
+        Assert.Equal("familia", trial.GetProperty("slug").GetString());
+        Assert.Equal(endsAt.ToUnixTimeSeconds(), trial.GetProperty("endsAt").GetDateTimeOffset().ToUnixTimeSeconds());
+        Assert.Null(plan.GetProperty("chosen").GetString());
     }
 
     [Fact]

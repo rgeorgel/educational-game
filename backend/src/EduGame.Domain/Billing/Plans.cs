@@ -75,14 +75,17 @@ public static class SubscriptionSources
     /// <summary>Escolhido pela própria pessoa na página de planos (por enquanto sem pagamento).</summary>
     public const string Choice = "escolha";
 
-    /// <summary>Concedido à mão com o comando "plano".</summary>
+    /// <summary>Concedido à mão (comando "plano" ou painel admin), sem cobrança.</summary>
     public const string Manual = "manual";
+
+    /// <summary>Período de teste grátis dado pelo painel admin (sempre com data para acabar, sem assinar).</summary>
+    public const string Trial = "teste";
 
     /// <summary>Pago pelo Stripe (integração futura).</summary>
     public const string Stripe = "stripe";
 }
 
-/// <summary>Assinatura de um plano: escolhida na página de planos, concedida à mão ou (no futuro) paga pelo Stripe.</summary>
+/// <summary>Assinatura de um plano: escolhida na página de planos, concedida à mão, teste grátis ou paga pelo Stripe.</summary>
 public class Subscription
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();

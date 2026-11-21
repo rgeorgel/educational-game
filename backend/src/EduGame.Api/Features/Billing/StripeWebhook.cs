@@ -112,11 +112,12 @@ public sealed class StripeWebhook(AppDbContext db, StripeSettings settings, Game
         row.ExternalUpdatedAt = eventAt;
         row.Note = "Stripe";
 
-        // Assinou de verdade: encerra a escolha grátis do lançamento.
+        // Assinou de verdade: encerra a escolha grátis do lançamento e o teste grátis deste plano.
         if (endsAt is null || endsAt > clock.Now)
         {
             var now = clock.Now;
-            await db.Subscriptions.Where(s => s.UserId == userId && s.Source == SubscriptionSources.Choice && (s.EndsAt == null || s.EndsAt > now))
+            await db.Subscriptions.Where(s => s.UserId == userId && (s.EndsAt == null || s.EndsAt > now)
+                    && (s.Source == SubscriptionSources.Choice || (s.Source == SubscriptionSources.Trial && s.Plan == plan)))
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.EndsAt, now), ct);
         }
         await db.SaveChangesAsync(ct);

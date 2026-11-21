@@ -98,7 +98,7 @@ services:
         condition: service_started
 
   # Painel de super admin: serviço separado do jogo (não usa o código nem a API do jogo).
-  # Só lê o banco, numa conexão em modo somente leitura. Fica bloqueado até ADMIN_USERNAME e
+  # Lê o banco numa conexão em modo somente leitura; só as ações de plano escrevem (tabela subscriptions). Fica bloqueado até ADMIN_USERNAME e
   # ADMIN_PASSWORD serem definidos. Por padrão só abre em 127.0.0.1 (veja ADMIN_BIND no .env.example).
   edugame-admin:
     build: ./admin

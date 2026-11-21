@@ -7,6 +7,9 @@ namespace EduGame.Api.Features.Billing;
 
 public sealed record PlanSummary(string Slug, string Name);
 
+/// <summary>Plano em período de teste grátis (dado pelo painel admin) e até quando vale.</summary>
+public sealed record PlanTrial(string Slug, DateTimeOffset EndsAt);
+
 /// <summary>Planos da conta e o que eles liberam (para a interface mostrar e os endpoints conferirem).</summary>
 public sealed record PlanInfo(
     string Slug,
@@ -14,6 +17,7 @@ public sealed record PlanInfo(
     IReadOnlyList<PlanSummary> Plans,
     string? Chosen,
     IReadOnlyList<string> Paid,
+    IReadOnlyList<PlanTrial> Trials,
     bool CanManageBilling,
     bool Enforced,
     DateTimeOffset? EndsAt,
@@ -51,10 +55,12 @@ public sealed class PlanService(AppDbContext db, IConfiguration config, GameCloc
         DateTimeOffset? endsAt = granting.Count == 0 || granting.Any(s => s.EndsAt is null) ? null : granting.Max(s => s.EndsAt);
         var chosen = subs.Where(s => s.Source == SubscriptionSources.Choice && s.IsActive(now)).OrderByDescending(s => s.StartsAt).FirstOrDefault()?.Plan;
         var paid = subs.Where(s => s.Source == SubscriptionSources.Stripe && s.IsActive(now)).Select(s => s.Plan).Distinct().ToList();
+        var trials = subs.Where(s => s.Source == SubscriptionSources.Trial && s.IsActive(now) && s.EndsAt is not null && !paid.Contains(s.Plan))
+            .GroupBy(s => s.Plan).Select(g => new PlanTrial(g.Key, g.Max(s => s.EndsAt!.Value))).ToList();
         var hasCustomer = await db.Users.AnyAsync(u => u.Id == userId && u.StripeCustomerId != null, ct);
 
         return new PlanInfo(top.Slug, string.Join(" + ", active.Select(p => p.Name)),
-            [.. active.Select(p => new PlanSummary(p.Slug, p.Name))], chosen, paid, hasCustomer, Enforced, endsAt,
+            [.. active.Select(p => new PlanSummary(p.Slug, p.Name))], chosen, paid, trials, hasCustomer, Enforced, endsAt,
             features.MaxProfiles, features.MaxClassrooms, features.MaxActiveAssignmentsPerClassroom,
             features.CanExport, features.Worksheets, features.WeeklyReport, features.Reinforcement);
     }

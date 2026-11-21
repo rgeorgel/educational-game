@@ -6,6 +6,9 @@ const root = document.getElementById("app");
 const SOURCES = { direto: "Acesso direto", compartilhar: "Compartilhado no jogo", "(sem registro)": "Antes do registro de origem" };
 const sourceLabel = (source) => SOURCES[source] ?? source ?? "—";
 const MODES = { etapa: "Etapas", guardiao: "Desafio do guardião", nivelamento: "Nivelamento", diario: "Desafio do dia", revisao: "Revisão" };
+const PLAN_NAMES = { professor: "Professor Pro", familia: "Família", escola: "Escola", gratis: "Grátis" };
+const SOURCE_NAMES = { escolha: "escolheu no site", manual: "manual", stripe: "pago", teste: "teste grátis" };
+const planName = (slug) => PLAN_NAMES[slug] ?? slug;
 const prefs = loadPrefs();
 
 // ---------- Tema (claro/escuro), lembrado só neste navegador ----------
@@ -214,6 +217,21 @@ function accountBadge(row) {
   return h("span", { class: "pill account" }, row.converted ? "conta (era convidado)" : "conta");
 }
 
+/** Dias que faltam até `iso` ("acaba hoje", "faltam 5 dias"). */
+function remaining(iso) {
+  const days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+  if (days <= 0) return "acaba hoje";
+  return days === 1 ? "falta 1 dia" : `faltam ${days} dias`;
+}
+
+/** Selo de um plano ativo: "Família · teste até 03/12". */
+function planPill(p) {
+  const cls = p.source === "teste" ? "trial" : p.source === "stripe" ? "paid" : "plan";
+  const kind = p.source === "teste" ? " · teste" : p.source === "stripe" ? " · pago" : p.source === "escolha" ? " · lançamento" : "";
+  const until = p.endsAt ? ` até ${localDay(p.endsAt)}` : "";
+  return h("span", { class: `pill ${cls}`, title: SOURCE_NAMES[p.source] ?? p.source }, `${planName(p.plan)}${kind}${until}`);
+}
+
 function emptyRow(cols, text) {
   return h("tr", {}, h("td", { colspan: cols, class: "empty" }, text));
 }
@@ -223,8 +241,6 @@ async function overviewPage() {
   const days = prefs.days ?? 30;
   const [ov, s, origins] = await Promise.all([api.overview(), api.series(days, 12), api.origins(days)]);
   const o = ov.overview;
-  const PLAN_NAMES = { professor: "Professor Pro", familia: "Família", escola: "Escola" };
-  const SOURCE_NAMES = { escolha: "escolheu no site", manual: "manual", stripe: "pago" };
   const planSummary = ov.plans.length
     ? ov.plans.map((p) => `${PLAN_NAMES[p.plan] ?? p.plan}: ${num(p.users)} (${SOURCE_NAMES[p.source] ?? p.source})`).join(" · ")
     : "ninguém escolheu um plano ainda";
@@ -392,7 +408,7 @@ function originsView({ sources, campaigns }) {
 
 // ---------- Usuários ----------
 async function usersPage() {
-  const params = { q: prefs.q ?? "", type: prefs.type ?? "todos", sort: prefs.sort ?? "recentes", page: prefs.page ?? 1 };
+  const params = { q: prefs.q ?? "", type: prefs.type ?? "todos", plan: prefs.plan ?? "todos", sort: prefs.sort ?? "recentes", page: prefs.page ?? 1 };
   const data = await api.users(params);
   const pages = Math.max(1, Math.ceil(data.total / data.pageSize));
 
@@ -425,6 +441,7 @@ async function usersPage() {
       { class: "clickable", tabindex: 0, onclick: () => (location.hash = `#/usuarios/${u.id}`), onkeydown: (e) => e.key === "Enter" && (location.hash = `#/usuarios/${u.id}`) },
       h("td", {}, who(u), u.profiles > 1 ? h("div", { class: "muted small" }, `${u.profiles} perfis`) : null),
       h("td", {}, u.email ?? h("span", { class: "muted" }, "—")),
+      h("td", {}, u.plans.length ? u.plans.map(planPill) : h("span", { class: "muted small" }, u.isGuest ? "—" : "Grátis")),
       h("td", {}, localDay(u.createdAt), h("div", { class: "muted small" }, `${ago(u.createdAt)}${u.source ? ` · ${sourceLabel(u.source)}` : ""}`)),
       h("td", {}, ago(u.lastSeenAt)),
       h("td", { class: "n" }, num(u.solved)),
@@ -450,6 +467,12 @@ async function usersPage() {
       { class: "filters" },
       search,
       segmented("Tipo de usuário", [["todos", "Todos"], ["conta", "Contas"], ["convidado", "Convidados"]], params.type, (v) => update({ type: v, page: 1 })),
+      segmented(
+        "Plano",
+        [["todos", "Qualquer plano"], ["com-plano", "Com plano"], ["teste", "Em teste"], ["pago", "Pagantes"], ["sem-plano", "Sem plano"]],
+        params.plan,
+        (v) => update({ plan: v, page: 1 }),
+      ),
       sortSelect,
     ),
     h(
@@ -464,9 +487,9 @@ async function usersPage() {
           h(
             "thead",
             {},
-            h("tr", {}, h("th", {}, "Jogador"), h("th", {}, "E-mail"), h("th", {}, "Cadastro"), h("th", {}, "Último acesso"), h("th", { class: "n" }, "Respostas"), h("th", { class: "n" }, "Acertos"), h("th", { class: "n" }, "XP"), h("th", { class: "n" }, "Acessos (30d)")),
+            h("tr", {}, h("th", {}, "Jogador"), h("th", {}, "E-mail"), h("th", {}, "Plano"), h("th", {}, "Cadastro"), h("th", {}, "Último acesso"), h("th", { class: "n" }, "Respostas"), h("th", { class: "n" }, "Acertos"), h("th", { class: "n" }, "XP"), h("th", { class: "n" }, "Acessos (30d)")),
           ),
-          h("tbody", {}, rows.length ? rows : emptyRow(8, "Ninguém encontrado com esses filtros.")),
+          h("tbody", {}, rows.length ? rows : emptyRow(9, "Ninguém encontrado com esses filtros.")),
         ),
       ),
       pages > 1
@@ -483,7 +506,7 @@ async function usersPage() {
 }
 
 async function userPage(id) {
-  const { user, profiles, activity, sessions, subscriptions } = await api.user(id);
+  const [{ user, profiles, activity, sessions, subscriptions }, catalog] = await Promise.all([api.user(id), api.planCatalog()]);
   const solved = profiles.reduce((a, p) => a + p.solved, 0);
   const correct = profiles.reduce((a, p) => a + p.correct, 0);
 
@@ -516,13 +539,7 @@ async function userPage(id) {
       tile("Perfis", num(profiles.length), user.classroomsOwned ? `${user.classroomsOwned} turmas criadas` : "nenhuma turma criada"),
     ),
     card("Últimos 30 dias", chart, { wide: true }),
-    subscriptions?.length
-      ? card(
-          "Planos",
-          h("ul", { class: "plain-list" }, subscriptions.map((s) => h("li", {}, h("strong", {}, s.plan), ` · ${s.active ? "ativo" : "encerrado"} · desde ${localDay(s.startsAt)}${s.endsAt ? ` até ${localDay(s.endsAt)}` : " sem fim"}${s.note ? ` · ${s.note}` : ""}`))),
-          { wide: true },
-        )
-      : null,
+    planManager(user, subscriptions, catalog),
     h(
       "div",
       { class: "grid" },
@@ -578,6 +595,158 @@ async function userPage(id) {
       { wide: true },
     ),
   );
+}
+
+// ---------- Planos de uma conta: ver, dar teste grátis, conceder, estender e encerrar ----------
+function planManager(user, subscriptions, catalog) {
+  const active = subscriptions.filter((s) => s.active);
+  const past = subscriptions.filter((s) => !s.active);
+  const error = h("p", { class: "error", role: "alert", hidden: true });
+
+  const run = async (btn, fn) => {
+    btn.disabled = true;
+    error.hidden = true;
+    try {
+      await fn();
+      route();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) return renderLogin();
+      error.textContent = err.message;
+      error.hidden = false;
+      btn.disabled = false;
+    }
+  };
+
+  const period = (s) => {
+    const since = `desde ${localDay(s.startsAt)}`;
+    if (!s.endsAt) return `${since} · sem data para acabar`;
+    if (!s.active) return `${localDay(s.startsAt)} a ${localDay(s.endsAt)}`;
+    return `${since} · até ${localDay(s.endsAt)} (${remaining(s.endsAt)})`;
+  };
+
+  const row = (s) => {
+    const actions = [];
+    if (s.active && s.source !== "stripe") {
+      if (s.endsAt) {
+        for (const days of [7, 30]) {
+          const btn = h("button", { type: "button", class: "ghost" }, `+${days} dias`);
+          btn.addEventListener("click", () => run(btn, () => api.extendPlan(user.id, s.id, days)));
+          actions.push(btn);
+        }
+      }
+      const end = h("button", { type: "button", class: "ghost danger" }, "Encerrar agora");
+      end.addEventListener("click", () => {
+        if (confirm(`Encerrar o ${planName(s.plan)} desta conta agora? A pessoa volta para o que os outros planos dela liberam.`))
+          run(end, () => api.endPlan(user.id, s.id));
+      });
+      actions.push(end);
+    }
+    return h(
+      "li",
+      { class: `plan-row${s.active ? "" : " ended"}` },
+      h(
+        "div",
+        {},
+        h("strong", {}, planName(s.plan)),
+        " ",
+        h("span", { class: `pill ${s.source === "teste" ? "trial" : s.source === "stripe" ? "paid" : "plan"}` }, SOURCE_NAMES[s.source] ?? s.source),
+        s.active ? null : h("span", { class: "pill muted-pill" }, "encerrado"),
+        h("div", { class: "muted small" }, period(s), s.externalStatus ? ` · Stripe: ${s.externalStatus}` : "", s.note ? ` · ${s.note}` : ""),
+        s.active && s.source === "stripe" ? h("div", { class: "muted small" }, "Pago pelo Stripe: para cancelar ou mudar, use o painel do Stripe.") : null,
+      ),
+      actions.length ? h("div", { class: "row-actions" }, actions) : null,
+    );
+  };
+
+  const list = active.length
+    ? h("ul", { class: "plan-list" }, active.map(row))
+    : h("p", { class: "muted small" }, user.isGuest ? "Convidados ficam no Grátis." : "Sem plano ativo: está no Grátis.");
+  const history = past.length
+    ? h("details", { class: "plan-history" }, h("summary", {}, `Histórico (${past.length})`), h("ul", { class: "plan-list" }, past.map(row)))
+    : null;
+
+  return card("Planos", [list, history, user.isGuest ? null : grantForm(user, catalog, run), error], {
+    sub: "O que vale agora é a soma dos planos ativos. Planos dados aqui não cobram nada.",
+    wide: true,
+  });
+}
+
+function grantForm(user, catalog, run) {
+  const state = { plan: catalog.plans[0]?.slug, kind: "teste", days: 14, custom: "" };
+  const box = h("div", { class: "grant" });
+  const draw = () => {
+    const presets = state.kind === "teste" ? catalog.trialPresets.map((d) => [d, `${d} dias`]) : [[30, "30 dias"], [90, "90 dias"], [365, "1 ano"], ["sem-fim", "Sem data para acabar"]];
+    if (!presets.some(([v]) => v === state.days) && state.days !== "outro") state.days = presets[0][0];
+    const days = state.days === "outro" ? Number(state.custom) || null : state.days === "sem-fim" ? null : state.days;
+    const valid = state.plan && (state.days === "sem-fim" || (Number.isInteger(days) && days >= 1 && days <= catalog.maxDays));
+
+    const custom = h("input", { type: "number", min: 1, max: catalog.maxDays, value: state.custom, "aria-label": "Quantidade de dias", placeholder: "dias" });
+    custom.addEventListener("input", () => {
+      state.custom = custom.value;
+      const n = Number(custom.value);
+      submit.disabled = !(Number.isInteger(n) && n >= 1 && n <= catalog.maxDays);
+      submit.textContent = label(n || null);
+    });
+    const note = h("input", { name: "note", maxlength: 150, placeholder: "Nota (opcional), ex.: pediu no WhatsApp", "aria-label": "Nota" });
+    const label = (d) =>
+      state.kind === "teste"
+        ? `Dar ${d ?? "…"} dias de teste do ${planName(state.plan)}`
+        : `Conceder ${planName(state.plan)}${d ? ` por ${d} dias` : state.days === "sem-fim" ? " sem data para acabar" : ""}`;
+    const submit = h("button", { type: "button", class: "primary", disabled: !valid }, label(days));
+    submit.addEventListener("click", () =>
+      run(submit, () =>
+        api.grantPlan(user.id, {
+          plan: state.plan,
+          kind: state.kind,
+          days: state.days === "sem-fim" ? null : state.days === "outro" ? Number(state.custom) : state.days,
+          note: note.value,
+        }),
+      ),
+    );
+
+    box.replaceChildren(
+      h("h3", {}, "Dar um plano"),
+      h(
+        "div",
+        { class: "grant-row" },
+        h("span", {}, "Tipo"),
+        segmented("Tipo", [["teste", "Teste grátis"], ["manual", "Concessão (cortesia, Pix, escola…)"]], state.kind, (v) => {
+          state.kind = v;
+          state.days = v === "teste" ? 14 : 30;
+          draw();
+        }),
+      ),
+      h(
+        "div",
+        { class: "grant-row" },
+        h("span", {}, "Plano"),
+        segmented("Plano", catalog.plans.map((p) => [p.slug, p.name]), state.plan, (v) => {
+          state.plan = v;
+          draw();
+        }),
+      ),
+      h(
+        "div",
+        { class: "grant-row" },
+        h("span", {}, "Duração"),
+        segmented("Duração", [...presets, ["outro", "Outro"]], state.days, (v) => {
+          state.days = v;
+          draw();
+          if (v === "outro") box.querySelector('input[type="number"]')?.focus();
+        }),
+        state.days === "outro" ? custom : null,
+      ),
+      h("div", { class: "grant-row" }, h("span", {}, "Nota"), note),
+      h(
+        "div",
+        { class: "grant-row" },
+        submit,
+        h("span", { class: "muted small" }, "Se a conta já tem teste ou concessão deste plano, ele é trocado por este."),
+      ),
+    );
+  };
+  draw();
+  return box;
 }
 
 function fact(label, value) {

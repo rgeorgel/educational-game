@@ -55,10 +55,21 @@ export function planPromo(plan, focus, billing) {
   );
 }
 
-/** "Seu plano: Família · Ver planos" */
+const shortDate = (iso) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+
+/** "Seu plano: Família (teste grátis até 03/12) · Ver planos" */
 export function planLine(plan) {
   if (!plan) return null;
-  return h("p", { class: "muted small plan-line" }, "Seu plano: ", h("strong", {}, plan.name), " · ", h("a", { href: "#/planos" }, "ver planos"));
+  const trial = plan.trials?.find((t) => t.slug === plan.slug);
+  return h(
+    "p",
+    { class: "muted small plan-line" },
+    "Seu plano: ",
+    h("strong", {}, plan.name),
+    trial ? ` (teste grátis até ${shortDate(trial.endsAt)})` : null,
+    " · ",
+    h("a", { href: "#/planos" }, "ver planos"),
+  );
 }
 
 /** Volta do Stripe (?pagamento=sucesso|cancelado): mostra o aviso e limpa o endereço. */
@@ -111,6 +122,8 @@ export async function plansPage() {
     const isPaid = paid.includes(offer.slug);
     const isCurrent = mine && (isPaid || offer.slug === current || mine.plans?.some((p) => p.slug === offer.slug && offer.slug !== "gratis"));
     const paidOffer = stripe && billing.paidPlans.includes(offer.slug);
+    const trial = mine?.trials?.find((t) => t.slug === offer.slug);
+    const trialNote = trial ? h("p", { class: "plan-current" }, `✓ Teste grátis até ${shortDate(trial.endsAt)}`) : null;
     let action;
     if (!offer.selfService) {
       action = h("p", { class: "muted small" }, "Para escolas e redes de ensino: fale com a gente.");
@@ -122,13 +135,13 @@ export async function plansPage() {
       const manage = h("button", { type: "button", class: "btn" }, "Gerenciar assinatura");
       busy(manage, async () => location.assign((await api.billingPortal()).url));
       action = [h("p", { class: "plan-current" }, "✓ Assinatura ativa"), manage];
-    } else if (isCurrent && !(paidOffer && mine?.chosen === offer.slug)) {
-      action = h("p", { class: "plan-current" }, "✓ Seu plano atual");
+    } else if (isCurrent && !(paidOffer && (mine?.chosen === offer.slug || trial))) {
+      action = trialNote ?? h("p", { class: "plan-current" }, "✓ Seu plano atual");
     } else if (paidOffer) {
-      // Quem escolheu este plano no lançamento também vê "Assinar" para continuar depois do lançamento.
+      // Quem escolheu este plano no lançamento ou está em teste grátis também vê "Assinar" para continuar depois.
       const btn = h("button", { type: "button", class: "btn btn-primary" }, `Assinar ${offer.name}`);
       busy(btn, async () => location.assign((await api.checkout(offer.slug)).url));
-      action = [mine?.chosen === offer.slug ? h("p", { class: "muted small" }, "Você escolheu este plano no lançamento.") : null, btn];
+      action = [trialNote ?? (mine?.chosen === offer.slug ? h("p", { class: "muted small" }, "Você escolheu este plano no lançamento.") : null), btn];
     } else if (offer.slug === "gratis" && stripe && paid.length) {
       action = h("p", { class: "muted small" }, "Para voltar ao Grátis, cancele em \"Gerenciar assinatura\".");
     } else {

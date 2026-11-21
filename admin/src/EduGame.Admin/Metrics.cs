@@ -203,11 +203,12 @@ public static class Metrics
     };
 
     private static async Task<IResult> Users(NpgsqlDataSource ds, IConfiguration config, CancellationToken ct,
-        string? q = null, string? type = null, string? sort = null, int page = 1)
+        string? q = null, string? type = null, string? sort = null, string? plan = null, int page = 1)
     {
         const int pageSize = 25;
         page = Math.Max(1, page);
         type = type is "convidado" or "conta" ? type : "todos";
+        plan = plan is "com-plano" or "teste" or "pago" or "sem-plano" ? plan : "todos";
         var order = UserSorts.GetValueOrDefault(sort ?? "", UserSorts["recentes"]);
         var search = (q ?? "").Trim();
         var like = "%" + search.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_") + "%";
@@ -218,6 +219,7 @@ public static class Metrics
                    coalesce(p.names, '') AS nicknames, coalesce(p.avatars, '') AS avatars, coalesce(p.n, 0) AS profiles,
                    coalesce(a.solved, 0) AS solved, coalesce(a.correct, 0) AS correct, coalesce(a.xp, 0) AS xp, a.last_day,
                    coalesce(v.visits, 0) AS visits_30d, coalesce(v.days, 0) AS days_30d,
+                   coalesce(sp.plans, '[]') AS plans,
                    count(*) OVER () AS total
             FROM users u
             LEFT JOIN LATERAL (SELECT string_agg(nickname, ', ' ORDER BY created_at) AS names,
@@ -228,7 +230,14 @@ public static class Metrics
                                WHERE pp.user_id = u.id) a ON true
             LEFT JOIN LATERAL (SELECT sum(visits) AS visits, count(*) AS days FROM daily_visits
                                WHERE user_id = u.id AND date > (now() AT TIME ZONE @tz)::date - 30) v ON true
+            LEFT JOIN LATERAL (SELECT json_agg(json_build_object('plan', s.plan, 'source', s.source, 'endsAt', s.ends_at)
+                                               ORDER BY s.ends_at NULLS FIRST)::text AS plans,
+                                      bool_or(s.source = 'teste') AS has_trial, bool_or(s.source = 'stripe') AS has_paid
+                               FROM subscriptions s
+                               WHERE s.user_id = u.id AND s.starts_at <= now() AND (s.ends_at IS NULL OR s.ends_at > now())) sp ON true
             WHERE (@type = 'todos' OR (@type = 'convidado' AND u.is_guest) OR (@type = 'conta' AND NOT u.is_guest))
+              AND (@plan = 'todos' OR (@plan = 'com-plano' AND sp.plans IS NOT NULL) OR (@plan = 'sem-plano' AND sp.plans IS NULL)
+                   OR (@plan = 'teste' AND sp.has_trial) OR (@plan = 'pago' AND sp.has_paid))
               AND (@q = '' OR u.email ILIKE @like
                    OR EXISTS (SELECT 1 FROM player_profiles pp WHERE pp.user_id = u.id AND pp.nickname ILIKE @like))
             ORDER BY {order}
@@ -256,8 +265,9 @@ public static class Metrics
                 lastPlayed = r["last_day"] is DBNull ? (DateOnly?)null : r.Date("last_day"),
                 visits30d = r.Long("visits_30d"),
                 days30d = r.Long("days_30d"),
+                plans = System.Text.Json.JsonDocument.Parse(r.Str("plans") ?? "[]").RootElement.Clone(),
             };
-        }, ct, ("tz", Tz(config)), ("type", type), ("q", search), ("like", like), ("limit", pageSize), ("offset", (page - 1) * pageSize));
+        }, ct, ("tz", Tz(config)), ("type", type), ("plan", plan), ("q", search), ("like", like), ("limit", pageSize), ("offset", (page - 1) * pageSize));
 
         return Results.Ok(new { page, pageSize, total, items = rows });
     }
@@ -362,11 +372,16 @@ public static class Metrics
         }, ct, ("id", id));
 
         var subscriptions = await ds.ListAsync("""
-            SELECT plan, starts_at, ends_at, note, (starts_at <= now() AND (ends_at IS NULL OR ends_at > now())) AS active
-            FROM subscriptions WHERE user_id = @id ORDER BY starts_at DESC
+            SELECT id, plan, source, starts_at, ends_at, note, external_status,
+                   (starts_at <= now() AND (ends_at IS NULL OR ends_at > now())) AS active
+            FROM subscriptions WHERE user_id = @id
+            ORDER BY (starts_at <= now() AND (ends_at IS NULL OR ends_at > now())) DESC, starts_at DESC
             """, r => new
         {
+            id = r.GetGuid(r.GetOrdinal("id")),
             plan = r.Str("plan"),
+            source = r.Str("source"),
+            externalStatus = r.Str("external_status"),
             startsAt = r.Time("starts_at"),
             endsAt = r.Time("ends_at"),
             note = r.Str("note"),

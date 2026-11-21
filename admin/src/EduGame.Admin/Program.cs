@@ -96,6 +96,7 @@ app.MapGet("/health", async (Npgsql.NpgsqlDataSource ds, CancellationToken ct) =
 });
 app.MapAdminAuth();
 app.MapMetrics();
+app.MapPlanAdmin();
 
 var creds = app.Services.GetRequiredService<AdminCredentials>();
 if (!creds.IsConfigured) app.Logger.LogWarning("Painel admin sem login ativo: {Problem}", creds.ConfigurationProblem);

@@ -6,8 +6,9 @@ namespace EduGame.Admin;
 /// Conexão com o mesmo Postgres do jogo, montada dos campos da seção "Database"
 /// (no Docker: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD e DB_SSL_MODE).
 ///
-/// Toda conexão abre em modo SOMENTE LEITURA e com tempo máximo por consulta:
-/// mesmo que algum SQL tentasse alterar dados, o Postgres recusaria.
+/// Toda conexão abre em modo SOMENTE LEITURA e com tempo máximo por consulta. A única exceção são as
+/// ações de plano (PlanAdmin), que abrem de propósito uma transação de leitura e escrita na tabela subscriptions.
+/// Fora delas, mesmo que algum SQL tentasse alterar dados, o Postgres recusaria.
 /// Para uma camada extra, use um usuário do banco que só tenha permissão de leitura (ADMIN_DB_USER).
 /// </summary>
 public static class Database

@@ -22,8 +22,9 @@ public sealed record PlanFeatures(
 }
 
 /// <param name="SelfService">Pode ser escolhido pela própria pessoa na página de planos (Escola é por contrato).</param>
-/// <param name="PriceLabel">Preço previsto, exibido na página de planos.</param>
-public sealed record PlanDefinition(string Slug, string Name, string Audience, string PriceLabel, bool SelfService, int Rank, PlanFeatures Features);
+/// <param name="PriceLabel">Preço exibido na página de planos.</param>
+/// <param name="MonthlyPriceCents">Preço mensal em centavos de real (usado ao criar o preço no Stripe); 0 = sem cobrança online.</param>
+public sealed record PlanDefinition(string Slug, string Name, string Audience, string PriceLabel, bool SelfService, int Rank, PlanFeatures Features, int MonthlyPriceCents = 0);
 
 public static class Plans
 {
@@ -36,10 +37,12 @@ public static class Plans
         new(MaxProfiles: 3, MaxClassrooms: 1, MaxActiveAssignmentsPerClassroom: 2, CanExport: false, Worksheets: false, WeeklyReport: false, Reinforcement: false));
 
     public static readonly PlanDefinition Teacher = new(TeacherSlug, "Professor Pro", "Para professores", "R$ 19,90/mês", true, 1,
-        new(MaxProfiles: 3, MaxClassrooms: 20, MaxActiveAssignmentsPerClassroom: 50, CanExport: true, Worksheets: true, WeeklyReport: false, Reinforcement: false));
+        new(MaxProfiles: 3, MaxClassrooms: 20, MaxActiveAssignmentsPerClassroom: 50, CanExport: true, Worksheets: true, WeeklyReport: false, Reinforcement: false),
+        MonthlyPriceCents: 1990);
 
     public static readonly PlanDefinition Family = new(FamilySlug, "Família", "Para pais e responsáveis", "R$ 9,90/mês", true, 1,
-        new(MaxProfiles: 8, MaxClassrooms: 1, MaxActiveAssignmentsPerClassroom: 2, CanExport: false, Worksheets: true, WeeklyReport: true, Reinforcement: true));
+        new(MaxProfiles: 8, MaxClassrooms: 1, MaxActiveAssignmentsPerClassroom: 2, CanExport: false, Worksheets: true, WeeklyReport: true, Reinforcement: true),
+        MonthlyPriceCents: 990);
 
     public static readonly PlanDefinition School = new(SchoolSlug, "Escola", "Para escolas e redes", "Sob consulta", false, 2,
         new(MaxProfiles: 8, MaxClassrooms: 300, MaxActiveAssignmentsPerClassroom: 50, CanExport: true, Worksheets: true, WeeklyReport: true, Reinforcement: true));

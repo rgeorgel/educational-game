@@ -175,35 +175,41 @@ Sem as variáveis abaixo, nada muda: os planos continuam no modo lançamento (es
 
 **Configurar (use o modo de teste do Stripe primeiro):**
 
-1. **Produtos e preços.** No Stripe, em *Product catalog*, crie:
-   - "Professor Pro" com preço recorrente **mensal** em BRL (ex.: R$ 19,90);
-   - "Família" com preço recorrente **mensal** em BRL (ex.: R$ 9,90).
+1. **Chave da API.** No Stripe, em *Developers → API keys*, copie a **Secret key** (`sk_test_…`).
+2. **Variáveis no Coolify** (ou no `.env`):
+   - `STRIPE_SECRET_KEY` = a chave.
+   - `PUBLIC_BASE_URL` = endereço do site (ex.: `https://educa-game.seu-dominio`).
 
-   Copie os ids dos preços (`price_…`).
-2. **Chave da API.** Em *Developers → API keys*, copie a **Secret key** (`sk_test_…`).
-3. **Webhook.** Em *Developers → Webhooks*, adicione o endpoint `https://SEU-DOMINIO/api/billing/webhook`:
-   - Versão da API: **a mesma da biblioteca**, que aparece no log da API ao iniciar ("Pagamentos pelo Stripe … (API 2026-11-18.endive)").
-   - Eventos: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
+   Depois, faça **Redeploy**.
+3. **Rode o comando de configuração** no **Terminal** do serviço `edugame-api` no Coolify (localmente: `docker compose exec edugame-api …`):
 
-   Copie o **Signing secret** (`whsec_…`).
-4. **Portal do cliente.** Em *Settings → Billing → Customer portal*, ative o portal e permita cancelar e atualizar a forma de pagamento.
-5. **Variáveis no Coolify** (ou no `.env`):
-   - `STRIPE_SECRET_KEY`
-   - `STRIPE_WEBHOOK_SECRET`
-   - `STRIPE_PRICE_PROFESSOR`
-   - `STRIPE_PRICE_FAMILIA`
-   - `PUBLIC_BASE_URL` (ex.: `https://educa-game.seu-dominio`)
+   ```bash
+   dotnet EduGame.Api.dll stripe configurar
+   ```
 
-   Depois, faça **Redeploy**. O log da API passa a mostrar "Pagamentos pelo Stripe ligados".
-6. **Teste:**
+   Ele cria tudo no Stripe. Rodar de novo não duplica nada:
+   - os produtos "Professor Pro" e "Família", com o preço mensal de `Plans.cs` (R$ 19,90 e R$ 9,90);
+   - o webhook em `PUBLIC_BASE_URL/api/billing/webhook`, com a versão certa da API e os eventos;
+   - o portal do cliente: cartão, recibos, cancelar no fim do período e trocar entre os planos.
+4. **Copie o segredo do webhook.** O comando mostra o `whsec_…` uma única vez. Coloque em `STRIPE_WEBHOOK_SECRET` e faça **Redeploy**. O log da API passa a mostrar "Pagamentos pelo Stripe ligados".
+5. **Teste:**
    - Assine com o cartão de teste `4242 4242 4242 4242` (qualquer data futura e qualquer CVC).
    - O plano aparece como "Assinatura ativa".
    - "Gerenciar assinatura" abre o portal; cancele por ali e veja o plano valer até o fim do período.
 
-Para testar localmente, use a [Stripe CLI](https://docs.stripe.com/stripe-cli): `stripe listen --forward-to localhost:8880/api/billing/webhook`. Ela mostra o `whsec_…` para usar em `STRIPE_WEBHOOK_SECRET`.
+Outros comandos:
+
+```bash
+dotnet EduGame.Api.dll stripe status                        # o que está configurado
+dotnet EduGame.Api.dll stripe preco familia 12,90           # muda o preço; quem já assina mantém o antigo
+dotnet EduGame.Api.dll stripe configurar --recriar-webhook  # gera um webhook novo (e um novo whsec_)
+```
+
+- **Preços:** o app acha os preços pelo nome fixo (`educagame_professor_mensal` e `educagame_familia_mensal`), então não precisa configurar ids. `STRIPE_PRICE_PROFESSOR` e `STRIPE_PRICE_FAMILIA` são opcionais e só forçam um preço específico.
+- **Teste local:** com a [Stripe CLI](https://docs.stripe.com/stripe-cli), `stripe listen --forward-to localhost:8880/api/billing/webhook` mostra um `whsec_…` para usar localmente.
 
 **Indo para produção:**
-- Troque para as chaves, preços e webhook do modo **live**.
+- Troque `STRIPE_SECRET_KEY` pela chave **live** (`sk_live_…`) e rode `stripe configurar` de novo. Ele cria os produtos, preços e webhook do modo live e mostra o novo `whsec_…`.
 - Ligue `PLANS_ENFORCE=true`.
 - Dê um prazo para quem escolheu plano no lançamento: `dotnet EduGame.Api.dll plano encerrar-escolhas 30`. As escolhas grátis acabam em 30 dias, e essas pessoas veem o botão "Assinar".
 

@@ -66,7 +66,9 @@ public sealed class StripeWebhook(AppDbContext db, StripeSettings settings, Game
         }
 
         var item = sub.Items?.Data?.FirstOrDefault();
-        var plan = sub.Metadata?.GetValueOrDefault("plan") is { } p && Plans.BySlug(p) is not null ? p : settings.PlanForPrice(item?.Price?.Id);
+        // O preço decide o plano (no portal a pessoa pode trocar de plano); a metadata do Checkout é a reserva.
+        var plan = settings.PlanForPrice(item?.Price?.Id, item?.Price?.LookupKey)
+            ?? (sub.Metadata?.GetValueOrDefault("plan") is { } p && Plans.BySlug(p) is not null ? p : null);
         if (plan is null)
         {
             log.LogWarning("Assinatura {Subscription} do Stripe com preço desconhecido ({Price}).", sub.Id, item?.Price?.Id);

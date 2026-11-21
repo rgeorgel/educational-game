@@ -97,6 +97,11 @@ if (EduGame.Api.Features.Billing.PlanCommand.IsInvoked(args))
     Environment.ExitCode = await EduGame.Api.Features.Billing.PlanCommand.RunAsync(app.Services, args, Console.Out);
     return;
 }
+if (EduGame.Api.Features.Billing.StripeSetup.IsInvoked(args))
+{
+    Environment.ExitCode = await EduGame.Api.Features.Billing.StripeSetup.RunAsync(app.Services, args, Console.Out);
+    return;
+}
 
 await app.Services.InitializeDatabaseAsync(
     migrate: app.Configuration.GetValue("Database:MigrateOnStartup", true));

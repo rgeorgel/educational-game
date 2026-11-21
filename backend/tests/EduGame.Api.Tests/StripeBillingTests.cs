@@ -19,6 +19,10 @@ public sealed class FakeStripeGateway : IStripeGateway
 {
     public List<(Guid UserId, string Plan, string PriceId, string SuccessUrl)> Checkouts { get; } = [];
 
+    /// <summary>Preços "criados" por stripe configurar, achados pelo nome fixo.</summary>
+    public Task<string?> FindPriceIdAsync(string lookupKey, CancellationToken ct) =>
+        Task.FromResult<string?>(lookupKey.StartsWith("educagame_") ? $"price_{lookupKey}" : null);
+
     public Task<string> CreateCustomerAsync(string email, Guid userId, CancellationToken ct) => Task.FromResult($"cus_{userId:N}");
 
     public Task<string> CreateCheckoutAsync(string customerId, Guid userId, string plan, string priceId, string successUrl, string cancelUrl, CancellationToken ct)
@@ -37,12 +41,15 @@ public class StripeBillingTests(ApiFactory factory)
     private const string WebhookSecret = "whsec_teste_local";
     private readonly FakeStripeGateway _gateway = new();
 
-    private WebApplicationFactory<Program> Stripe() => factory.WithWebHostBuilder(b =>
+    private WebApplicationFactory<Program> Stripe(bool fixedPrices = true) => factory.WithWebHostBuilder(b =>
     {
         b.UseSetting("Stripe:SecretKey", "sk_test_falso");
         b.UseSetting("Stripe:WebhookSecret", WebhookSecret);
-        b.UseSetting("Stripe:Prices:professor", "price_pro");
-        b.UseSetting("Stripe:Prices:familia", "price_fam");
+        if (fixedPrices)
+        {
+            b.UseSetting("Stripe:Prices:professor", "price_pro");
+            b.UseSetting("Stripe:Prices:familia", "price_fam");
+        }
         b.UseSetting("App:PublicBaseUrl", "https://educa.exemplo");
         b.ConfigureServices(s => s.Replace(ServiceDescriptor.Singleton<IStripeGateway>(_gateway)));
     });
@@ -81,7 +88,8 @@ public class StripeBillingTests(ApiFactory factory)
         ["data"] = new Dictionary<string, object?> { ["object"] = dataObject },
     });
 
-    private static Dictionary<string, object?> SubscriptionObject(Guid userId, string id, string status, DateTimeOffset? cancelAt = null, DateTimeOffset? endedAt = null) => new()
+    private static Dictionary<string, object?> SubscriptionObject(Guid userId, string id, string status, DateTimeOffset? cancelAt = null, DateTimeOffset? endedAt = null,
+        string priceId = "price_fam", string? lookupKey = null, string metadataPlan = "familia") => new()
     {
         ["id"] = id,
         ["object"] = "subscription",
@@ -91,7 +99,7 @@ public class StripeBillingTests(ApiFactory factory)
         ["cancel_at"] = cancelAt is null ? null : Unix(cancelAt.Value),
         ["cancel_at_period_end"] = cancelAt is not null,
         ["ended_at"] = endedAt is null ? null : Unix(endedAt.Value),
-        ["metadata"] = new Dictionary<string, string> { ["userId"] = userId.ToString(), ["plan"] = "familia" },
+        ["metadata"] = new Dictionary<string, string> { ["userId"] = userId.ToString(), ["plan"] = metadataPlan },
         ["items"] = new Dictionary<string, object?>
         {
             ["object"] = "list",
@@ -101,7 +109,7 @@ public class StripeBillingTests(ApiFactory factory)
                 {
                     ["id"] = "si_1", ["object"] = "subscription_item",
                     ["current_period_end"] = Unix(DateTimeOffset.UtcNow.AddDays(30)),
-                    ["price"] = new Dictionary<string, object?> { ["id"] = "price_fam", ["object"] = "price" },
+                    ["price"] = new Dictionary<string, object?> { ["id"] = priceId, ["object"] = "price", ["lookup_key"] = lookupKey },
                 },
             },
         },
@@ -219,5 +227,43 @@ public class StripeBillingTests(ApiFactory factory)
         var subs = await db.Subscriptions.Where(s => s.UserId == userId).ToListAsync();
         Assert.Contains(subs, s => s.Source == SubscriptionSources.Stripe && s.EndsAt == null);
         Assert.All(subs.Where(s => s.Source == SubscriptionSources.Choice), s => Assert.True(s.EndsAt <= DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task Prices_are_found_by_lookup_key_when_not_configured()
+    {
+        using var app = Stripe(fixedPrices: false);
+        var (client, userId) = await AccountAsync(app);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/billing/checkout", new { plan = "professor" })).StatusCode);
+        Assert.Equal("price_educagame_professor_mensal", Assert.Single(_gateway.Checkouts, c => c.UserId == userId).PriceId);
+    }
+
+    [Fact]
+    public async Task Switching_plans_in_the_portal_follows_the_price_not_the_old_metadata()
+    {
+        using var app = Stripe(fixedPrices: false);
+        var webhook = app.CreateClient();
+        var (client, userId) = await AccountAsync(app);
+        var subId = $"sub_{Guid.NewGuid():N}";
+        var t0 = DateTimeOffset.UtcNow.AddSeconds(-30);
+
+        await webhook.SendAsync(Signed(EventJson("customer.subscription.created",
+            SubscriptionObject(userId, subId, "active", priceId: "price_x", lookupKey: "educagame_familia_mensal"), t0)));
+        Assert.Equal(["familia"], (await client.GetFromJsonAsync<JsonElement>("/api/me/plan")).GetProperty("paid").EnumerateArray().Select(p => p.GetString()));
+
+        // No portal, trocou para o Professor Pro: a metadata do Checkout continua dizendo "familia".
+        await webhook.SendAsync(Signed(EventJson("customer.subscription.updated",
+            SubscriptionObject(userId, subId, "active", priceId: "price_y", lookupKey: "educagame_professor_mensal", metadataPlan: "familia"), t0.AddSeconds(10))));
+        Assert.Equal(["professor"], (await client.GetFromJsonAsync<JsonElement>("/api/me/plan")).GetProperty("paid").EnumerateArray().Select(p => p.GetString()));
+    }
+
+    [Fact]
+    public async Task Setup_command_requires_the_secret_key()
+    {
+        var output = new StringWriter();
+        Assert.Equal(1, await StripeSetup.RunAsync(factory.Services, ["stripe", "configurar"], output));
+        Assert.Contains("STRIPE_SECRET_KEY", output.ToString());
+        Assert.Equal("educagame_familia_mensal", StripeSettings.LookupKey("familia"));
+        Assert.Equal("educagame_professor", StripeSettings.ProductId("professor"));
     }
 }

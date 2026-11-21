@@ -29,7 +29,7 @@ public static class BillingEndpoints
             var user = await db.Users.SingleAsync(u => u.Id == userId, ct);
             if (user.IsGuest || user.Email is null)
                 return ApiResults.Forbidden("Para assinar, salve o progresso criando uma conta.");
-            if (!StripeSettings.PaidPlans.Contains(req.Plan) || stripe.PriceFor(req.Plan) is not { } price)
+            if (!StripeSettings.PaidPlans.Contains(req.Plan))
                 return ApiResults.Validation("plan", "Escolha o plano Professor Pro ou Família.");
 
             var current = await plans.ForUserAsync(userId, ct);
@@ -38,6 +38,13 @@ public static class BillingEndpoints
 
             try
             {
+                var price = stripe.PriceFor(req.Plan) ?? await gateway.FindPriceIdAsync(StripeSettings.LookupKey(req.Plan), ct);
+                if (price is null)
+                {
+                    http.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("Stripe")
+                        .LogError("Preço {LookupKey} não encontrado no Stripe. Rode \"dotnet EduGame.Api.dll stripe configurar\".", StripeSettings.LookupKey(req.Plan));
+                    return Unavailable();
+                }
                 if (user.StripeCustomerId is null)
                 {
                     user.StripeCustomerId = await gateway.CreateCustomerAsync(user.Email, user.Id, ct);

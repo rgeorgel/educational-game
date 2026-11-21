@@ -95,7 +95,7 @@ Os preços e prazos são **hipóteses para testar** com professores e famílias 
 
 ## Antes de ligar a cobrança
 
-- **Pagamento (código pronto):** criar a conta no Stripe e configurar produtos, preços, webhook e portal, como em "Pagamentos (Stripe)" no README.
+- **Pagamento (código pronto):** criar a conta no Stripe, colocar a chave e rodar `dotnet EduGame.Api.dll stripe configurar`. Ele cria produtos, preços, webhook e portal (veja "Pagamentos (Stripe)" no README).
 - **Empresa e documentos:**
   - CNPJ (MEI ou ME) e emissão de nota fiscal; um contador ajuda;
   - termos de uso e política de privacidade atualizados (LGPD, dados de crianças, cancelamento e reembolso).

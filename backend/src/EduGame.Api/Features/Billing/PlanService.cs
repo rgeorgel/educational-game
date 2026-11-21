@@ -13,6 +13,8 @@ public sealed record PlanInfo(
     string Name,
     IReadOnlyList<PlanSummary> Plans,
     string? Chosen,
+    IReadOnlyList<string> Paid,
+    bool CanManageBilling,
     bool Enforced,
     DateTimeOffset? EndsAt,
     int MaxProfiles,
@@ -48,9 +50,11 @@ public sealed class PlanService(AppDbContext db, IConfiguration config, GameCloc
         var granting = subs.Where(s => s.Plan == top.Slug && s.IsActive(now)).ToList();
         DateTimeOffset? endsAt = granting.Count == 0 || granting.Any(s => s.EndsAt is null) ? null : granting.Max(s => s.EndsAt);
         var chosen = subs.Where(s => s.Source == SubscriptionSources.Choice && s.IsActive(now)).OrderByDescending(s => s.StartsAt).FirstOrDefault()?.Plan;
+        var paid = subs.Where(s => s.Source == SubscriptionSources.Stripe && s.IsActive(now)).Select(s => s.Plan).Distinct().ToList();
+        var hasCustomer = await db.Users.AnyAsync(u => u.Id == userId && u.StripeCustomerId != null, ct);
 
         return new PlanInfo(top.Slug, string.Join(" + ", active.Select(p => p.Name)),
-            [.. active.Select(p => new PlanSummary(p.Slug, p.Name))], chosen, Enforced, endsAt,
+            [.. active.Select(p => new PlanSummary(p.Slug, p.Name))], chosen, paid, hasCustomer, Enforced, endsAt,
             features.MaxProfiles, features.MaxClassrooms, features.MaxActiveAssignmentsPerClassroom,
             features.CanExport, features.Worksheets, features.WeeklyReport, features.Reinforcement);
     }

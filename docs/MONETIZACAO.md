@@ -39,9 +39,10 @@ Os preços e prazos são **hipóteses para testar** com professores e famílias 
    - A pessoa escolhe o plano na página **Planos** (`/jogar#/planos`) e ele já vale.
    - A página diz "grátis durante o lançamento" e avisa que a cobrança será anunciada antes.
    - Serve para medir o interesse real: quantos escolhem cada plano e quantos usam os recursos.
-2. **Depois: pagamento com Stripe.**
-   - O Stripe Checkout (cartão e Pix) cria as assinaturas, e os webhooks mantêm tudo em dia.
-   - Quem escolheu na fase 1 recebe um aviso, com um preço de fundador.
+2. **Pagamento com Stripe (implementado; liga ao configurar as chaves).**
+   - O Stripe Checkout cria as assinaturas e os webhooks mantêm tudo em dia.
+   - O portal do Stripe cuida de cartão, recibos e cancelamento.
+   - Ao ligar: avise quem escolheu plano na fase 1. Use `plano encerrar-escolhas 30` para dar 30 dias, e considere um cupom de fundador (o Checkout aceita códigos promocionais).
 3. **Escola:** painel do coordenador (todas as turmas da escola), contrato e nota fiscal. Começar por escolas particulares pequenas e médias; redes públicas compram por licitação e demoram.
 4. **Receitas complementares, a qualquer momento:**
    - botão "Apoie o projeto" (Pix, Apoia.se ou Catarse);
@@ -58,6 +59,9 @@ Os preços e prazos são **hipóteses para testar** com professores e famílias 
   - Com `PLANS_ENFORCE=false` (padrão), ninguém é limitado: todos têm os recursos do Professor Pro e da Família. Escolher um plano fica só registrado.
   - Com `PLANS_ENFORCE=true` e Redeploy, cada conta tem só o que os seus planos liberam. Um recurso bloqueado mostra "faz parte do plano X" com o link para Planos.
   - **Recomendação:** ligar depois de algumas semanas, quando houver gente usando, e avisar antes.
+- **Stripe:** `POST /api/billing/checkout`, `POST /api/billing/portal`, `POST /api/billing/webhook` e `GET /api/billing/status`.
+  - O código fica em `backend/src/EduGame.Api/Features/Billing/`.
+  - O cliente do Stripe fica em `users.stripe_customer_id`.
 - **API:**
   - `GET /api/plans` (pública) lista os planos.
   - `GET /api/me/plan` mostra o plano da conta.
@@ -91,10 +95,7 @@ Os preços e prazos são **hipóteses para testar** com professores e famílias 
 
 ## Antes de ligar a cobrança
 
-- **Pagamento:**
-  - conta no Stripe (com Pix habilitado);
-  - Checkout e Customer Portal;
-  - webhooks (`checkout.session.completed`, `customer.subscription.updated`/`deleted`) que gravam em `subscriptions` com `source = stripe`.
+- **Pagamento (código pronto):** criar a conta no Stripe e configurar produtos, preços, webhook e portal, como em "Pagamentos (Stripe)" no README.
 - **Empresa e documentos:**
   - CNPJ (MEI ou ME) e emissão de nota fiscal; um contador ajuda;
   - termos de uso e política de privacidade atualizados (LGPD, dados de crianças, cancelamento e reembolso).

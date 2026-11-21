@@ -97,5 +97,11 @@ public class Subscription
     /// <summary>Identificador no provedor de pagamento (ex.: assinatura do Stripe), quando houver.</summary>
     public string? ExternalId { get; set; }
 
+    /// <summary>Status no provedor (ex.: "active", "past_due", "canceled"), para o painel e o suporte.</summary>
+    public string? ExternalStatus { get; set; }
+
+    /// <summary>Quando o provedor mandou a última atualização (eventos fora de ordem mais antigos são ignorados).</summary>
+    public DateTimeOffset? ExternalUpdatedAt { get; set; }
+
     public bool IsActive(DateTimeOffset now) => StartsAt <= now && (EndsAt is null || EndsAt > now);
 }

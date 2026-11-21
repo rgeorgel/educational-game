@@ -1062,6 +1062,7 @@ details.level-section[open] {
 .plan-locked { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .plan-locked p { margin: 0; }
 .notice { margin: 0; }
+.notice.success { border-color: color-mix(in srgb, var(--success) 50%, var(--border)); background: var(--success-bg); color: var(--text); }
 .family-actions { margin-bottom: var(--space-2); }
 
 /* Relatório da semana */

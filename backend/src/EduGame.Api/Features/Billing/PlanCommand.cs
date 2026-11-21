@@ -76,6 +76,17 @@ public static class PlanCommand
                 output.WriteLine($"{ended} assinatura(s) encerrada(s) para {email}.");
                 return 0;
             }
+            case "encerrar-escolhas":
+            {
+                // Fim do lançamento: as escolhas grátis acabam em N dias (padrão 0 = agora).
+                var days = int.TryParse(args.ElementAtOrDefault(2), out var n) && n >= 0 ? n : 0;
+                var until = now.AddDays(days);
+                var ended = await db.Subscriptions
+                    .Where(s => s.Source == SubscriptionSources.Choice && (s.EndsAt == null || s.EndsAt > until))
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.EndsAt, until));
+                output.WriteLine($"{ended} escolha(s) do lançamento terminam em {until:yyyy-MM-dd HH:mm} (UTC).");
+                return 0;
+            }
             default:
                 return Usage(output, null);
         }
@@ -88,6 +99,7 @@ public static class PlanCommand
         output.WriteLine("  plano listar");
         output.WriteLine("  plano conceder <e-mail> <professor|familia|escola> [dias] [nota]");
         output.WriteLine("  plano remover <e-mail>");
+        output.WriteLine("  plano encerrar-escolhas [dias]   (fim do lançamento: escolhas grátis acabam em N dias)");
         return error is null ? 0 : 1;
     }
 }

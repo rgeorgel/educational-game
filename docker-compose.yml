@@ -46,6 +46,14 @@ services:
       Database__MigrateOnStartup: ${DB_MIGRATE_ON_STARTUP:-${DATABASE_MIGRATE_ON_STARTUP:-true}}
       # Planos (Grátis / Professor Pro / Escola). Desligado = ninguém é limitado.
       Plans__Enforce: ${PLANS_ENFORCE:-false}
+      # Pagamento pelo Stripe (veja "Pagamentos" no README). Sem estas variáveis, os planos
+      # ficam no modo lançamento (escolha grátis, sem cobrança).
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY:-}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:-}
+      Stripe__Prices__professor: ${STRIPE_PRICE_PROFESSOR:-}
+      Stripe__Prices__familia: ${STRIPE_PRICE_FAMILIA:-}
+      # Endereço público do site (links de volta do pagamento), ex.: https://educa-game.seu-dominio
+      App__PublicBaseUrl: ${PUBLIC_BASE_URL:-}
     extra_hosts:
       # Permite usar Host=host.docker.internal para um Postgres instalado no próprio servidor (Linux).
       - "host.docker.internal:host-gateway"

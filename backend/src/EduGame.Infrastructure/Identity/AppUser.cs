@@ -27,4 +27,7 @@ public class AppUser : IdentityUser<Guid>
     public string? SignupMedium { get; set; }
     public string? SignupCampaign { get; set; }
     public string? SignupReferrer { get; set; }
+
+    /// <summary>Cliente no Stripe (criado na primeira assinatura paga).</summary>
+    public string? StripeCustomerId { get; set; }
 }

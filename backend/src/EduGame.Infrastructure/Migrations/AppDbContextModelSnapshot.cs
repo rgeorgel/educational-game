@@ -43,6 +43,15 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("external_id");
 
+                    b.Property<string>("ExternalStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("external_status");
+
+                    b.Property<DateTimeOffset?>("ExternalUpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("external_updated_at");
+
                     b.Property<string>("Note")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
@@ -74,7 +83,9 @@ namespace EduGame.Infrastructure.Migrations
                         .HasName("pk_subscriptions");
 
                     b.HasIndex("ExternalId")
-                        .HasDatabaseName("ix_subscriptions_external_id");
+                        .IsUnique()
+                        .HasDatabaseName("ix_subscriptions_external_id")
+                        .HasFilter("external_id IS NOT NULL");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_subscriptions_user_id");
@@ -1148,6 +1159,11 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("signup_source");
 
+                    b.Property<string>("StripeCustomerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("stripe_customer_id");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("two_factor_enabled");
@@ -1169,6 +1185,9 @@ namespace EduGame.Infrastructure.Migrations
 
                     b.HasIndex("SignupSource")
                         .HasDatabaseName("ix_users_signup_source");
+
+                    b.HasIndex("StripeCustomerId")
+                        .HasDatabaseName("ix_users_stripe_customer_id");
 
                     b.ToTable("users", (string)null);
                 });

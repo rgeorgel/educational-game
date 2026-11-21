@@ -50,6 +50,7 @@ Jogo educacional de **matemática e lógica** para crianças e adolescentes, com
   - treino de reforço escolhido pelo responsável;
   - fichas para imprimir com gabarito;
   - até 8 perfis no Família.
+- [x] **Pagamento pelo Stripe:** Checkout, portal do cliente e webhooks. Liga quando as chaves são configuradas.
 - [ ] Fase 4 — Novos tópicos.
 
 ## Stack
@@ -142,7 +143,9 @@ Jogar é sempre grátis. Os planos são para os adultos que acompanham. A estrat
 | Família | 8 | 1 | 2 | — | ✓ | ✓ |
 | Escola | 8 | 300 | 50 | ✓ | ✓ | ✓ |
 
-A pessoa escolhe o plano na página **Planos** (`/jogar#/planos`). Por enquanto não há pagamento: o plano vale na hora. O Stripe entra depois.
+A pessoa escolhe o plano na página **Planos** (`/jogar#/planos`):
+- **Sem o Stripe configurado** (modo lançamento): a escolha é grátis e vale na hora.
+- **Com o Stripe:** a pessoa assina pelo Checkout (veja "Pagamentos (Stripe)").
 
 Enquanto `PLANS_ENFORCE=false` (padrão), ninguém é limitado e a escolha fica só registrada.
 Ao ligar (`PLANS_ENFORCE=true` e Redeploy), cada conta tem só o que os seus planos liberam.
@@ -158,6 +161,53 @@ dotnet EduGame.Api.dll plano remover professora@escola.com
 ```
 
 As assinaturas ficam na tabela `subscriptions`, e o painel admin mostra quem tem plano.
+
+## Pagamentos (Stripe)
+
+Com o Stripe configurado, Professor Pro e Família são **assinados pelo Stripe Checkout**:
+- Pagamento: cartão, e outros métodos que o Stripe permitir para assinaturas no Brasil.
+- **Gerenciar assinatura** abre o portal do Stripe, para trocar o cartão, baixar recibos ou cancelar.
+- Os avisos do Stripe (webhook) criam, atualizam e encerram o plano na tabela `subscriptions`, com `source = stripe`.
+- Cancelou? O plano vale até o fim do período pago.
+- `past_due` (pagamento atrasado) mantém o plano enquanto o Stripe tenta cobrar de novo.
+
+Sem as variáveis abaixo, nada muda: os planos continuam no modo lançamento (escolha grátis).
+
+**Configurar (use o modo de teste do Stripe primeiro):**
+
+1. **Produtos e preços.** No Stripe, em *Product catalog*, crie:
+   - "Professor Pro" com preço recorrente **mensal** em BRL (ex.: R$ 19,90);
+   - "Família" com preço recorrente **mensal** em BRL (ex.: R$ 9,90).
+
+   Copie os ids dos preços (`price_…`).
+2. **Chave da API.** Em *Developers → API keys*, copie a **Secret key** (`sk_test_…`).
+3. **Webhook.** Em *Developers → Webhooks*, adicione o endpoint `https://SEU-DOMINIO/api/billing/webhook`:
+   - Versão da API: **a mesma da biblioteca**, que aparece no log da API ao iniciar ("Pagamentos pelo Stripe … (API 2026-11-18.endive)").
+   - Eventos: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
+
+   Copie o **Signing secret** (`whsec_…`).
+4. **Portal do cliente.** Em *Settings → Billing → Customer portal*, ative o portal e permita cancelar e atualizar a forma de pagamento.
+5. **Variáveis no Coolify** (ou no `.env`):
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `STRIPE_PRICE_PROFESSOR`
+   - `STRIPE_PRICE_FAMILIA`
+   - `PUBLIC_BASE_URL` (ex.: `https://educa-game.seu-dominio`)
+
+   Depois, faça **Redeploy**. O log da API passa a mostrar "Pagamentos pelo Stripe ligados".
+6. **Teste:**
+   - Assine com o cartão de teste `4242 4242 4242 4242` (qualquer data futura e qualquer CVC).
+   - O plano aparece como "Assinatura ativa".
+   - "Gerenciar assinatura" abre o portal; cancele por ali e veja o plano valer até o fim do período.
+
+Para testar localmente, use a [Stripe CLI](https://docs.stripe.com/stripe-cli): `stripe listen --forward-to localhost:8880/api/billing/webhook`. Ela mostra o `whsec_…` para usar em `STRIPE_WEBHOOK_SECRET`.
+
+**Indo para produção:**
+- Troque para as chaves, preços e webhook do modo **live**.
+- Ligue `PLANS_ENFORCE=true`.
+- Dê um prazo para quem escolheu plano no lançamento: `dotnet EduGame.Api.dll plano encerrar-escolhas 30`. As escolhas grátis acabam em 30 dias, e essas pessoas veem o botão "Assinar".
+
+Veja também [docs/MONETIZACAO.md](docs/MONETIZACAO.md) (CNPJ, nota fiscal, termos).
 
 ## Painel de super admin
 

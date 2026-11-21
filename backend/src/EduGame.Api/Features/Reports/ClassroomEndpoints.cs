@@ -195,7 +195,7 @@ public static class ClassroomEndpoints
             Results.Ok(await plans.ForUserAsync(http.User.UserId(), ct))).RequireAuthorization().WithTags("Billing");
 
         // Escolher o plano (por enquanto sem pagamento; depois o Stripe).
-        api.MapPut("/me/plan", async (ChoosePlanRequest req, HttpContext http, AppDbContext db, PlanService plans, CancellationToken ct) =>
+        api.MapPut("/me/plan", async (ChoosePlanRequest req, HttpContext http, AppDbContext db, PlanService plans, StripeSettings stripe, CancellationToken ct) =>
         {
             var userId = http.User.UserId();
             if (await db.IsGuestAsync(userId, ct))
@@ -203,6 +203,9 @@ public static class ClassroomEndpoints
             var plan = Domain.Billing.Plans.BySlug(req.Plan);
             if (plan is null || !plan.SelfService)
                 return ApiResults.Validation("plan", "Escolha o plano Grátis, Professor Pro ou Família. Para escolas, fale com a gente.");
+            // Com o Stripe ligado, os planos pagos só entram pelo pagamento (Checkout).
+            if (stripe.Enabled && plan.Slug != Domain.Billing.Plans.FreeSlug)
+                return ApiResults.Conflict("Para assinar, use o botão \"Assinar\" na página de planos (pagamento seguro pelo Stripe).");
             return Results.Ok(await plans.ChooseAsync(userId, plan, ct));
         }).RequireAuthorization().RequireRateLimiting(RateLimits.Auth).WithTags("Billing");
 

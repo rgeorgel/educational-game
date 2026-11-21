@@ -27,6 +27,9 @@ builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<ClassroomInsights>();
 builder.Services.AddScoped<EduGame.Api.Features.Billing.PlanService>();
+builder.Services.AddSingleton<EduGame.Api.Features.Billing.StripeSettings>();
+builder.Services.AddSingleton<EduGame.Api.Features.Billing.IStripeGateway, EduGame.Api.Features.Billing.StripeGateway>();
+builder.Services.AddScoped<EduGame.Api.Features.Billing.StripeWebhook>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
@@ -184,6 +187,12 @@ api.MapSessions();
 api.MapProgress();
 api.MapReports();
 EduGame.Api.Features.Family.FamilyEndpoints.MapFamily(api);
+EduGame.Api.Features.Billing.BillingEndpoints.MapBilling(api);
+
+var stripeSettings = app.Services.GetRequiredService<EduGame.Api.Features.Billing.StripeSettings>();
+app.Logger.LogInformation(stripeSettings.Enabled
+    ? "Pagamentos pelo Stripe ligados (API {Version})."
+    : "Pagamentos pelo Stripe desligados: planos no modo lançamento (API {Version}).", Stripe.StripeConfiguration.ApiVersion);
 
 app.Run();
 

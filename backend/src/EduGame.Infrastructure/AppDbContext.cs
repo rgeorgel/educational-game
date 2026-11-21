@@ -68,6 +68,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.SignupCampaign).HasMaxLength(64);
             e.Property(x => x.SignupReferrer).HasMaxLength(64);
             e.HasIndex(x => x.SignupSource);
+            e.Property(x => x.StripeCustomerId).HasMaxLength(64);
+            e.HasIndex(x => x.StripeCustomerId);
         });
         b.Entity<IdentityRole<Guid>>().ToTable("roles");
         b.Entity<IdentityUserRole<Guid>>().ToTable("user_roles");
@@ -234,7 +236,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.Note).HasMaxLength(200);
             e.Property(x => x.Source).HasMaxLength(16).HasDefaultValue("manual");
             e.Property(x => x.ExternalId).HasMaxLength(128);
-            e.HasIndex(x => x.ExternalId);
+            e.Property(x => x.ExternalStatus).HasMaxLength(32);
+            e.HasIndex(x => x.ExternalId).IsUnique().HasFilter("external_id IS NOT NULL");
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 

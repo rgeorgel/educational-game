@@ -1,10 +1,17 @@
 // Página inicial (landing). Mantém só o essencial:
 // 1. links antigos do jogo (/#/...) continuam funcionando, levando para /jogar;
 // 2. quem já está jogando neste aparelho vê "Continuar jogando" em vez de "Jogar agora";
-// 3. guarda de onde a pessoa veio (utm/indicação), enviado depois no cadastro.
+// 3. guarda de onde a pessoa veio (utm/indicação), enviado depois no cadastro;
+// 4. Google Analytics com aviso de cookies (só nas páginas que usam este arquivo: landing,
+//    professores e blog; o jogo em /jogar não carrega).
 import { captureOrigin } from "./origin.js";
 
 captureOrigin();
+
+// Import dinâmico: se o arquivo falhar (ex.: offline sem cache), o resto da página segue normal.
+import("./analytics.js")
+  .then((m) => m.initAnalytics())
+  .catch(() => {});
 
 if (location.hash.startsWith("#/")) {
   location.replace(`/jogar${location.hash}`);

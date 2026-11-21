@@ -37,7 +37,7 @@
           <h2 id="resumo">Resumo em linguagem simples</h2>
           <ul>
             <li><strong>Das crianças, guardamos só o necessário para o jogo funcionar:</strong> apelido, avatar, ano escolar (se você informar) e o progresso nos desafios. Nada de nome completo, foto, localização ou contatos.</li>
-            <li><strong>Sem anúncios e sem rastreadores de terceiros.</strong> Não vendemos nem alugamos dados, e não usamos os dados das crianças para publicidade.</li>
+            <li><strong>Sem anúncios e sem rastreadores no jogo.</strong> Não vendemos nem alugamos dados, e não usamos os dados das crianças para publicidade. Só as páginas de apresentação e o blog usam o Google Analytics, e apenas se você aceitar.</li>
             <li><strong>O adulto responsável decide:</strong> cria os perfis, escolhe se a criança entra numa turma e pode apagar tudo a qualquer momento em <em>Configurações</em>.</li>
             <li><strong>Pagamentos ficam com o Stripe.</strong> Nós não vemos nem guardamos o número do cartão.</li>
           </ul>
@@ -100,6 +100,7 @@
           <li><strong>Enviar e-mails da conta:</strong> boas-vindas, link para criar uma senha nova, aviso de senha alterada e avisos sobre a assinatura. Base: execução do serviço (art. 7º, V).</li>
           <li><strong>Cobrar planos pagos e emitir documentos fiscais.</strong> Base: execução do contrato e obrigação legal (art. 7º, V e II).</li>
           <li><strong>Segurança e prevenção de abusos</strong> (limite de tentativas de login, registros técnicos). Base: obrigação legal e legítimo interesse (art. 7º, II e IX).</li>
+          <li><strong>Medir as visitas às páginas de apresentação e ao blog</strong> com o Google Analytics (quantas pessoas visitam e de onde vêm). Só nessas páginas, nunca no jogo. Base: consentimento (art. 7º, I), dado no aviso de cookies e que pode ser retirado a qualquer momento.</li>
           <li><strong>Melhorar o jogo com números agregados</strong> (por exemplo, quais habilidades estão difíceis demais), sem identificar ninguém. Base: legítimo interesse (art. 7º, IX), sempre no melhor interesse da criança.</li>
         </ul>
         <p>Não usamos os dados para publicidade, perfilamento comercial ou decisões automatizadas que afetem direitos. O ajuste de dificuldade serve apenas para o jogo.</p>
@@ -131,13 +132,14 @@
           <li><strong>Hospedagem e banco de dados:</strong> servidores onde o jogo e os dados ficam guardados.</li>
           <li><strong>Envio de e-mails:</strong> provedor que entrega os e-mails da conta (recebe o e-mail do adulto e o texto da mensagem).</li>
           <li><strong>Stripe:</strong> processa os pagamentos dos planos (recebe o e-mail do adulto e os dados de pagamento que ele informar). Veja a <a href="https://stripe.com/br/privacy" rel="noopener">política de privacidade do Stripe</a>.</li>
+          <li><strong>Google Analytics:</strong> só se você aceitar no aviso de cookies, e só nas páginas de apresentação (início e professores) e no blog. Recebe dados de navegação (páginas vistas, de onde você veio, tipo de aparelho e navegador, cidade aproximada). Não recebe dados de conta nem nada do jogo. Os sinais do Google e a personalização de anúncios ficam desligados. Veja a <a href="https://policies.google.com/privacy?hl=pt-BR" rel="noopener">política de privacidade do Google</a>.</li>
           <li><strong>Autoridades:</strong> quando houver obrigação legal ou ordem judicial.</li>
         </ul>
-        <p>Dados das crianças (apelido e progresso) não são enviados ao Stripe nem ao provedor de e-mail.</p>
+        <p>Dados das crianças (apelido e progresso) não são enviados ao Stripe, ao provedor de e-mail nem ao Google.</p>
 
         <h2 id="internacional">7. Transferência internacional</h2>
         <p>
-          Alguns operadores, como o Stripe e o provedor de e-mail, podem processar dados do adulto fora do Brasil. Nesses casos, exigimos garantias
+          Alguns operadores, como o Stripe, o provedor de e-mail e o Google (Analytics), podem processar dados do adulto fora do Brasil. Nesses casos, exigimos garantias
           adequadas de proteção, como cláusulas contratuais, conforme o art. 33 da LGPD.
         </p>
 
@@ -146,8 +148,12 @@
           <li><strong>Cookie de login</strong> (<code>edugame.auth</code>): essencial, mantém você conectado. Para convidados, é ele que guarda o progresso no aparelho.</li>
           <li><strong>Armazenamento local do navegador:</strong> preferências (tema, tamanho do texto, leitura em voz alta), o perfil escolhido e a origem do primeiro acesso.</li>
           <li><strong>Cache para funcionar com internet fraca:</strong> arquivos do próprio jogo.</li>
+          <li><strong>Google Analytics</strong> (<code>_ga</code> e <code>_ga_…</code>, duram até 2 anos): só nas páginas de apresentação e no blog, e só depois que você clica em <em>Aceitar</em> no aviso de cookies. Sem o aceite, o script do Google nem é carregado. O jogo (<code>/jogar</code>) não usa esses cookies.</li>
         </ul>
-        <p>Não usamos cookies de publicidade nem ferramentas de análise de terceiros. Por isso não exibimos aviso de cookies.</p>
+        <p>
+          Sua escolha sobre o Google Analytics fica guardada no navegador. Para mudar, clique em <em>Cookies</em> no rodapé da página inicial ou do blog;
+          ao recusar, apagamos os cookies do Google Analytics deste site. Não usamos cookies de publicidade.
+        </p>
 
         <h2 id="prazos">9. Por quanto tempo guardamos</h2>
         <ul>

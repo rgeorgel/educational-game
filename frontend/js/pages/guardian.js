@@ -2,7 +2,7 @@ import { api } from "../api.js";
 import { errorMessage, h } from "../dom.js";
 import { store } from "../store.js";
 import { avatarView, levelBadge } from "./shared.js";
-import { planLine } from "./plans.js";
+import { planPromo } from "./plans.js";
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long" });
 
@@ -130,7 +130,12 @@ function familyActions(r) {
 }
 
 export async function guardianPage() {
-  const [reports, plan] = await Promise.all([api.guardianReport(), store.state.me?.isGuest ? null : api.myPlan().catch(() => null)]);
+  const guest = store.state.me?.isGuest;
+  const [reports, plan, billing] = await Promise.all([
+    api.guardianReport(),
+    guest ? null : api.myPlan().catch(() => null),
+    guest ? null : api.billingStatus().catch(() => null),
+  ]);
   return h(
     "section",
     { class: "page" },
@@ -145,7 +150,7 @@ export async function guardianPage() {
       " ",
       h("a", { href: "#/fichas" }, "Fichas para imprimir."),
     ),
-    planLine(plan),
+    planPromo(plan, "familia", billing),
     reports.length
       ? h("div", { class: "report-grid" }, reports.map((r) => profileReportCard(r, [familyActions(r), classroomManager(r.id)])))
       : h("p", { class: "card" }, "Nenhum perfil ainda. ", h("a", { href: "#/perfis" }, "Crie o primeiro perfil.")),

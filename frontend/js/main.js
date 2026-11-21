@@ -106,7 +106,8 @@ function renderHeader() {
     }
     nav.push(
       link("#/perfis", "👥", "Perfis", path === "/perfis"),
-      link("#/responsavel", "👪", "Responsável", path.startsWith("/responsavel") || path.startsWith("/turmas") || path.startsWith("/semana") || ["/bncc", "/planos", "/fichas"].includes(path)),
+      link("#/responsavel", "👪", "Responsável", path.startsWith("/responsavel") || path.startsWith("/turmas") || path.startsWith("/semana") || ["/bncc", "/fichas"].includes(path)),
+      me.isGuest ? null : link("#/planos", "⭐", "Planos", path === "/planos", { class: "nav-link nav-plans" }),
       link("#/config", "⚙️", "Configurações", path === "/config", { class: "nav-link nav-settings" }),
       h("button", { type: "button", class: "btn btn-ghost btn-small logout-btn", onClick: logout, title: "Sair", "aria-label": "Sair" }, h("span", { class: "nav-ico", "aria-hidden": "true" }, "🚪"), h("span", { class: "nav-text" }, "Sair")),
     );

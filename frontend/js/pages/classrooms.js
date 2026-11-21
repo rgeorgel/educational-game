@@ -4,7 +4,7 @@ import { navigate } from "../router.js";
 import { store } from "../store.js";
 import { profileReportCard } from "./guardian.js";
 import { assignmentsSection, exportSection, planBanner, skillsSection } from "./assignments.js";
-import { planLine } from "./plans.js";
+import { planPromo } from "./plans.js";
 
 export async function classroomsPage() {
   if (store.state.me?.isGuest) {
@@ -15,7 +15,7 @@ export async function classroomsPage() {
       h("p", { class: "card" }, "Para criar turmas, primeiro ", h("a", { href: "#/salvar" }, "crie uma conta"), ". Contas de convidado não podem criar turmas."),
     );
   }
-  const [classes, plan] = await Promise.all([api.classrooms(), api.myPlan().catch(() => null)]);
+  const [classes, plan, billing] = await Promise.all([api.classrooms(), api.myPlan().catch(() => null), api.billingStatus().catch(() => null)]);
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
 
   const form = h(
@@ -44,7 +44,7 @@ export async function classroomsPage() {
     h("h1", {}, "Minhas turmas"),
     h("p", { class: "muted" }, "Crie uma turma e passe o código para as famílias. Cada responsável decide se o perfil do filho entra na turma."),
     h("p", { class: "muted small" }, "Todas as habilidades do jogo estão ligadas à BNCC: ", h("a", { href: "#/bncc" }, "ver currículo e BNCC"), ". Para treinar no papel: ", h("a", { href: "#/fichas" }, "fichas para imprimir"), "."),
-    planLine(plan),
+    planPromo(plan, "professor", billing),
     planBanner(plan),
     h("div", { class: "card stack" }, form, error),
     classes.length

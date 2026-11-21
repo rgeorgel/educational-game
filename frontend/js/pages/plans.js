@@ -24,6 +24,37 @@ export function lockedCard(err) {
   );
 }
 
+const PROMO = {
+  familia: { icon: "👪", title: "Plano Família", price: "R$ 9,90/mês", text: "Relatório da semana de cada filho, treino de reforço escolhido por você, fichas para imprimir e até 8 perfis." },
+  professor: { icon: "🏫", title: "Professor Pro", price: "R$ 19,90/mês", text: "Até 20 turmas, tarefas para a turma, relatório por habilidade da BNCC, planilhas e fichas para imprimir." },
+};
+
+/**
+ * Destaque dos planos nas áreas do adulto. Quem ainda não tem o plano vê um cartão com o que ganha;
+ * quem já tem vê só a linha "Seu plano".
+ * @param {"familia"|"professor"} focus plano mais útil para quem está nesta tela
+ */
+export function planPromo(plan, focus, billing) {
+  if (!plan) return null;
+  const has = plan.paid?.includes(focus) || plan.chosen === focus || plan.plans?.some((p) => p.slug === focus || p.slug === "escola");
+  if (has) return planLine(plan);
+  const promo = PROMO[focus];
+  const launch = billing?.mode === "lancamento";
+  return h(
+    "section",
+    { class: "card plan-promo" },
+    h("span", { class: "plan-promo-icon", "aria-hidden": "true" }, promo.icon),
+    h(
+      "div",
+      {},
+      h("h2", {}, promo.title, " ", h("span", { class: "plan-promo-price" }, launch ? "grátis durante o lançamento" : promo.price)),
+      h("p", { class: "small" }, promo.text),
+      h("p", { class: "muted small" }, `Seu plano agora: ${plan.name}.`),
+    ),
+    h("a", { href: "#/planos", class: "btn btn-primary" }, "Conhecer os planos"),
+  );
+}
+
 /** "Seu plano: Família · Ver planos" */
 export function planLine(plan) {
   if (!plan) return null;

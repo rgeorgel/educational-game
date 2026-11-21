@@ -95,7 +95,8 @@
               "Leitura em voz alta, texto grande e tema escuro",
               "Área do responsável com relatório dos últimos 7 dias",
               "Turmas para professores",
-              "Sem anúncios e sem compras",
+              "Sem anúncios e sem compras dentro do jogo",
+              "Planos opcionais para famílias e professores",
               "Começa sem cadastro, só com um apelido",
               "Instalável como app (PWA)"
             ],
@@ -109,7 +110,7 @@
               {
                 "@type": "Question",
                 "name": "É grátis?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Sim. Não há assinatura, compras dentro do jogo nem anúncios." }
+                "acceptedAnswer": { "@type": "Answer", "text": "Sim. Jogar é grátis, sem anúncios e sem compras dentro do jogo. Os planos Família e Professor Pro são opcionais e trazem recursos para os adultos que acompanham, como o relatório da semana e as fichas para imprimir." }
               },
               {
                 "@type": "Question",
@@ -164,6 +165,7 @@
           <a href="#como-funciona" class="lp-nav-link">Como funciona</a>
           <a href="#familias" class="lp-nav-link">Famílias</a>
           <a href="/professores" class="lp-nav-link">Professores</a>
+          <a href="#planos" class="lp-nav-link">Planos</a>
           <a href="/jogar#/conta" class="lp-nav-link" data-cta="login">Entrar</a>
           <a href="/jogar#/entrar" class="lp-btn lp-btn-primary lp-btn-small" data-cta="play">Jogar agora</a>
         </nav>
@@ -316,13 +318,58 @@
         </div>
       </section>
 
+      <!-- ---------- Planos ---------- -->
+      <section id="planos" class="lp-section">
+        <div class="lp-container">
+          <h2>Planos</h2>
+          <p class="lp-section-lead">Jogar é sempre grátis, sem anúncios. Os planos são opcionais, para os adultos que acompanham.</p>
+          <p class="lp-launch-note" data-launch-note hidden>🎉 Lançamento: os planos pagos estão grátis por enquanto. Avisaremos antes de começar a cobrar.</p>
+          <div class="lp-levels lp-plans">
+            <article class="lp-level-card">
+              <h3>Grátis</h3>
+              <p class="lp-plan-price">R$ 0</p>
+              <ul class="lp-plan-list">
+                <li>Todo o jogo: Matemática e Lógica, do Iniciante ao Expert</li>
+                <li>Até 3 perfis</li>
+                <li>Relatório dos últimos 7 dias</li>
+                <li>1 turma para professores</li>
+              </ul>
+              <a href="/jogar#/entrar" class="lp-btn lp-btn-ghost" data-cta="play">Jogar agora</a>
+            </article>
+            <article class="lp-level-card lp-plan-featured">
+              <h3>Família</h3>
+              <p class="lp-plan-price">R$ 9,90<span>/mês</span></p>
+              <ul class="lp-plan-list">
+                <li>Relatório da semana de cada filho</li>
+                <li>Treino de reforço: você escolhe a habilidade</li>
+                <li>Fichas para imprimir com gabarito</li>
+                <li>Até 8 perfis</li>
+              </ul>
+              <a href="/jogar#/planos" class="lp-btn lp-btn-primary">Ver o plano Família</a>
+            </article>
+            <article class="lp-level-card lp-plan-featured">
+              <h3>Professor Pro</h3>
+              <p class="lp-plan-price">R$ 19,90<span>/mês</span></p>
+              <ul class="lp-plan-list">
+                <li>Até 20 turmas e tarefas para a turma</li>
+                <li>Relatório por habilidade da BNCC</li>
+                <li>Planilhas para Excel e Google Planilhas</li>
+                <li>Fichas para imprimir com gabarito</li>
+              </ul>
+              <a href="/jogar#/planos" class="lp-btn lp-btn-primary">Ver o Professor Pro</a>
+            </article>
+          </div>
+          <p class="lp-note">Sem fidelidade: cancele quando quiser. Para escolas e redes de ensino, fale com a gente.</p>
+        </div>
+      </section>
+
       <!-- ---------- Perguntas ---------- -->
       <section class="lp-section">
         <div class="lp-container lp-narrow">
           <h2>Perguntas frequentes</h2>
           <details class="lp-faq">
             <summary>É grátis?</summary>
-            <p>Sim. Não há assinatura, compras dentro do jogo nem anúncios.</p>
+            <p>Sim. Jogar é grátis, sem anúncios e sem compras dentro do jogo. Os planos Família e Professor Pro são opcionais e trazem recursos para os adultos que acompanham, como o relatório da semana e as fichas para imprimir.</p>
           </details>
           <details class="lp-faq">
             <summary>Precisa criar conta?</summary>
@@ -362,6 +409,7 @@
           <a href="/jogar#/cadastro">Criar conta</a>
           <a href="/professores">Professores</a>
           <a href="/jogar#/bncc">Currículo e BNCC</a>
+          <a href="#planos">Planos</a>
         </nav>
       </div>
     </footer>

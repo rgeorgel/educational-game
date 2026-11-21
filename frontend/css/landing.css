@@ -699,3 +699,15 @@
 /* Página para professores */
 .lp-class-needs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 0.95rem; }
 .lp-class-needs li { padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg); }
+
+/* Planos (landing e professores) */
+.lp-levels.lp-plans { grid-template-columns: repeat(3, 1fr); align-items: stretch; }
+@media (max-width: 860px) { .lp-levels.lp-plans { grid-template-columns: 1fr; } }
+.lp-plans .lp-level-card { display: flex; flex-direction: column; gap: 10px; }
+.lp-plans h3 { margin: 0; }
+.lp-plan-featured { border: 2px solid color-mix(in srgb, var(--primary) 45%, transparent); }
+.lp-plan-price, .lp-level-card .lp-plan-price { font-size: 1.6rem; font-weight: 800; margin: 0; color: var(--text); }
+.lp-plan-price span { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+.lp-plan-list { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; flex: 1; align-content: start; }
+.lp-plans .lp-btn { align-self: flex-start; }
+.lp-launch-note { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--success-bg); color: var(--text); font-weight: 600; }

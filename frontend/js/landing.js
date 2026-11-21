@@ -34,3 +34,17 @@ async function personalize() {
 }
 
 personalize();
+
+// Planos: durante o lançamento (sem cobrança), avisa que os planos pagos estão grátis.
+async function launchNote() {
+  try {
+    const res = await fetch("/api/billing/status", { headers: { Accept: "application/json" } });
+    if (!res.ok) return;
+    const { mode } = await res.json();
+    for (const el of document.querySelectorAll("[data-launch-note]")) el.hidden = mode !== "lancamento";
+  } catch {
+    /* sem a API, a página continua sem o aviso */
+  }
+}
+
+launchNote();

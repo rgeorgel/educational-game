@@ -7,7 +7,7 @@
 - Para professores: https://educa-game.georgel.ca/professores
 - Currículo e alinhamento à BNCC: https://educa-game.georgel.ca/jogar#/bncc (dados em https://educa-game.georgel.ca/api/curriculum)
 - Idioma: português (pt-BR)
-- Preço: grátis, sem anúncios e sem compras dentro do jogo
+- Preço: jogar é grátis, sem anúncios e sem compras dentro do jogo. Planos opcionais para adultos: Família (R$ 9,90/mês: relatório da semana, treino de reforço, fichas para imprimir, até 8 perfis) e Professor Pro (R$ 19,90/mês: até 20 turmas, tarefas, planilhas e fichas). Detalhes: https://educa-game.georgel.ca/#planos
 - Plataformas: navegador do celular, tablet ou computador; instalável como app (PWA)
 - Público: a partir de 7 anos; crianças, adolescentes, famílias e professores
 

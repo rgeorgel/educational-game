@@ -1098,3 +1098,20 @@ details.level-section[open] {
   .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 0; border-radius: 0; }
   .no-print { display: none !important; }
 }
+
+/* Destaque dos planos (Responsável e Turmas) */
+.plan-promo {
+  display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3) var(--space-4); align-items: center;
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, var(--surface)), var(--surface));
+}
+.plan-promo h2 { margin: 0; font-size: 1.15rem; }
+.plan-promo p { margin: 2px 0 0; }
+.plan-promo-icon { font-size: 2rem; }
+.plan-promo-price { font-size: 0.85rem; font-weight: 700; color: var(--primary); white-space: nowrap; }
+.page-narrow .plan-promo { grid-template-columns: auto 1fr; }
+.page-narrow .plan-promo .btn { grid-column: 1 / -1; justify-self: start; }
+@media (max-width: 640px) {
+  .plan-promo { grid-template-columns: auto 1fr; }
+  .plan-promo .btn { grid-column: 1 / -1; justify-self: start; }
+}

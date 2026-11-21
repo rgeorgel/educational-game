@@ -14,6 +14,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app ./
+# Pasta das chaves de login (montada num volume); precisa pertencer ao usuário do app.
+RUN mkdir -p /keys && chown $APP_UID /keys
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 USER $APP_UID

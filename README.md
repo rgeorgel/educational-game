@@ -116,6 +116,13 @@ docker compose up -d --build
   **não** defina `COMPOSE_PROFILES`.
 - Em **Domains**, coloque o domínio no serviço **`web`** (não no `api`). O nginx escuta na porta 80 do container;
   se o Coolify pedir a porta, use `http://seu-dominio:80`.
+- **Deploy com o mínimo de parada.** No Coolify, apps em Docker Compose não têm deploy sem parada (rolling update): os containers são parados e recriados. O projeto reduz essa janela assim:
+  - **Saúde verificada a cada 1 segundo** enquanto o container sobe (`start_interval`, requer Docker 25 ou mais novo no servidor). O proxy volta a mandar tráfego assim que o serviço responde.
+  - **O `web` não espera a API ficar saudável.** O site continua no ar enquanto a API reinicia.
+  - **Durante o reinício, o nginx responde 503 com `Retry-After`** e o jogo tenta de novo sozinho, mostrando "Reconectando…". Leituras também são repetidas em caso de erro de rede.
+  - **Service worker:** se o servidor responder 502/503/504, ele entrega a cópia guardada das páginas.
+  - **Logins sobrevivem ao deploy:** as chaves do jogo ficam no banco e as do painel admin no volume `admin-keys`.
+  - Para eliminar a parada de vez, seria preciso separar API e site em dois recursos "Dockerfile" no Coolify, que fazem rolling update.
 - Depois de alterar domínio ou variáveis, clique em **Redeploy** (enquanto aparecer "Changes pending", a mudança
   ainda não foi aplicada e o proxy responde 503).
 

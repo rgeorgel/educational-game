@@ -54,12 +54,16 @@ services:
         condition: service_healthy
         # Sem o perfil "local-db" o container do banco não existe; a API conecta no banco externo.
         required: false
+    # Deploy mais curto: enquanto sobe, a saúde é verificada a cada 1 s (start_interval, Docker 25+),
+    # então o proxy volta a mandar tráfego assim que a API responde. Ao parar, termina as requisições em andamento.
+    stop_grace_period: 15s
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/health"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 15s
+      start_period: 60s
+      start_interval: 1s
 
   web:
     # Frontend e configuração do nginx vão dentro da imagem (funciona em qualquer servidor/Coolify).
@@ -70,16 +74,20 @@ services:
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-8080}:80"
+    stop_grace_period: 10s
     healthcheck:
       # Plataformas como o Coolify só mandam tráfego para containers saudáveis.
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 5s
+      start_period: 20s
+      start_interval: 1s
     depends_on:
+      # Não espera a API ficar saudável: o nginx sobe na hora e serve o site; enquanto a API
+      # reinicia, /api responde 503 com Retry-After e o app tenta de novo sozinho.
       edugame-api:
-        condition: service_healthy
+        condition: service_started
 
   # Painel de super admin: serviço separado do jogo (não usa o código nem a API do jogo).
   # Só lê o banco, numa conexão em modo somente leitura. Fica bloqueado até ADMIN_USERNAME e
@@ -91,6 +99,7 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       Admin__Username: ${ADMIN_USERNAME:-}
       Admin__Password: ${ADMIN_PASSWORD:-}
+      Admin__KeysPath: /keys
       Database__Host: ${DB_HOST:-db}
       Database__Port: ${DB_PORT:-5432}
       Database__Name: ${DB_NAME:-edugame}
@@ -106,12 +115,17 @@ services:
       db:
         condition: service_healthy
         required: false
+    volumes:
+      # Chaves do login do painel: sem isso, cada deploy desloga o admin.
+      - admin-keys:/keys
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 30s
+      start_interval: 1s
 
 volumes:
   pgdata:
+  admin-keys:

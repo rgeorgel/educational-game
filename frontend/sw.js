@@ -6,7 +6,7 @@
 // - Respostas e outras escritas (POST/PUT/DELETE): só rede (o servidor confere as respostas).
 // Ao sair da conta, o app pede para apagar o cache de dados (aparelhos compartilhados).
 
-const VERSION = "v9";
+const VERSION = "v10";
 const SHELL_CACHE = `edugame-shell-${VERSION}`;
 const DATA_CACHE = "edugame-data";
 
@@ -107,6 +107,12 @@ async function networkFirst(request, cacheName, fallback) {
     if (response.ok) {
       const cache = await caches.open(cacheName);
       cache.put(request, response.clone());
+      return response;
+    }
+    // Servidor reiniciando (deploy): 502/503/504 → usa a cópia guardada, se houver.
+    if (response.status >= 502 && response.status <= 504) {
+      const cached = await caches.match(request);
+      if (cached) return cached;
     }
     return response;
   } catch {

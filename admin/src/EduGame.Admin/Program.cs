@@ -1,12 +1,18 @@
 using System.Threading.RateLimiting;
 using EduGame.Admin;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton(Database.CreateDataSource(builder.Configuration));
 builder.Services.AddSingleton<AdminCredentials>();
 builder.Services.AddProblemDetails();
+
+// Chaves que assinam o cookie de login. Num volume (Admin:KeysPath), o login sobrevive a deploys.
+var dataProtection = builder.Services.AddDataProtection().SetApplicationName("edugame-admin");
+if (builder.Configuration["Admin:KeysPath"] is { Length: > 0 } keysPath)
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
 var sessionHours = builder.Configuration.GetValue("Admin:SessionHours", 8);
 builder.Services

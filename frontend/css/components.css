@@ -1060,3 +1060,10 @@ numeric-keypad {
   border-radius: var(--radius-sm);
   background: var(--surface);
 }
+
+/* Aviso enquanto o servidor reinicia (deploy) */
+.reconnecting {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 1000;
+  padding: 8px 14px; border-radius: 999px; background: var(--text); color: var(--bg);
+  font-size: 0.9rem; box-shadow: var(--shadow);
+}

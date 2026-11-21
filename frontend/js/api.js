@@ -17,16 +17,57 @@ export function onUnauthorized(fn) {
   return () => listeners.delete(fn);
 }
 
+// Durante um deploy a API fica alguns segundos fora. O nginx responde 503 com o cabeçalho
+// X-Api-Indisponivel (a requisição nem chegou à API), então dá para tentar de novo com segurança.
+// Leituras (GET) também tentam de novo em erros de rede e 502/504. Espera no máximo ~25 s.
+const RETRY_DELAYS = [500, 1000, 1500, 2000, 3000, 4000, 5000, 8000];
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function shouldRetry(method, res) {
+  if (!res) return method === "GET"; // erro de rede: só repete leituras
+  if (res.headers.get("x-api-indisponivel") === "1") return true;
+  return method === "GET" && [502, 503, 504].includes(res.status);
+}
+
+async function send(method, path, body) {
+  for (let attempt = 0; ; attempt++) {
+    let res = null;
+    try {
+      res = await fetch(`/api${path}`, {
+        method,
+        credentials: "same-origin",
+        headers: body === undefined ? { Accept: "application/json" } : { "Content-Type": "application/json", Accept: "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    } catch {
+      res = null;
+    }
+    if (attempt >= RETRY_DELAYS.length || !shouldRetry(method, res)) return res;
+    reconnecting(true);
+    await sleep(RETRY_DELAYS[attempt]);
+  }
+}
+
+/** Aviso discreto "Reconectando…" enquanto o servidor reinicia. */
+let banner = null;
+function reconnecting(on) {
+  if (typeof document === "undefined") return;
+  if (on && !banner) {
+    banner = document.createElement("div");
+    banner.className = "reconnecting";
+    banner.setAttribute("role", "status");
+    banner.textContent = "Reconectando ao servidor…";
+    document.body.append(banner);
+  } else if (!on && banner) {
+    banner.remove();
+    banner = null;
+  }
+}
+
 async function request(method, path, body) {
-  let res;
-  try {
-    res = await fetch(`/api${path}`, {
-      method,
-      credentials: "same-origin",
-      headers: body === undefined ? { Accept: "application/json" } : { "Content-Type": "application/json", Accept: "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-  } catch {
+  const res = await send(method, path, body);
+  reconnecting(false);
+  if (!res) {
     throw new ApiError(0, { title: "Sem conexão", detail: "Não foi possível falar com o servidor. Verifique sua internet." });
   }
 

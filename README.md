@@ -262,7 +262,7 @@ Sem SMTP:
 
 - `/termos` e `/privacidade` (arquivos `frontend/termos.html` e `frontend/privacidade.html`).
 - Aparecem no cadastro, em "Salvar progresso", em Configurações e no rodapé das páginas.
-- O responsável (nome e CPF) e o e-mail de contato aparecem nas duas páginas e no rodapé de todas as páginas públicas (exigência do Decreto 7.962/2013 para quem vende pela internet). Para trocar, edite os quatro HTML de `frontend/`.
+- O responsável (nome e CPF) e o e-mail de contato aparecem só nessas duas páginas. O rodapé das páginas públicas tem apenas o link para o portfólio (georgel.ca).
 - Os textos foram escritos para este jogo (LGPD, dados de crianças, CDC, Stripe), mas não são orientação jurídica: vale a revisão de um advogado antes de ligar a cobrança.
 
 ## Painel de super admin

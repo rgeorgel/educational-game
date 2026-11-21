@@ -646,6 +646,11 @@
   color: var(--text-muted);
 }
 
+.lp-footer-legal {
+  margin: var(--space-3) auto 0;
+  font-size: 0.85rem;
+}
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 960px) {
   .lp-hero-inner,
@@ -727,4 +732,3 @@
 .lp-legal th, .lp-legal td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
 .lp-legal th { background: color-mix(in srgb, var(--primary) 6%, var(--bg)); }
 .lp-legal .lp-table-scroll { overflow-x: auto; }
-.lp-todo { background: #fff3bf; color: #5c4400; padding: 0 4px; border-radius: 4px; }

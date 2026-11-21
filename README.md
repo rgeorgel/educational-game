@@ -262,7 +262,7 @@ Sem SMTP:
 
 - `/termos` e `/privacidade` (arquivos `frontend/termos.html` e `frontend/privacidade.html`).
 - Aparecem no cadastro, em "Salvar progresso", em Configurações e no rodapé das páginas.
-- **Antes de publicar, preencha os trechos marcados em amarelo** (`[preencher: …]`): nome ou razão social com CPF/CNPJ e o e-mail de contato.
+- O responsável (nome e CPF) e o e-mail de contato aparecem nas duas páginas e no rodapé de todas as páginas públicas (exigência do Decreto 7.962/2013 para quem vende pela internet). Para trocar, edite os quatro HTML de `frontend/`.
 - Os textos foram escritos para este jogo (LGPD, dados de crianças, CDC, Stripe), mas não são orientação jurídica: vale a revisão de um advogado antes de ligar a cobrança.
 
 ## Painel de super admin

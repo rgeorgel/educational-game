@@ -52,8 +52,15 @@ services:
       Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:-}
       Stripe__Prices__professor: ${STRIPE_PRICE_PROFESSOR:-}
       Stripe__Prices__familia: ${STRIPE_PRICE_FAMILIA:-}
-      # Endereço público do site (links de volta do pagamento), ex.: https://educa-game.seu-dominio
+      # Endereço público do site (links do pagamento e dos e-mails), ex.: https://educa-game.seu-dominio
       App__PublicBaseUrl: ${PUBLIC_BASE_URL:-}
+      # E-mails (veja "E-mails" no README). Sem SMTP_HOST e EMAIL_FROM nada é enviado.
+      Email__SmtpHost: ${SMTP_HOST:-}
+      Email__SmtpPort: ${SMTP_PORT:-587}
+      Email__SmtpUser: ${SMTP_USER:-}
+      Email__SmtpPassword: ${SMTP_PASSWORD:-}
+      Email__From: ${EMAIL_FROM:-}
+      Email__ReplyTo: ${EMAIL_REPLY_TO:-}
     extra_hosts:
       # Permite usar Host=host.docker.internal para um Postgres instalado no próprio servidor (Linux).
       - "host.docker.internal:host-gateway"

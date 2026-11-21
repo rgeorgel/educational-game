@@ -216,6 +216,44 @@ dotnet EduGame.Api.dll stripe configurar --recriar-webhook  # gera um webhook no
 
 Veja também [docs/MONETIZACAO.md](docs/MONETIZACAO.md) (CNPJ, nota fiscal, termos).
 
+## E-mails e recuperação de senha
+
+O jogo envia três e-mails, sempre para o adulto da conta:
+- **Boas-vindas**, ao criar conta ou salvar o progresso de um convidado;
+- **Esqueci minha senha**: link para criar uma senha nova. Vale por 2 horas e funciona uma vez só;
+- **Senha alterada**, logo depois da troca.
+
+Como funciona:
+- Na tela de entrar, "Esqueci minha senha" leva a `/jogar#/esqueci`.
+- A resposta é sempre a mesma, exista ou não conta com aquele e-mail. Assim ninguém descobre quem tem conta.
+- No máximo um e-mail de senha a cada 2 minutos por conta.
+- Os e-mails saem de uma fila em segundo plano, com novas tentativas se o provedor falhar. O site não fica esperando o SMTP.
+- Ao criar a senha nova pelo link, a pessoa já entra, a conta é destravada e os outros aparelhos são desconectados em até 30 minutos.
+
+**Configurar** (no `.env` ou nas variáveis do Coolify, depois **Redeploy**):
+
+| Variável | Exemplo |
+| --- | --- |
+| `PUBLIC_BASE_URL` | `https://educa-game.seu-dominio` (obrigatório em produção: os links dos e-mails usam ele) |
+| `SMTP_HOST` / `SMTP_PORT` | `smtp.resend.com` / `587` (465 = SSL) |
+| `SMTP_USER` / `SMTP_PASSWORD` | usuário e senha (ou chave de API) do provedor |
+| `EMAIL_FROM` | `Educa Game <nao-responda@seu-dominio>` |
+| `EMAIL_REPLY_TO` | opcional, ex.: o e-mail de suporte |
+
+Qualquer provedor SMTP serve. Para os e-mails não caírem no spam, verifique o domínio do remetente no provedor
+(registros SPF, DKIM e DMARC no DNS).
+
+Sem SMTP:
+- em desenvolvimento, o e-mail completo aparece no log da API (`docker compose logs edugame-api`), com o link clicável;
+- em produção, "Esqueci minha senha" avisa que está indisponível e o log da API mostra o que falta configurar.
+
+## Termos de uso e privacidade
+
+- `/termos` e `/privacidade` (arquivos `frontend/termos.html` e `frontend/privacidade.html`).
+- Aparecem no cadastro, em "Salvar progresso", em Configurações e no rodapé das páginas.
+- **Antes de publicar, preencha os trechos marcados em amarelo** (`[preencher: …]`): nome ou razão social com CPF/CNPJ e o e-mail de contato.
+- Os textos foram escritos para este jogo (LGPD, dados de crianças, CDC, Stripe), mas não são orientação jurídica: vale a revisão de um advogado antes de ligar a cobrança.
+
 ## Painel de super admin
 
 Um painel para acompanhar o uso do jogo e gerenciar os planos das pessoas. Ele roda como um **serviço separado** (`edugame-admin`, pasta `admin/`):

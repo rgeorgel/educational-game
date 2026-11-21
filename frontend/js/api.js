@@ -95,6 +95,8 @@ export const api = {
   startAsGuest: (nickname, avatar) => post("/auth/guest", { nickname, avatar, origin: originForSignup() }),
   saveProgress: (email, password, acceptTerms) => post("/auth/upgrade", { email, password, acceptTerms }),
   logout: () => post("/auth/logout"),
+  forgotPassword: (email) => post("/auth/forgot-password", { email }),
+  resetPassword: (userId, token, password) => post("/auth/reset-password", { userId, token, password }),
 
   avatars: () => get("/profiles/avatars"),
   createProfile: (profile) => post("/profiles", profile),

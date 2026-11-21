@@ -4,7 +4,7 @@ import { api, onUnauthorized } from "./api.js";
 import { h } from "./dom.js";
 import { applyPrefs } from "./prefs.js";
 import { captureOrigin } from "./origin.js";
-import { authPage, saveProgressPage } from "./pages/auth.js";
+import { authPage, forgotPasswordPage, resetPasswordPage, saveProgressPage } from "./pages/auth.js";
 import { avatarPage } from "./pages/avatar.js";
 import { bnccPage } from "./pages/bncc.js";
 import { plansPage } from "./pages/plans.js";
@@ -35,6 +35,8 @@ route("/", homePage, { title: "Início" });
 route("/entrar", () => authPage("jogar"), { title: "Jogar" });
 route("/conta", () => authPage("entrar"), { title: "Entrar" });
 route("/cadastro", () => authPage("criar"), { title: "Criar conta" });
+route("/esqueci", forgotPasswordPage, { title: "Esqueci minha senha" });
+route("/nova-senha/:userId/:token", resetPasswordPage, { title: "Nova senha" });
 route("/perfis", profilesPage, { title: "Perfis" });
 route("/mapa/:subject", mapPage, { title: "Mapa" });
 route("/jogar/:sessionId", sessionPage, { title: "Jogando" });
@@ -56,6 +58,9 @@ const OPEN = ["/bncc", "/planos"];
 
 setGuard((path) => {
   if (OPEN.includes(path)) return null;
+  // Link do e-mail de nova senha: abre mesmo com outra conta (ou convidado) neste aparelho.
+  if (path.startsWith("/nova-senha/")) return null;
+  if (path === "/esqueci") return store.state.me && !store.state.me.isGuest ? "/perfis" : null;
   if (!store.state.me) return PUBLIC.includes(path) ? null : "/entrar";
   if (PUBLIC.includes(path)) return "/perfis";
   if (!store.profile && !NO_PROFILE_NEEDED.some((p) => path === p || path.startsWith(`${p}/`))) return "/perfis";

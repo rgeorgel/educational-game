@@ -4,6 +4,7 @@ using System.Threading.RateLimiting;
 using EduGame.Api.Common;
 using EduGame.Api.Features.Auth;
 using EduGame.Api.Features.Calibration;
+using EduGame.Api.Features.Email;
 using EduGame.Api.Features.Map;
 using EduGame.Api.Features.Profiles;
 using EduGame.Api.Features.Progress;
@@ -30,6 +31,9 @@ builder.Services.AddScoped<EduGame.Api.Features.Billing.PlanService>();
 builder.Services.AddSingleton<EduGame.Api.Features.Billing.StripeSettings>();
 builder.Services.AddSingleton<EduGame.Api.Features.Billing.IStripeGateway, EduGame.Api.Features.Billing.StripeGateway>();
 builder.Services.AddScoped<EduGame.Api.Features.Billing.StripeWebhook>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<PublicUrl>();
+builder.Services.AddEmail();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();

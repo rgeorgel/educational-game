@@ -6,6 +6,25 @@ import { store } from "../store.js";
 const CONSENT_TEXT =
   "Sou maior de idade e responsável pelas crianças que vão jogar. Autorizo o uso dos dados de progresso (apelido e respostas) apenas para o funcionamento do jogo.";
 
+/** Autorização com links para os termos e a política (abrem em outra aba para não perder o formulário). */
+function consentLabel() {
+  return h(
+    "label",
+    { class: "checkbox" },
+    h("input", { type: "checkbox", name: "acceptTerms", value: "true" }),
+    h(
+      "span",
+      {},
+      CONSENT_TEXT,
+      " Li e aceito os ",
+      h("a", { href: "/termos", target: "_blank", rel: "noopener" }, "termos de uso"),
+      " e a ",
+      h("a", { href: "/privacidade", target: "_blank", rel: "noopener" }, "política de privacidade"),
+      ".",
+    ),
+  );
+}
+
 /** Grade de avatares (rádio) reaproveitada na tela de início. */
 function avatarPicker(avatars) {
   return h(
@@ -62,8 +81,10 @@ export async function authPage(initialTab) {
   const accountError = h("p", { class: "form-error", role: "alert", hidden: true });
   const accountTitle = h("h2", {}, "Entrar");
   const accountSubmit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, "Entrar");
-  const consent = h("label", { class: "checkbox", hidden: true }, h("input", { type: "checkbox", name: "acceptTerms", value: "true" }), h("span", {}, CONSENT_TEXT));
+  const consent = consentLabel();
+  consent.hidden = true;
   const passwordHint = h("small", { class: "muted", hidden: true }, "Mínimo de 8 caracteres.");
+  const forgotLink = h("a", { href: "#/esqueci", class: "small forgot-link" }, "Esqueci minha senha");
 
   const accountForm = h(
     "form",
@@ -76,6 +97,7 @@ export async function authPage(initialTab) {
       h("input", { type: "password", name: "password", autocomplete: "current-password", required: true, minlength: "8" }),
       passwordHint,
     ),
+    forgotLink,
     consent,
     accountError,
     accountSubmit,
@@ -119,6 +141,7 @@ export async function authPage(initialTab) {
       accountSubmit.textContent = create ? "Criar conta" : "Entrar";
       consent.hidden = !create;
       passwordHint.hidden = !create;
+      forgotLink.hidden = create;
       accountForm.elements.password.autocomplete = create ? "new-password" : "current-password";
       accountError.hidden = true;
     }
@@ -178,7 +201,7 @@ export function saveProgressPage() {
     },
     h("label", { class: "field" }, h("span", {}, "E-mail do responsável"), h("input", { type: "email", name: "email", autocomplete: "email", required: true })),
     h("label", { class: "field" }, h("span", {}, "Senha"), h("input", { type: "password", name: "password", autocomplete: "new-password", required: true, minlength: "8" }), h("small", { class: "muted" }, "Mínimo de 8 caracteres.")),
-    h("label", { class: "checkbox" }, h("input", { type: "checkbox", name: "acceptTerms", value: "true" }), h("span", {}, CONSENT_TEXT)),
+    consentLabel(),
     error,
     submit,
   );
@@ -196,4 +219,84 @@ export function saveProgressPage() {
       form,
     ),
   );
+}
+
+/** "Esqueci minha senha": pede o e-mail e manda o link. A resposta é sempre a mesma (não revela quem tem conta). */
+export function forgotPasswordPage() {
+  const error = h("p", { class: "form-error", role: "alert", hidden: true });
+  const submit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, "Enviar link");
+  const done = h("div", { class: "notice success card stack", role: "status", hidden: true });
+  const form = h(
+    "form",
+    {
+      class: "stack",
+      novalidate: true,
+      onSubmit: async (e) => {
+        e.preventDefault();
+        const { email } = formData(form);
+        error.hidden = true;
+        if (!email?.trim()) return showError(error, "Informe o e-mail da conta.");
+        submit.disabled = true;
+        try {
+          const res = await api.forgotPassword(email.trim());
+          done.replaceChildren(
+            h("p", {}, "📬 ", res?.message ?? "Se houver uma conta com este e-mail, enviamos um link para criar uma senha nova."),
+            h("p", { class: "muted small" }, "O link vale por 2 horas. Não chegou? Confira a caixa de spam ou peça de novo em alguns minutos."),
+          );
+          done.hidden = false;
+          form.hidden = true;
+        } catch (err) {
+          showError(error, errorMessage(err));
+        } finally {
+          submit.disabled = false;
+        }
+      },
+    },
+    h("label", { class: "field" }, h("span", {}, "E-mail da conta"), h("input", { type: "email", name: "email", autocomplete: "email", required: true })),
+    error,
+    submit,
+  );
+  return h(
+    "section",
+    { class: "page-narrow" },
+    h("h1", {}, "🔑 Esqueci minha senha"),
+    h("div", { class: "card stack" }, h("p", {}, "Informe o e-mail da conta. Vamos mandar um link para você criar uma senha nova."), form, done),
+    h("p", { class: "small" }, h("a", { href: "#/conta" }, "← Voltar para entrar")),
+  );
+}
+
+/** Link do e-mail: escolhe a senha nova e já entra. */
+export function resetPasswordPage({ userId, token }) {
+  const error = h("p", { class: "form-error", role: "alert", hidden: true });
+  const submit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, "Salvar nova senha");
+  const form = h(
+    "form",
+    {
+      class: "stack",
+      novalidate: true,
+      onSubmit: async (e) => {
+        e.preventDefault();
+        const { password, confirm } = formData(form);
+        error.hidden = true;
+        if (!password || password.length < 8) return showError(error, "A senha precisa ter pelo menos 8 caracteres.");
+        if (password !== confirm) return showError(error, "As duas senhas não são iguais.");
+        submit.disabled = true;
+        try {
+          store.signOut();
+          store.setMe(await api.resetPassword(userId, token, password));
+          navigate("/perfis", { replace: true });
+        } catch (err) {
+          showError(error, errorMessage(err));
+          if (err?.status === 400 && /link/i.test(errorMessage(err))) error.append(" ", h("a", { href: "#/esqueci" }, "Pedir novo link"));
+        } finally {
+          submit.disabled = false;
+        }
+      },
+    },
+    h("label", { class: "field" }, h("span", {}, "Nova senha"), h("input", { type: "password", name: "password", autocomplete: "new-password", required: true, minlength: "8" }), h("small", { class: "muted" }, "Mínimo de 8 caracteres.")),
+    h("label", { class: "field" }, h("span", {}, "Repita a nova senha"), h("input", { type: "password", name: "confirm", autocomplete: "new-password", required: true, minlength: "8" })),
+    error,
+    submit,
+  );
+  return h("section", { class: "page-narrow" }, h("h1", {}, "🔑 Criar nova senha"), h("div", { class: "card stack" }, form));
 }

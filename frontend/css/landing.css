@@ -711,3 +711,20 @@
 .lp-plan-list { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; flex: 1; align-content: start; }
 .lp-plans .lp-btn { align-self: flex-start; }
 .lp-launch-note { margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--success-bg); color: var(--text); font-weight: 600; }
+
+/* ---------- Páginas legais (termos e privacidade) ---------- */
+.lp-legal { padding-block: var(--space-6, 48px) var(--space-7, 64px); }
+.lp-legal .lp-container { max-width: 760px; }
+.lp-legal h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); line-height: 1.15; margin: 0 0 var(--space-2); }
+.lp-legal h2 { font-size: 1.25rem; margin: var(--space-6, 40px) 0 var(--space-3); scroll-margin-top: 80px; }
+.lp-legal h3 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+.lp-legal p, .lp-legal li { line-height: 1.65; }
+.lp-legal ul { padding-left: 1.3em; display: grid; gap: var(--space-2); }
+.lp-legal-meta { color: var(--text-muted); margin: 0 0 var(--space-5); }
+.lp-legal-summary { border: 1px solid var(--border); border-radius: 16px; padding: var(--space-4) var(--space-5); background: color-mix(in srgb, var(--primary) 6%, var(--bg)); }
+.lp-legal-summary h2 { margin-top: 0; }
+.lp-legal table { border-collapse: collapse; width: 100%; font-size: 0.95rem; margin: var(--space-3) 0; }
+.lp-legal th, .lp-legal td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+.lp-legal th { background: color-mix(in srgb, var(--primary) 6%, var(--bg)); }
+.lp-legal .lp-table-scroll { overflow-x: auto; }
+.lp-todo { background: #fff3bf; color: #5c4400; padding: 0 4px; border-radius: 4px; }

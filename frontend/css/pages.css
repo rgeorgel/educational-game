@@ -990,6 +990,7 @@ details.level-section[open] {
   gap: var(--space-1);
 }
 
+.forgot-link { justify-self: end; margin-top: calc(-1 * var(--space-2)); }
 .auth .tabs .tab {
   padding: 0 var(--space-2);
 }

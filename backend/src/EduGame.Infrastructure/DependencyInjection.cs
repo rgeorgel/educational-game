@@ -36,6 +36,9 @@ public static class DependencyInjection
             .AddSignInManager()
             .AddDefaultTokenProviders();
 
+        // Links de "esqueci minha senha" valem por 2 horas (padrão do Identity: 1 dia).
+        services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(2));
+
         // Convidados não têm e-mail: troca o validador padrão por um que entende isso.
         services.RemoveAll<IUserValidator<AppUser>>();
         services.AddScoped<IUserValidator<AppUser>, GuestAwareUserValidator>();

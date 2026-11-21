@@ -98,8 +98,8 @@ Os preços e prazos são **hipóteses para testar** com professores e famílias 
 - **Pagamento (código pronto):** criar a conta no Stripe, colocar a chave e rodar `dotnet EduGame.Api.dll stripe configurar`. Ele cria produtos, preços, webhook e portal (veja "Pagamentos (Stripe)" no README).
 - **Empresa e documentos:**
   - CNPJ (MEI ou ME) e emissão de nota fiscal; um contador ajuda;
-  - termos de uso e política de privacidade atualizados (LGPD, dados de crianças, cancelamento e reembolso).
-- **Comunicação:** e-mail transacional (Resend, Postmark ou SMTP) para avisar sobre a cobrança e, depois, enviar o relatório semanal por e-mail.
+  - termos de uso e política de privacidade: prontos em `/termos` e `/privacidade` (LGPD, dados de crianças, cancelamento, arrependimento de 7 dias e reembolso). Falta preencher nome/CPF ou CNPJ e e-mail de contato, e uma revisão de advogado.
+- **Comunicação:** o envio de e-mails já existe (SMTP; boas-vindas, recuperação de senha, senha alterada). Falta configurar o provedor em produção e criar os avisos de cobrança, de fim do teste grátis e, depois, o relatório semanal por e-mail.
 - **Saída do lançamento:** avisar quem escolheu planos na fase de lançamento, com prazo e preço de fundador.
 
 ## O que acompanhar

@@ -265,6 +265,15 @@ Sem SMTP:
 - O responsável (nome e CPF) e o e-mail de contato aparecem só nessas duas páginas. O rodapé das páginas públicas tem apenas o link para o portfólio (georgel.ca).
 - Os textos foram escritos para este jogo (LGPD, dados de crianças, CDC, Stripe), mas não são orientação jurídica: vale a revisão de um advogado antes de ligar a cobrança.
 
+## Blog
+
+Páginas estáticas em `/blog` (lista) e `/blog/nome-do-post`, feitas para o Google encontrar o site.
+
+- Os textos ficam em `content/blog/*.html`: um cabeçalho com `slug`, `title`, `description`, `emoji`, `date` e `related`, e depois o HTML do post (`<h2>`, `<p>`, `<ul>`…).
+- Para publicar um post novo ou uma edição, rode `python3 scripts/build_blog.py` e faça o commit. O script gera `frontend/blog/` (posts, lista e `feed.xml`), com dados estruturados para o Google, e atualiza o `sitemap.xml` e o `llms.txt`.
+- Não edite `frontend/blog/` à mão: ele é apagado e gerado de novo a cada execução.
+- Depois do deploy, envie o `sitemap.xml` no Google Search Console para os posts novos serem encontrados mais rápido.
+
 ## Painel de super admin
 
 Um painel para acompanhar o uso do jogo e gerenciar os planos das pessoas. Ele roda como um **serviço separado** (`edugame-admin`, pasta `admin/`):

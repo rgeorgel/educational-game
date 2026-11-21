@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Blog do Educa Game</title>
+    <link>https://educa-game.georgel.ca/blog</link>
+    <description>Ideias para pais e professores ensinarem matemática e raciocínio lógico com jogos.</description>
+    <language>pt-BR</language>
+    <item>
+      <title>Jogos de matemática para crianças: como escolher um que ensina de verdade</title>
+      <link>https://educa-game.georgel.ca/blog/jogos-de-matematica-para-criancas</link>
+      <guid>https://educa-game.georgel.ca/blog/jogos-de-matematica-para-criancas</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Nem todo jogo &quot;educativo&quot; ensina. Veja 7 sinais de um bom jogo de matemática para crianças, os sinais de alerta e como usar o jogo em casa sem brigar por tela.</description>
+    </item>
+    <item>
+      <title>Como ensinar tabuada sem decoreba: estratégias e 6 atividades para fazer em casa</title>
+      <link>https://educa-game.georgel.ca/blog/como-ensinar-tabuada</link>
+      <guid>https://educa-game.georgel.ca/blog/como-ensinar-tabuada</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Tabuada não precisa ser decoreba. Veja como ensinar a multiplicação com sentido, os truques que reduzem as contas difíceis a 15 e 6 atividades simples para praticar em casa.</description>
+    </item>
+    <item>
+      <title>Matemática na BNCC do 1º ao 5º ano: o que a criança aprende em cada ano</title>
+      <link>https://educa-game.georgel.ca/blog/bncc-matematica-anos-iniciais</link>
+      <guid>https://educa-game.georgel.ca/blog/bncc-matematica-anos-iniciais</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Um guia simples da BNCC de Matemática nos anos iniciais: como ler os códigos das habilidades (EF02MA07 e outros), as cinco unidades temáticas e o que se espera em cada ano, do 1º ao 5º.</description>
+    </item>
+    <item>
+      <title>Raciocínio lógico para crianças: 7 atividades com padrões, sequências e balanças</title>
+      <link>https://educa-game.georgel.ca/blog/raciocinio-logico-para-criancas</link>
+      <guid>https://educa-game.georgel.ca/blog/raciocinio-logico-para-criancas</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Raciocínio lógico se treina como qualquer habilidade. Veja 7 atividades simples, com exemplos e respostas, para fazer em casa ou na escola, e o que a BNCC diz sobre o tema.</description>
+    </item>
+    <item>
+      <title>Sudoku para crianças: benefícios, regras e como começar pelo 4×4</title>
+      <link>https://educa-game.georgel.ca/blog/sudoku-para-criancas</link>
+      <guid>https://educa-game.georgel.ca/blog/sudoku-para-criancas</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Sudoku é um ótimo exercício de lógica para crianças e não exige contas. Veja os benefícios, as regras explicadas para a criança, um 4×4 para resolver junto e dicas para avançar.</description>
+    </item>
+  </channel>
+</rss>

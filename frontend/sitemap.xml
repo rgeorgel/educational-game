@@ -24,4 +24,42 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <!-- blog:inicio (gerado por scripts/build_blog.py) -->
+  <url>
+    <loc>https://educa-game.georgel.ca/blog</loc>
+    <lastmod>2026-11-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://educa-game.georgel.ca/blog/jogos-de-matematica-para-criancas</loc>
+    <lastmod>2026-11-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://educa-game.georgel.ca/blog/como-ensinar-tabuada</loc>
+    <lastmod>2026-11-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://educa-game.georgel.ca/blog/bncc-matematica-anos-iniciais</loc>
+    <lastmod>2026-11-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://educa-game.georgel.ca/blog/raciocinio-logico-para-criancas</loc>
+    <lastmod>2026-11-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://educa-game.georgel.ca/blog/sudoku-para-criancas</loc>
+    <lastmod>2026-11-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <!-- blog:fim -->
 </urlset>

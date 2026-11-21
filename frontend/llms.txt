@@ -46,3 +46,15 @@ O jogo guarda só apelido, avatar, ano escolar (opcional) e o progresso. Nada de
 - O professor cria a turma e passa um código; cada família coloca o perfil do filho na turma. O professor vê só apelido e progresso.
 - Relatório da turma com o nível de cada aluno e "o que a turma mais precisa praticar", com os códigos da BNCC.
 - Alinhado à BNCC: Matemática do 1º ao 9º ano (e algumas habilidades do Ensino Médio) e o eixo de pensamento computacional da BNCC de Computação.
+
+## Blog
+
+Artigos para pais e professores (lista completa em https://educa-game.georgel.ca/blog):
+
+<!-- blog:inicio (gerado por scripts/build_blog.py) -->
+- [Jogos de matemática para crianças: como escolher um que ensina de verdade](https://educa-game.georgel.ca/blog/jogos-de-matematica-para-criancas): Nem todo jogo "educativo" ensina. Veja 7 sinais de um bom jogo de matemática para crianças, os sinais de alerta e como usar o jogo em casa sem brigar por tela.
+- [Como ensinar tabuada sem decoreba: estratégias e 6 atividades para fazer em casa](https://educa-game.georgel.ca/blog/como-ensinar-tabuada): Tabuada não precisa ser decoreba. Veja como ensinar a multiplicação com sentido, os truques que reduzem as contas difíceis a 15 e 6 atividades simples para praticar em casa.
+- [Matemática na BNCC do 1º ao 5º ano: o que a criança aprende em cada ano](https://educa-game.georgel.ca/blog/bncc-matematica-anos-iniciais): Um guia simples da BNCC de Matemática nos anos iniciais: como ler os códigos das habilidades (EF02MA07 e outros), as cinco unidades temáticas e o que se espera em cada ano, do 1º ao 5º.
+- [Raciocínio lógico para crianças: 7 atividades com padrões, sequências e balanças](https://educa-game.georgel.ca/blog/raciocinio-logico-para-criancas): Raciocínio lógico se treina como qualquer habilidade. Veja 7 atividades simples, com exemplos e respostas, para fazer em casa ou na escola, e o que a BNCC diz sobre o tema.
+- [Sudoku para crianças: benefícios, regras e como começar pelo 4×4](https://educa-game.georgel.ca/blog/sudoku-para-criancas): Sudoku é um ótimo exercício de lógica para crianças e não exige contas. Veja os benefícios, as regras explicadas para a criança, um 4×4 para resolver junto e dicas para avançar.
+<!-- blog:fim -->

@@ -40,6 +40,7 @@ Os preços e prazos são **hipóteses para testar** com professores e famílias 
    - A página diz "grátis durante o lançamento" e avisa que a cobrança será anunciada antes.
    - Serve para medir o interesse real: quantos escolhem cada plano e quantos usam os recursos.
 2. **Pagamento com Stripe (implementado; liga ao configurar as chaves).**
+   - Professor Pro e Família têm 7 dias de teste grátis sem cartão, uma vez por plano (página de planos). O painel admin também dá testes de outros prazos.
    - O Stripe Checkout cria as assinaturas e os webhooks mantêm tudo em dia.
    - O portal do Stripe cuida de cartão, recibos e cancelamento.
    - Ao ligar: avise quem escolheu plano na fase 1. Use `plano encerrar-escolhas 30` para dar 30 dias, e considere um cupom de fundador (o Checkout aceita códigos promocionais).

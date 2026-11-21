@@ -209,6 +209,21 @@ public static class ClassroomEndpoints
             return Results.Ok(await plans.ChooseAsync(userId, plan, ct));
         }).RequireAuthorization().RequireRateLimiting(RateLimits.Auth).WithTags("Billing");
 
+        // Teste grátis de 7 dias de um plano pago, sem cartão (só com o Stripe ligado: no lançamento a escolha já é grátis).
+        api.MapPost("/me/plan/trial", async (ChoosePlanRequest req, HttpContext http, AppDbContext db, PlanService plans, StripeSettings stripe, CancellationToken ct) =>
+        {
+            var userId = http.User.UserId();
+            if (await db.IsGuestAsync(userId, ct))
+                return ApiResults.Forbidden("Para testar um plano, salve o progresso criando uma conta.");
+            var plan = Domain.Billing.Plans.BySlug(req.Plan);
+            if (plan is null || !Domain.Billing.Plans.HasSelfServiceTrial(plan))
+                return ApiResults.Validation("plan", "O teste grátis é para os planos Professor Pro e Família.");
+            if (!stripe.Enabled)
+                return ApiResults.Conflict("Durante o lançamento os planos já são grátis: é só escolher o plano.");
+            if (await plans.StartTrialAsync(userId, plan, ct) is { } error) return ApiResults.Conflict(error);
+            return Results.Ok(await plans.ForUserAsync(userId, ct));
+        }).RequireAuthorization().RequireRateLimiting(RateLimits.Auth).WithTags("Billing");
+
         memberships.MapPost("/", async (Guid profileId, JoinRequest req, HttpContext http, AppDbContext db, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);

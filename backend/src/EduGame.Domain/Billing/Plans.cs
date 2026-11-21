@@ -49,6 +49,12 @@ public static class Plans
 
     public static IReadOnlyList<PlanDefinition> All { get; } = [Free, Teacher, Family, School];
 
+    /// <summary>Dias do teste grátis que a própria pessoa começa na página de planos (sem cartão, uma vez por plano).</summary>
+    public const int TrialDays = 7;
+
+    /// <summary>Planos com teste grátis pelo site: os pagos que a pessoa assina sozinha (Professor Pro e Família).</summary>
+    public static bool HasSelfServiceTrial(PlanDefinition plan) => plan.SelfService && plan.MonthlyPriceCents > 0;
+
     public static PlanDefinition? BySlug(string? slug) => All.SingleOrDefault(p => p.Slug == slug);
 
     /// <summary>Enquanto a cobrança está desligada, todos têm os recursos do Professor Pro e da Família juntos.</summary>
@@ -78,7 +84,7 @@ public static class SubscriptionSources
     /// <summary>Concedido à mão (comando "plano" ou painel admin), sem cobrança.</summary>
     public const string Manual = "manual";
 
-    /// <summary>Período de teste grátis dado pelo painel admin (sempre com data para acabar, sem assinar).</summary>
+    /// <summary>Teste grátis (sempre com data para acabar, sem assinar): começado na página de planos ou dado pelo painel admin.</summary>
     public const string Trial = "teste";
 
     /// <summary>Pago pelo Stripe (integração futura).</summary>

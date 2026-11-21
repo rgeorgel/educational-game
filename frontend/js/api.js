@@ -133,6 +133,7 @@ export const api = {
   checkout: (plan) => post("/billing/checkout", { plan }),
   billingPortal: () => post("/billing/portal"),
   choosePlan: (plan) => request("PUT", "/me/plan", { plan }),
+  startTrial: (plan) => post("/me/plan/trial", { plan }),
   weeklyReport: (profileId) => get(`/profiles/${profileId}/weekly-report`),
   goals: (profileId) => get(`/profiles/${profileId}/goals`),
   createGoal: (profileId, skillSlug, subjectSlug) => post(`/profiles/${profileId}/goals`, { skillSlug, subjectSlug }),

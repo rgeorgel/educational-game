@@ -18,6 +18,7 @@ public sealed record PlanInfo(
     string? Chosen,
     IReadOnlyList<string> Paid,
     IReadOnlyList<PlanTrial> Trials,
+    IReadOnlyList<string> TrialAvailable,
     bool CanManageBilling,
     bool Enforced,
     DateTimeOffset? EndsAt,
@@ -57,10 +58,14 @@ public sealed class PlanService(AppDbContext db, IConfiguration config, GameCloc
         var paid = subs.Where(s => s.Source == SubscriptionSources.Stripe && s.IsActive(now)).Select(s => s.Plan).Distinct().ToList();
         var trials = subs.Where(s => s.Source == SubscriptionSources.Trial && s.IsActive(now) && s.EndsAt is not null && !paid.Contains(s.Plan))
             .GroupBy(s => s.Plan).Select(g => new PlanTrial(g.Key, g.Max(s => s.EndsAt!.Value))).ToList();
+        // Teste grátis pelo site: uma vez por plano, para quem nunca testou nem pagou aquele plano.
+        var trialAvailable = Plans.All.Where(Plans.HasSelfServiceTrial)
+            .Where(p => !subs.Any(s => s.Plan == p.Slug && s.Source is SubscriptionSources.Trial or SubscriptionSources.Stripe))
+            .Select(p => p.Slug).ToList();
         var hasCustomer = await db.Users.AnyAsync(u => u.Id == userId && u.StripeCustomerId != null, ct);
 
         return new PlanInfo(top.Slug, string.Join(" + ", active.Select(p => p.Name)),
-            [.. active.Select(p => new PlanSummary(p.Slug, p.Name))], chosen, paid, trials, hasCustomer, Enforced, endsAt,
+            [.. active.Select(p => new PlanSummary(p.Slug, p.Name))], chosen, paid, trials, trialAvailable, hasCustomer, Enforced, endsAt,
             features.MaxProfiles, features.MaxClassrooms, features.MaxActiveAssignmentsPerClassroom,
             features.CanExport, features.Worksheets, features.WeeklyReport, features.Reinforcement);
     }
@@ -89,6 +94,30 @@ public sealed class PlanService(AppDbContext db, IConfiguration config, GameCloc
         }
         await db.SaveChangesAsync(ct);
         return await ForUserAsync(userId, ct);
+    }
+
+    /// <summary>
+    /// Começa o teste grátis de <see cref="Plans.TrialDays"/> dias (sem cartão). Devolve o erro para mostrar,
+    /// ou null se começou. Uma vez por plano: quem já testou (pelo site ou pelo admin) ou já pagou não testa de novo.
+    /// </summary>
+    public async Task<string?> StartTrialAsync(Guid userId, PlanDefinition plan, CancellationToken ct)
+    {
+        var used = await db.Subscriptions.AnyAsync(s => s.UserId == userId && s.Plan == plan.Slug
+            && (s.Source == SubscriptionSources.Trial || s.Source == SubscriptionSources.Stripe), ct);
+        if (used) return $"Você já usou o teste grátis do {plan.Name}. Para continuar com ele, é só assinar.";
+
+        var now = clock.Now;
+        db.Subscriptions.Add(new Subscription
+        {
+            UserId = userId,
+            Plan = plan.Slug,
+            StartsAt = now,
+            EndsAt = now.AddDays(Plans.TrialDays),
+            Source = SubscriptionSources.Trial,
+            Note = $"Teste grátis de {Plans.TrialDays} dias (site)",
+        });
+        await db.SaveChangesAsync(ct);
+        return null;
     }
 
     /// <summary>Mensagem para quando o limite do plano foi atingido.</summary>

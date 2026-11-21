@@ -163,6 +163,17 @@ dotnet EduGame.Api.dll plano remover professora@escola.com
 As assinaturas ficam na tabela `subscriptions`. Pelo **painel admin** dá para fazer o mesmo sem terminal
 e também dar **testes grátis** (7, 14, 30 dias ou outro prazo), sem a pessoa assinar nada (veja "Planos no painel" abaixo).
 
+### Teste grátis de 7 dias
+
+Com o Stripe ligado, Professor Pro e Família têm **7 dias grátis para testar, sem cartão**:
+- na página de planos, cada um mostra "Testar 7 dias grátis" ao lado de "Assinar";
+- uma vez por plano e por conta: quem já testou (pelo site ou pelo painel admin) ou já pagou aquele plano não testa de novo;
+- o teste acaba sozinho e a conta volta ao que os outros planos liberam; durante o teste aparece "Teste grátis até dd/mm" e o botão "Assinar";
+- assinar durante o teste encerra o teste daquele plano;
+- no modo lançamento (sem Stripe) não há teste: a escolha do plano já é grátis.
+
+O prazo fica em `Plans.TrialDays` (`backend/src/EduGame.Domain/Billing/Plans.cs`). As linhas ficam em `subscriptions` com `source = teste` e a nota "Teste grátis de 7 dias (site)".
+
 ## Pagamentos (Stripe)
 
 Com o Stripe configurado, Professor Pro e Família são **assinados pelo Stripe Checkout**:

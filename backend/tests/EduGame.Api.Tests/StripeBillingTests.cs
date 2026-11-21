@@ -240,6 +240,55 @@ public class StripeBillingTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Seven_day_trial_without_card_once_per_plan()
+    {
+        using var app = Stripe();
+        var (client, userId) = await AccountAsync(app);
+
+        var before = await client.GetFromJsonAsync<JsonElement>("/api/me/plan");
+        Assert.Equal(["professor", "familia"], before.GetProperty("trialAvailable").EnumerateArray().Select(x => x.GetString()).Order().Reverse());
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/me/plan/trial", new { plan = "escola" })).StatusCode);
+        var started = await client.PostAsJsonAsync("/api/me/plan/trial", new { plan = "familia" });
+        Assert.Equal(HttpStatusCode.OK, started.StatusCode);
+        var plan = await started.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("familia", plan.GetProperty("slug").GetString());
+        var trial = Assert.Single(plan.GetProperty("trials").EnumerateArray());
+        var endsAt = trial.GetProperty("endsAt").GetDateTimeOffset();
+        Assert.InRange(endsAt, DateTimeOffset.UtcNow.AddDays(7).AddMinutes(-5), DateTimeOffset.UtcNow.AddDays(7).AddMinutes(5));
+        Assert.Equal(["professor"], plan.GetProperty("trialAvailable").EnumerateArray().Select(x => x.GetString()));
+
+        // Uma vez por plano: nem durante, nem depois que acabou.
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/me/plan/trial", new { plan = "familia" })).StatusCode);
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await db.Subscriptions.Where(s => s.UserId == userId).ExecuteUpdateAsync(s => s.SetProperty(x => x.EndsAt, DateTimeOffset.UtcNow.AddMinutes(-1)));
+        }
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/me/plan/trial", new { plan = "familia" })).StatusCode);
+        Assert.Equal("gratis", (await client.GetFromJsonAsync<JsonElement>("/api/me/plan")).GetProperty("slug").GetString());
+
+        // Quem já paga um plano não testa esse plano.
+        await app.CreateClient().SendAsync(Signed(EventJson("customer.subscription.created",
+            SubscriptionObject(userId, $"sub_{Guid.NewGuid():N}", "active", priceId: "price_prof", metadataPlan: "professor"), DateTimeOffset.UtcNow)));
+        var paying = await client.GetFromJsonAsync<JsonElement>("/api/me/plan");
+        Assert.Empty(paying.GetProperty("trialAvailable").EnumerateArray());
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/me/plan/trial", new { plan = "professor" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Trial_is_not_offered_during_the_free_launch_nor_to_guests()
+    {
+        var (client, _) = await AccountAsync(factory); // sem Stripe = lançamento
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsJsonAsync("/api/me/plan/trial", new { plan = "familia" })).StatusCode);
+
+        using var app = Stripe();
+        var guest = app.CreateClient();
+        await guest.PostAsJsonAsync("/api/auth/guest", new { nickname = "Conv", avatar = "🐼" });
+        Assert.Equal(HttpStatusCode.Forbidden, (await guest.PostAsJsonAsync("/api/me/plan/trial", new { plan = "familia" })).StatusCode);
+    }
+
+    [Fact]
     public async Task Prices_are_found_by_lookup_key_when_not_configured()
     {
         using var app = Stripe(fixedPrices: false);

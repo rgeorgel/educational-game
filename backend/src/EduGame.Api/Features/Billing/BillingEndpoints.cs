@@ -11,7 +11,7 @@ namespace EduGame.Api.Features.Billing;
 public static class BillingEndpoints
 {
     public sealed record CheckoutRequest(string Plan);
-    public sealed record BillingStatus(string Mode, IReadOnlyList<string> PaidPlans);
+    public sealed record BillingStatus(string Mode, IReadOnlyList<string> PaidPlans, int TrialDays);
 
     public static void MapBilling(this RouteGroupBuilder api)
     {
@@ -19,7 +19,7 @@ public static class BillingEndpoints
 
         // "stripe": os planos pagos são assinados pelo Checkout; "lancamento": escolha grátis (sem pagamento).
         billing.MapGet("/status", (StripeSettings stripe) =>
-            Results.Ok(new BillingStatus(stripe.Enabled ? "stripe" : "lancamento", stripe.Enabled ? StripeSettings.PaidPlans : [])));
+            Results.Ok(new BillingStatus(stripe.Enabled ? "stripe" : "lancamento", stripe.Enabled ? StripeSettings.PaidPlans : [], Domain.Billing.Plans.TrialDays)));
 
         billing.MapPost("/checkout", async (CheckoutRequest req, HttpContext http, AppDbContext db, StripeSettings stripe,
             IStripeGateway gateway, PlanService plans, CancellationToken ct) =>

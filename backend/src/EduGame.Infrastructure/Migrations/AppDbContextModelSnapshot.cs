@@ -38,6 +38,11 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ends_at");
 
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("external_id");
+
                     b.Property<string>("Note")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
@@ -49,6 +54,14 @@ namespace EduGame.Infrastructure.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("plan");
 
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("manual")
+                        .HasColumnName("source");
+
                     b.Property<DateTimeOffset>("StartsAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("starts_at");
@@ -59,6 +72,9 @@ namespace EduGame.Infrastructure.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_subscriptions");
+
+                    b.HasIndex("ExternalId")
+                        .HasDatabaseName("ix_subscriptions_external_id");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_subscriptions_user_id");
@@ -635,6 +651,45 @@ namespace EduGame.Infrastructure.Migrations
                         .HasDatabaseName("ix_player_profiles_user_id");
 
                     b.ToTable("player_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("EduGame.Domain.Players.PracticeGoal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("ProfileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("profile_id");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("integer")
+                        .HasColumnName("skill_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_practice_goals");
+
+                    b.HasIndex("SkillId")
+                        .HasDatabaseName("ix_practice_goals_skill_id");
+
+                    b.HasIndex("ProfileId", "CompletedAt")
+                        .HasDatabaseName("ix_practice_goals_profile_id_completed_at");
+
+                    b.ToTable("practice_goals", (string)null);
                 });
 
             modelBuilder.Entity("EduGame.Domain.Players.ProfileAchievement", b =>
@@ -1463,6 +1518,23 @@ namespace EduGame.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_player_profiles_users_user_id");
+                });
+
+            modelBuilder.Entity("EduGame.Domain.Players.PracticeGoal", b =>
+                {
+                    b.HasOne("EduGame.Domain.Players.PlayerProfile", null)
+                        .WithMany()
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_practice_goals_player_profiles_profile_id");
+
+                    b.HasOne("EduGame.Domain.Content.Skill", null)
+                        .WithMany()
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_practice_goals_skills_skill_id");
                 });
 
             modelBuilder.Entity("EduGame.Domain.Players.ProfileAchievement", b =>

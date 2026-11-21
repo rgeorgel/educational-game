@@ -18,6 +18,7 @@ export async function summaryPage({ sessionId }) {
   else if (s.mode === "nivelamento") main = placementResult(s, mapLink);
   else if (s.mode === "diario") main = dailyResult(s);
   else if (s.mode === "revisao") main = reviewResult(s, profileId, error, mapLink);
+  else if (s.mode === "reforco") main = reinforcementResult(s);
   else main = stageResult(s, profileId, error, mapLink);
 
   // Momento bom para lembrar o convidado de salvar: acabou de conquistar algo.
@@ -155,6 +156,21 @@ function reviewResult(s, profileId, error, mapLink) {
     h("p", { class: "muted" }, "Revisar de vez em quando ajuda a não esquecer o que você já aprendeu."),
     error,
     h("div", { class: "actions" }, again, mapLink),
+  );
+}
+
+function reinforcementResult(s) {
+  const done = s.stars >= 2;
+  return h(
+    "div",
+    { class: `card center result${done ? " celebrate" : ""}` },
+    h("p", { class: "result-icon", "aria-hidden": "true" }, done ? "🎯" : "💪"),
+    h("h1", {}, done ? "Treino concluído!" : "Bom treino!"),
+    h("star-rating", { stars: String(s.stars), class: "stars-big" }),
+    h("p", { class: "summary-score" }, h("strong", {}, `${s.correct} de ${s.total}`), " certas"),
+    h("p", { class: "xp" }, `+${s.xpEarned} XP`),
+    h("p", { class: "muted" }, done ? "Seu responsável vai ver que você concluiu este treino." : "Faltou pouco: com 2 estrelas o treino fica concluído. Tente de novo quando quiser!"),
+    h("div", { class: "actions" }, h("a", { href: "#/", class: "btn btn-primary" }, "Voltar ao início")),
   );
 }
 

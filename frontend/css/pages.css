@@ -1046,3 +1046,54 @@ details.level-section[open] {
 .class-skills .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bncc-inline { color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .table-scroll { overflow-x: auto; }
+
+/* Planos */
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-4); align-items: stretch; }
+.plan-card { display: flex; flex-direction: column; gap: var(--space-2); }
+.plan-card h2 { margin: 0; }
+.plan-card p { margin: 0; }
+.plan-featured { border-color: color-mix(in srgb, var(--primary) 45%, var(--border)); }
+.plan-is-current { box-shadow: 0 0 0 2px var(--primary); }
+.plan-price { font-size: 1.35rem; font-weight: 700; display: grid; gap: 2px; }
+.plan-free-now { font-size: 0.8rem; font-weight: 600; color: var(--success); }
+.plan-features { margin: var(--space-2) 0; padding-left: 1.2em; display: grid; gap: 6px; flex: 1; align-content: start; }
+.plan-current { font-weight: 700; color: var(--success); }
+.plan-line { margin: 0; }
+.plan-locked { display: flex; gap: var(--space-3); align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.plan-locked p { margin: 0; }
+.notice { margin: 0; }
+.family-actions { margin-bottom: var(--space-2); }
+
+/* Relatório da semana */
+.tips ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.goal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.goal-list li { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding: var(--space-2) 0; border-top: 1px solid var(--border); }
+.delta { display: block; margin-top: 2px; }
+.delta.up { color: var(--success); }
+.delta.down { color: var(--danger); }
+
+/* Fichas para imprimir */
+.worksheet { background: #fff; color: #111; border-radius: var(--radius); padding: 24px; display: grid; gap: 16px; }
+.worksheet h2 { color: #111; margin: 0; }
+.ws-head { display: grid; gap: 6px; border-bottom: 2px solid #111; padding-bottom: 10px; }
+.ws-fields { margin: 0; }
+.ws-problems { margin: 0; padding-left: 1.6em; display: grid; gap: 18px; }
+.ws-problems li { break-inside: avoid; }
+.ws-problems p { margin: 2px 0; }
+.ws-prompt { font-weight: 600; }
+.ws-visual { font-size: 1.3rem; letter-spacing: 0.1em; }
+.ws-code { background: #f4f4f4; padding: 8px; border-radius: 6px; font-size: 0.85rem; white-space: pre-wrap; }
+.ws-options { list-style: none; margin: 4px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.ws-line { color: #444; }
+.ws-grid { border-collapse: collapse; margin: 6px 0; }
+.ws-grid td { width: 34px; height: 34px; border: 1px solid #333; text-align: center; font-weight: 700; }
+.ws-answers { border-top: 2px dashed #999; padding-top: 12px; break-before: page; }
+.ws-answers ol { padding-left: 1.6em; display: grid; gap: 6px; }
+
+@media print {
+  body { background: #fff !important; }
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 0; border-radius: 0; }
+  .no-print { display: none !important; }
+}

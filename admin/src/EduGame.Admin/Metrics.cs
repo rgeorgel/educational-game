@@ -106,7 +106,15 @@ public static class Metrics
             paying = r.Long("paying"),
             visitsSince = r["visits_since"] is DBNull ? (DateOnly?)null : r.Date("visits_since"),
         }, ct, ("tz", Tz(config)));
-        return Results.Ok(row);
+
+        // Planos ativos por plano e origem (escolha no site, manual ou Stripe).
+        var plans = await ds.ListAsync("""
+            SELECT plan, source, count(DISTINCT user_id) AS users
+            FROM subscriptions WHERE starts_at <= now() AND (ends_at IS NULL OR ends_at > now())
+            GROUP BY plan, source ORDER BY users DESC, plan
+            """, r => new { plan = r.Str("plan"), source = r.Str("source"), users = r.Long("users") }, ct);
+
+        return Results.Ok(new { overview = row, plans });
     }
 
     private static async Task<IResult> Series(NpgsqlDataSource ds, IConfiguration config, CancellationToken ct, int days = 30, int weeks = 12)

@@ -157,13 +157,14 @@ export function exportSection(report) {
           h("p", { class: "muted small" }, "Abre no Excel ou no Google Planilhas. Só apelidos e progresso, sem dados pessoais."),
           h("div", { class: "actions-left" }, link("alunos", "Alunos (nível, acertos, tarefas)"), link("habilidades", "Habilidades (BNCC)")),
         ]
-      : h("p", { class: "muted small" }, "Exportar a planilha da turma faz parte do plano Professor Pro."),
+      : h("p", { class: "muted small" }, "Exportar a planilha da turma faz parte do plano Professor Pro. ", h("a", { href: "#/planos" }, "Ver planos"), "."),
   );
 }
 
 export function planBanner(plan) {
   if (!plan?.enforced) return null;
   const until = plan.endsAt ? ` até ${new Date(plan.endsAt).toLocaleDateString("pt-BR")}` : "";
+  // Mostra os limites de turma quando a cobrança está ligada.
   return h(
     "p",
     { class: "card plan-banner small" },

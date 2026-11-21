@@ -30,17 +30,17 @@ public static class PlanCommand
             case "listar":
             {
                 var rows = await db.Subscriptions.AsNoTracking()
-                    .Join(db.Users, s => s.UserId, u => u.Id, (s, u) => new { u.Email, s.Plan, s.StartsAt, s.EndsAt, s.Note })
+                    .Join(db.Users, s => s.UserId, u => u.Id, (s, u) => new { u.Email, s.Plan, s.Source, s.StartsAt, s.EndsAt, s.Note })
                     .OrderBy(x => x.Email).ToListAsync();
                 var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
                 output.WriteLine(config.GetValue("Plans:Enforce", false)
                     ? "Cobrança ligada (PLANS_ENFORCE=true): quem não tem assinatura está no plano Grátis."
-                    : "Cobrança desligada (PLANS_ENFORCE=false): todos têm os recursos do Professor Pro.");
+                    : "Cobrança desligada (PLANS_ENFORCE=false): todos têm os recursos do Professor Pro e da Família.");
                 if (rows.Count == 0) output.WriteLine("Nenhuma assinatura.");
                 foreach (var r in rows)
                 {
                     var active = r.StartsAt <= now && (r.EndsAt is null || r.EndsAt > now);
-                    output.WriteLine($"{r.Email}\t{r.Plan}\t{(active ? "ativa" : "encerrada")}\taté {(r.EndsAt?.ToString("yyyy-MM-dd") ?? "sem fim")}\t{r.Note}");
+                    output.WriteLine($"{r.Email}\t{r.Plan}\t{r.Source}\t{(active ? "ativa" : "encerrada")}\taté {(r.EndsAt?.ToString("yyyy-MM-dd") ?? "sem fim")}\t{r.Note}");
                 }
                 return 0;
             }
@@ -49,7 +49,7 @@ public static class PlanCommand
                 var email = args.ElementAtOrDefault(2);
                 var plan = Plans.BySlug(args.ElementAtOrDefault(3));
                 if (email is null || plan is null || plan.Slug == Plans.FreeSlug)
-                    return Usage(output, "Informe o e-mail e o plano (professor ou escola).");
+                    return Usage(output, "Informe o e-mail e o plano (professor, familia ou escola).");
                 var user = await users.FindByEmailAsync(email);
                 if (user is null || user.IsGuest) return Usage(output, $"Conta não encontrada: {email}");
                 int? days = int.TryParse(args.ElementAtOrDefault(4), out var d) && d > 0 ? d : null;
@@ -57,6 +57,7 @@ public static class PlanCommand
                 {
                     UserId = user.Id,
                     Plan = plan.Slug,
+                    Source = SubscriptionSources.Manual,
                     StartsAt = now,
                     EndsAt = days is null ? null : now.AddDays(days.Value),
                     Note = args.ElementAtOrDefault(5)?[..Math.Min(200, args[5].Length)],
@@ -85,7 +86,7 @@ public static class PlanCommand
         if (error is not null) output.WriteLine($"Erro: {error}");
         output.WriteLine("Uso:");
         output.WriteLine("  plano listar");
-        output.WriteLine("  plano conceder <e-mail> <professor|escola> [dias] [nota]");
+        output.WriteLine("  plano conceder <e-mail> <professor|familia|escola> [dias] [nota]");
         output.WriteLine("  plano remover <e-mail>");
         return error is null ? 0 : 1;
     }

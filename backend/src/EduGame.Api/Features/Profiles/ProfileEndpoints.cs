@@ -10,7 +10,8 @@ namespace EduGame.Api.Features.Profiles;
 
 public static class ProfileEndpoints
 {
-    public const int MaxProfilesPerAccount = 6;
+    /// <summary>Teto absoluto; o limite de cada conta vem do plano (Grátis 3, Família 8).</summary>
+    public const int MaxProfilesPerAccount = 8;
 
     public static readonly string[] Avatars = ["🦊", "🐼", "🐯", "🐸", "🦉", "🐙", "🦄", "🐢", "🐧", "🦁", "🐨", "🐳"];
 
@@ -37,7 +38,7 @@ public static class ProfileEndpoints
         // Público: a tela "Jogar agora" mostra os avatares antes de existir qualquer conta.
         group.MapGet("/avatars", () => Avatars).AllowAnonymous();
 
-        group.MapPost("/", async (CreateProfileRequest req, HttpContext http, AppDbContext db, CancellationToken ct) =>
+        group.MapPost("/", async (CreateProfileRequest req, HttpContext http, AppDbContext db, EduGame.Api.Features.Billing.PlanService plans, CancellationToken ct) =>
         {
             var userId = http.User.UserId();
             var nickname = (req.Nickname ?? "").Trim();
@@ -48,8 +49,10 @@ public static class ProfileEndpoints
                 return ApiResults.Validation("birthYear", "Ano de nascimento fora da faixa esperada.");
             if (req.SchoolGrade is { } g && g is < 1 or > 12)
                 return ApiResults.Validation("schoolGrade", "Série/ano deve estar entre 1 e 12.");
-            if (await db.Profiles.CountAsync(p => p.UserId == userId, ct) >= MaxProfilesPerAccount)
-                return ApiResults.Conflict($"Cada conta pode ter até {MaxProfilesPerAccount} perfis.");
+            var plan = await plans.ForUserAsync(userId, ct);
+            var maxProfiles = Math.Min(plan.MaxProfiles, MaxProfilesPerAccount);
+            if (await db.Profiles.CountAsync(p => p.UserId == userId, ct) >= maxProfiles)
+                return ApiResults.Conflict(EduGame.Api.Features.Billing.PlanService.LimitMessage(plan, $"Sua conta pode ter até {maxProfiles} perfis."));
 
             var profile = new PlayerProfile
             {

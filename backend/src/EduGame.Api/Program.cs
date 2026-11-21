@@ -183,6 +183,7 @@ api.MapMap();
 api.MapSessions();
 api.MapProgress();
 api.MapReports();
+EduGame.Api.Features.Family.FamilyEndpoints.MapFamily(api);
 
 app.Run();
 

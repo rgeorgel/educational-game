@@ -104,6 +104,23 @@ public class ClassroomAssignment
     public bool IsActive(DateOnly today) => DueDate is null || DueDate >= today;
 }
 
+/// <summary>
+/// Treino de reforço: o responsável escolhe uma habilidade para o filho treinar (plano Família).
+/// Aparece na tela inicial da criança e conta como concluído com 2+ estrelas num treino.
+/// </summary>
+public class PracticeGoal
+{
+    public const int MaxActivePerProfile = 3;
+    public const int StarsToComplete = 2;
+
+    public Guid Id { get; set; } = Guid.CreateVersion7();
+    public Guid ProfileId { get; set; }
+    public int SkillId { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? CompletedAt { get; set; }
+    public int Attempts { get; set; }
+}
+
 public class ClassroomMember
 {
     public Guid ClassroomId { get; set; }

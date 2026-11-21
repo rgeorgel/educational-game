@@ -4,6 +4,7 @@ import { navigate } from "../router.js";
 import { store } from "../store.js";
 import { profileReportCard } from "./guardian.js";
 import { assignmentsSection, exportSection, planBanner, skillsSection } from "./assignments.js";
+import { planLine } from "./plans.js";
 
 export async function classroomsPage() {
   if (store.state.me?.isGuest) {
@@ -42,7 +43,8 @@ export async function classroomsPage() {
     { class: "page-narrow" },
     h("h1", {}, "Minhas turmas"),
     h("p", { class: "muted" }, "Crie uma turma e passe o código para as famílias. Cada responsável decide se o perfil do filho entra na turma."),
-    h("p", { class: "muted small" }, "Todas as habilidades do jogo estão ligadas à BNCC: ", h("a", { href: "#/bncc" }, "ver currículo e BNCC"), "."),
+    h("p", { class: "muted small" }, "Todas as habilidades do jogo estão ligadas à BNCC: ", h("a", { href: "#/bncc" }, "ver currículo e BNCC"), ". Para treinar no papel: ", h("a", { href: "#/fichas" }, "fichas para imprimir"), "."),
+    planLine(plan),
     planBanner(plan),
     h("div", { class: "card stack" }, form, error),
     classes.length

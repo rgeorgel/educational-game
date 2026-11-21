@@ -6,10 +6,11 @@ import { dueText, starsText } from "./assignments.js";
 
 export async function homePage() {
   const profile = store.profile;
-  const [data, daily, tasks] = await Promise.all([
+  const [data, daily, tasks, goals] = await Promise.all([
     api.progress(profile.id),
     api.daily(profile.id),
     store.state.me?.isGuest ? [] : api.profileAssignments(profile.id).catch(() => []),
+    api.goals(profile.id).catch(() => []),
   ]);
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
 
@@ -45,6 +46,7 @@ export async function homePage() {
           h("a", { href: "#/salvar", class: "btn btn-primary btn-small" }, "💾 Salvar progresso"),
         )
       : null,
+    goals.some((g) => !g.completedAt) ? goalsCard(goals.filter((g) => !g.completedAt), profile.id, error) : null,
     tasks.length ? tasksCard(tasks, profile.id, error) : null,
     h("section", { class: "card daily" }, h("h2", {}, "📆 Desafio do dia"), h("div", { class: "daily-list" }, dailyCards), error),
     h("p", { class: "muted" }, "Escolha uma trilha para continuar a expedição."),
@@ -98,6 +100,31 @@ function tasksCard(tasks, profileId, error) {
           { class: "daily-item" },
           h("span", { class: "daily-icon", "aria-hidden": "true" }, t.stage.subjectIcon),
           h("span", {}, h("strong", {}, t.stage.name), h("span", { class: "muted small" }, ` · ${info}`), t.note ? h("span", { class: "small task-note" }, `“${t.note}”`) : null),
+          btn,
+        );
+      }),
+    ),
+  );
+}
+
+/** Treinos de reforço que o responsável escolheu (plano Família). */
+function goalsCard(goals, profileId, error) {
+  return h(
+    "section",
+    { class: "card daily tasks" },
+    h("h2", {}, "🎯 Treino de reforço"),
+    h("p", { class: "muted small" }, "Seu responsável escolheu para você treinar. Ganhe 2 estrelas para concluir!"),
+    h(
+      "div",
+      { class: "daily-list" },
+      goals.map((g) => {
+        const btn = h("button", { type: "button", class: "btn btn-primary btn-small" }, "Jogar");
+        btn.addEventListener("click", () => startAndPlay(() => api.startGoal(profileId, g.id), btn, error));
+        return h(
+          "div",
+          { class: "daily-item" },
+          h("span", { class: "daily-icon", "aria-hidden": "true" }, g.skill.subjectIcon),
+          h("span", {}, h("strong", {}, g.skill.name), h("span", { class: "muted small" }, ` · ${g.skill.levelName} · 8 problemas`)),
           btn,
         );
       }),

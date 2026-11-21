@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<BnccSkill> BnccSkills => Set<BnccSkill>();
     public DbSet<ClassroomAssignment> ClassroomAssignments => Set<ClassroomAssignment>();
+    public DbSet<PracticeGoal> PracticeGoals => Set<PracticeGoal>();
     public DbSet<Domain.Billing.Subscription> Subscriptions => Set<Domain.Billing.Subscription>();
     public DbSet<ProblemTemplate> ProblemTemplates => Set<ProblemTemplate>();
     public DbSet<CuratedProblem> CuratedProblems => Set<CuratedProblem>();
@@ -231,7 +232,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasIndex(x => x.UserId);
             e.Property(x => x.Plan).HasMaxLength(32);
             e.Property(x => x.Note).HasMaxLength(200);
+            e.Property(x => x.Source).HasMaxLength(16).HasDefaultValue("manual");
+            e.Property(x => x.ExternalId).HasMaxLength(128);
+            e.HasIndex(x => x.ExternalId);
             e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<PracticeGoal>(e =>
+        {
+            e.ToTable("practice_goals");
+            e.HasIndex(x => new { x.ProfileId, x.CompletedAt });
+            e.HasOne<PlayerProfile>().WithMany().HasForeignKey(x => x.ProfileId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Skill>().WithMany().HasForeignKey(x => x.SkillId).OnDelete(DeleteBehavior.Cascade);
         });
 
         b.Entity<Analytics.DailyVisit>(e =>

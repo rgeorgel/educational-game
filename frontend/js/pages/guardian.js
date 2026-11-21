@@ -2,6 +2,7 @@ import { api } from "../api.js";
 import { errorMessage, h } from "../dom.js";
 import { store } from "../store.js";
 import { avatarView, levelBadge } from "./shared.js";
+import { planLine } from "./plans.js";
 
 const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long" });
 
@@ -118,8 +119,18 @@ function classroomManager(profileId) {
   );
 }
 
+/** Atalhos do plano Família em cada perfil. */
+function familyActions(r) {
+  return h(
+    "div",
+    { class: "actions-left family-actions" },
+    h("a", { href: `#/semana/${r.id}`, class: "btn btn-small" }, "📊 Relatório da semana"),
+    h("a", { href: `#/semana/${r.id}`, class: "btn btn-small btn-ghost" }, "🎯 Treino de reforço"),
+  );
+}
+
 export async function guardianPage() {
-  const reports = await api.guardianReport();
+  const [reports, plan] = await Promise.all([api.guardianReport(), store.state.me?.isGuest ? null : api.myPlan().catch(() => null)]);
   return h(
     "section",
     { class: "page" },
@@ -131,9 +142,12 @@ export async function guardianPage() {
       h("a", { href: "#/turmas" }, "É professor? Crie e acompanhe suas turmas."),
       " ",
       h("a", { href: "#/bncc" }, "Veja o currículo do jogo alinhado à BNCC."),
+      " ",
+      h("a", { href: "#/fichas" }, "Fichas para imprimir."),
     ),
+    planLine(plan),
     reports.length
-      ? h("div", { class: "report-grid" }, reports.map((r) => profileReportCard(r, classroomManager(r.id))))
+      ? h("div", { class: "report-grid" }, reports.map((r) => profileReportCard(r, [familyActions(r), classroomManager(r.id)])))
       : h("p", { class: "card" }, "Nenhum perfil ainda. ", h("a", { href: "#/perfis" }, "Crie o primeiro perfil.")),
   );
 }

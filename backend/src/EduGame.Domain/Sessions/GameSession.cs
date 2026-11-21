@@ -18,6 +18,9 @@ public static class SessionModes
 
     /// <summary>Revisão inteligente das habilidades que mais precisam de prática.</summary>
     public const string Review = "revisao";
+
+    /// <summary>Treino de reforço de uma habilidade escolhida pelo responsável (plano Família).</summary>
+    public const string Reinforcement = "reforco";
 }
 
 /// <summary>Uma sessão de jogo: uma etapa, um Desafio do Guardião ou um teste de nivelamento.</summary>

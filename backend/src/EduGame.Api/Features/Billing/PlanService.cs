@@ -5,38 +5,91 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EduGame.Api.Features.Billing;
 
-/// <summary>Plano da conta e o que ele permite (para a interface mostrar e os endpoints conferirem).</summary>
+public sealed record PlanSummary(string Slug, string Name);
+
+/// <summary>Planos da conta e o que eles liberam (para a interface mostrar e os endpoints conferirem).</summary>
 public sealed record PlanInfo(
     string Slug,
     string Name,
+    IReadOnlyList<PlanSummary> Plans,
+    string? Chosen,
     bool Enforced,
     DateTimeOffset? EndsAt,
+    int MaxProfiles,
     int MaxClassrooms,
     int MaxActiveAssignmentsPerClassroom,
-    bool CanExport);
+    bool CanExport,
+    bool Worksheets,
+    bool WeeklyReport,
+    bool Reinforcement);
+
+/// <summary>Um plano na página de planos.</summary>
+public sealed record PlanOffer(string Slug, string Name, string Audience, string PriceLabel, bool SelfService, PlanFeatures Features);
 
 /// <summary>
 /// Controle de planos. Enquanto <c>Plans:Enforce</c> estiver desligado (padrão), ninguém é limitado:
-/// todos têm os recursos do Professor Pro. Ao ligar, quem não tem assinatura fica no Grátis.
+/// todos têm os recursos do Professor Pro e da Família. Ao ligar, cada conta tem só o que os seus planos liberam.
+/// Por enquanto a pessoa escolhe o plano no site sem pagar; depois o Stripe cria as assinaturas (Source = "stripe").
 /// </summary>
 public sealed class PlanService(AppDbContext db, IConfiguration config, GameClock clock)
 {
     public bool Enforced => config.GetValue("Plans:Enforce", false);
 
+    public static IReadOnlyList<PlanOffer> Offers { get; } =
+        [.. Plans.All.Select(p => new PlanOffer(p.Slug, p.Name, p.Audience, p.PriceLabel, p.SelfService, p.Features))];
+
     public async Task<PlanInfo> ForUserAsync(Guid userId, CancellationToken ct)
     {
         var now = clock.Now;
         var subs = await db.Subscriptions.AsNoTracking().Where(s => s.UserId == userId).ToListAsync(ct);
-        var plan = Plans.Effective(subs, now, Enforced);
-        var granting = subs.Where(s => s.Plan == plan.Slug && s.IsActive(now)).ToList();
+        var active = Plans.Active(subs, now);
+        var features = Plans.Features(subs, now, Enforced);
+        var top = active[0];
+        var granting = subs.Where(s => s.Plan == top.Slug && s.IsActive(now)).ToList();
         DateTimeOffset? endsAt = granting.Count == 0 || granting.Any(s => s.EndsAt is null) ? null : granting.Max(s => s.EndsAt);
-        return new PlanInfo(plan.Slug, plan.Name, Enforced, endsAt,
-            plan.MaxClassrooms, plan.MaxActiveAssignmentsPerClassroom, plan.CanExport);
+        var chosen = subs.Where(s => s.Source == SubscriptionSources.Choice && s.IsActive(now)).OrderByDescending(s => s.StartsAt).FirstOrDefault()?.Plan;
+
+        return new PlanInfo(top.Slug, string.Join(" + ", active.Select(p => p.Name)),
+            [.. active.Select(p => new PlanSummary(p.Slug, p.Name))], chosen, Enforced, endsAt,
+            features.MaxProfiles, features.MaxClassrooms, features.MaxActiveAssignmentsPerClassroom,
+            features.CanExport, features.Worksheets, features.WeeklyReport, features.Reinforcement);
+    }
+
+    /// <summary>
+    /// A pessoa escolhe um plano no site. Troca a escolha anterior (planos concedidos à mão continuam).
+    /// "gratis" só encerra a escolha anterior.
+    /// </summary>
+    public async Task<PlanInfo> ChooseAsync(Guid userId, PlanDefinition plan, CancellationToken ct)
+    {
+        var now = clock.Now;
+        var previous = await db.Subscriptions
+            .Where(s => s.UserId == userId && s.Source == SubscriptionSources.Choice && (s.EndsAt == null || s.EndsAt > now))
+            .ToListAsync(ct);
+        foreach (var s in previous) s.EndsAt = now;
+        if (plan.Slug != Plans.FreeSlug)
+        {
+            db.Subscriptions.Add(new Subscription
+            {
+                UserId = userId,
+                Plan = plan.Slug,
+                StartsAt = now,
+                Source = SubscriptionSources.Choice,
+                Note = "Escolhido no site (lançamento, sem pagamento)",
+            });
+        }
+        await db.SaveChangesAsync(ct);
+        return await ForUserAsync(userId, ct);
     }
 
     /// <summary>Mensagem para quando o limite do plano foi atingido.</summary>
     public static string LimitMessage(PlanInfo plan, string what) =>
-        plan.Enforced && plan.Slug == Plans.FreeSlug
-            ? $"{what} No plano Grátis isso é limitado; com o Professor Pro você tem mais. Fale com a gente para liberar."
-            : what;
+        plan.Enforced ? $"{what} Veja os planos para ter mais." : what;
+
+    /// <summary>403 para recurso de outro plano; o app mostra o link para a página de planos.</summary>
+    public static IResult Locked(string feature, string planSlug) =>
+        TypedResults.Problem(
+            detail: $"{feature} faz parte do plano {Plans.BySlug(planSlug)?.Name ?? planSlug}.",
+            statusCode: StatusCodes.Status403Forbidden,
+            title: "Recurso de plano",
+            extensions: new Dictionary<string, object?> { ["plan"] = planSlug });
 }

@@ -205,6 +205,23 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         }, ct);
     }
 
+    /// <summary>Treino de reforço (plano Família): 8 problemas da habilidade escolhida pelo responsável.</summary>
+    public const int ReinforcementProblemCount = 8;
+
+    public async Task<GameSession> StartReinforcementAsync(PlayerProfile profile, PracticeGoal goal, CancellationToken ct)
+    {
+        var skill = await db.Skills.SingleAsync(s => s.Id == goal.SkillId, ct);
+        goal.Attempts++;
+        return await CreateAsync(new GameSession
+        {
+            ProfileId = profile.Id,
+            SubjectId = skill.SubjectId,
+            Mode = SessionModes.Reinforcement,
+            SkillIds = [skill.Id],
+            ProblemCount = ReinforcementProblemCount,
+        }, ct);
+    }
+
     /// <summary>Marca o nivelamento como dispensado: o jogador prefere começar do início.</summary>
     public async Task SkipPlacementAsync(PlayerProfile profile, Subject subject, CancellationToken ct)
     {
@@ -271,7 +288,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         var last = served.LastOrDefault();
 
         // Etapa/revisão: depois de um erro vem um "problema irmão" (mesma habilidade e gerador), um pouco mais fácil.
-        if (session.Mode is SessionModes.Stage or SessionModes.Review && last?.Attempt is { IsCorrect: false })
+        if (session.Mode is SessionModes.Stage or SessionModes.Review or SessionModes.Reinforcement && last?.Attempt is { IsCorrect: false })
             return (last.SkillId, last.GeneratorKey, Math.Max(Rating.Min, last.Difficulty - 100), null);
 
         if (session.Mode == SessionModes.Daily)
@@ -499,6 +516,13 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
                 var current = await db.Levels.SingleAsync(l => l.Id == session.LevelId, ct);
                 var next = await db.Levels.SingleAsync(l => l.SubjectId == session.SubjectId && l.Order == current.Order + 1, ct);
                 await PromoteAsync(session, subjectProgress, next, now, ct);
+                break;
+            }
+            case SessionModes.Reinforcement when session.Stars >= PracticeGoal.StarsToComplete:
+            {
+                var skillId = session.SkillIds.Single();
+                await db.PracticeGoals.Where(g => g.ProfileId == session.ProfileId && g.SkillId == skillId && g.CompletedAt == null)
+                    .ExecuteUpdateAsync(g => g.SetProperty(x => x.CompletedAt, now), ct);
                 break;
             }
             case SessionModes.Placement:

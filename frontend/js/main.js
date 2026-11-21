@@ -7,6 +7,9 @@ import { captureOrigin } from "./origin.js";
 import { authPage, saveProgressPage } from "./pages/auth.js";
 import { avatarPage } from "./pages/avatar.js";
 import { bnccPage } from "./pages/bncc.js";
+import { plansPage } from "./pages/plans.js";
+import { weeklyPage } from "./pages/weekly.js";
+import { worksheetsPage } from "./pages/worksheets.js";
 import { classroomPage, classroomsPage } from "./pages/classrooms.js";
 import { guardianPage } from "./pages/guardian.js";
 import { settingsPage } from "./pages/settings.js";
@@ -26,7 +29,7 @@ captureOrigin();
 
 const PUBLIC = ["/entrar", "/conta", "/cadastro"];
 // Páginas do adulto: não exigem escolher um perfil de jogador.
-const NO_PROFILE_NEEDED = ["/perfis", "/responsavel", "/turmas", "/config", "/salvar", "/bncc"];
+const NO_PROFILE_NEEDED = ["/perfis", "/responsavel", "/turmas", "/config", "/salvar", "/bncc", "/planos", "/semana", "/fichas"];
 
 route("/", homePage, { title: "Início" });
 route("/entrar", () => authPage("jogar"), { title: "Jogar" });
@@ -44,9 +47,12 @@ route("/responsavel", guardianPage, { title: "Área do responsável" });
 route("/turmas", classroomsPage, { title: "Turmas" });
 route("/turmas/:id", classroomPage, { title: "Turma" });
 route("/bncc", bnccPage, { title: "Currículo e BNCC" });
+route("/planos", plansPage, { title: "Planos" });
+route("/semana/:profileId", weeklyPage, { title: "Relatório da semana" });
+route("/fichas", worksheetsPage, { title: "Fichas para imprimir" });
 
 // Abertas para todos, com ou sem conta (ex.: professor avaliando o jogo).
-const OPEN = ["/bncc"];
+const OPEN = ["/bncc", "/planos"];
 
 setGuard((path) => {
   if (OPEN.includes(path)) return null;
@@ -100,7 +106,7 @@ function renderHeader() {
     }
     nav.push(
       link("#/perfis", "👥", "Perfis", path === "/perfis"),
-      link("#/responsavel", "👪", "Responsável", path.startsWith("/responsavel") || path.startsWith("/turmas") || path === "/bncc"),
+      link("#/responsavel", "👪", "Responsável", path.startsWith("/responsavel") || path.startsWith("/turmas") || path.startsWith("/semana") || ["/bncc", "/planos", "/fichas"].includes(path)),
       link("#/config", "⚙️", "Configurações", path === "/config", { class: "nav-link nav-settings" }),
       h("button", { type: "button", class: "btn btn-ghost btn-small logout-btn", onClick: logout, title: "Sair", "aria-label": "Sair" }, h("span", { class: "nav-ico", "aria-hidden": "true" }, "🚪"), h("span", { class: "nav-text" }, "Sair")),
     );

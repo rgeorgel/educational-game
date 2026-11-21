@@ -30,6 +30,7 @@ public static class ClassroomEndpoints
         IReadOnlyList<SkillClassDto> Skills,
         PlanInfo Plan);
 
+    public sealed record ChoosePlanRequest(string Plan);
     public sealed record CreateAssignmentRequest(int StageId, int MinStars = 1, DateOnly? DueDate = null, string? Note = null);
 
     public static string NewCode() =>
@@ -187,9 +188,23 @@ public static class ClassroomEndpoints
             return Results.Ok(await insights.ForStudentAsync(profileId, ct));
         }).RequireAuthorization().WithTags("Classrooms");
 
-        // Plano da conta (a interface mostra limites só quando a cobrança estiver ligada).
+        // ---------- Planos ----------
+        api.MapGet("/plans", () => Results.Ok(PlanService.Offers)).WithTags("Billing");
+
         api.MapGet("/me/plan", async (HttpContext http, PlanService plans, CancellationToken ct) =>
             Results.Ok(await plans.ForUserAsync(http.User.UserId(), ct))).RequireAuthorization().WithTags("Billing");
+
+        // Escolher o plano (por enquanto sem pagamento; depois o Stripe).
+        api.MapPut("/me/plan", async (ChoosePlanRequest req, HttpContext http, AppDbContext db, PlanService plans, CancellationToken ct) =>
+        {
+            var userId = http.User.UserId();
+            if (await db.IsGuestAsync(userId, ct))
+                return ApiResults.Forbidden("Para escolher um plano, salve o progresso criando uma conta.");
+            var plan = Domain.Billing.Plans.BySlug(req.Plan);
+            if (plan is null || !plan.SelfService)
+                return ApiResults.Validation("plan", "Escolha o plano Grátis, Professor Pro ou Família. Para escolas, fale com a gente.");
+            return Results.Ok(await plans.ChooseAsync(userId, plan, ct));
+        }).RequireAuthorization().RequireRateLimiting(RateLimits.Auth).WithTags("Billing");
 
         memberships.MapPost("/", async (Guid profileId, JoinRequest req, HttpContext http, AppDbContext db, CancellationToken ct) =>
         {

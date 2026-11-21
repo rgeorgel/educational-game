@@ -95,7 +95,7 @@ public class ClassroomTasksTests(ApiFactory factory)
         var skills = report.GetProperty("skills").EnumerateArray().ToList();
         Assert.NotEmpty(skills);
         Assert.Contains(skills, s => s.GetProperty("bncc").GetArrayLength() > 0 && s.GetProperty("practiced").GetInt32() == 1);
-        Assert.Equal("professor", report.GetProperty("plan").GetProperty("slug").GetString()); // cobrança desligada
+        Assert.True(report.GetProperty("plan").GetProperty("canExport").GetBoolean()); // cobrança desligada: tudo liberado
 
         // Planilhas (Excel em português: BOM + ";").
         var csv = await teacher.GetAsync($"/api/classrooms/{classId}/export.csv?tipo=alunos");
@@ -134,7 +134,8 @@ public class ClassroomTasksTests(ApiFactory factory)
 
         Assert.Equal(0, await PlanCommand.RunAsync(factory.Services, ["plano", "remover", email], output));
         plan = await client.GetFromJsonAsync<JsonElement>("/api/me/plan");
-        Assert.Equal("professor", plan.GetProperty("slug").GetString()); // sem cobrança ligada, todos têm o Professor Pro
+        Assert.Equal("gratis", plan.GetProperty("slug").GetString());
+        Assert.True(plan.GetProperty("canExport").GetBoolean()); // sem cobrança ligada, os recursos continuam liberados
     }
 
     [Theory]

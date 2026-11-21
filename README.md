@@ -45,6 +45,11 @@ Jogo educacional de **matemática e lógica** para crianças e adolescentes, com
   - **Relatório da turma por habilidade**, com os códigos da BNCC.
   - **Planilhas (CSV):** de alunos e de habilidades, que abrem no Excel ou no Google Planilhas.
   - **Planos** Grátis, Professor Pro e Escola, com limites que só valem com `PLANS_ENFORCE=true`.
+- [x] **Planos Professor Pro e Família** (escolha no site, sem pagamento por enquanto):
+  - relatório da semana;
+  - treino de reforço escolhido pelo responsável;
+  - fichas para imprimir com gabarito;
+  - até 8 perfis no Família.
 - [ ] Fase 4 — Novos tópicos.
 
 ## Stack
@@ -126,20 +131,23 @@ docker compose up -d --build
 - Depois de alterar domínio ou variáveis, clique em **Redeploy** (enquanto aparecer "Changes pending", a mudança
   ainda não foi aplicada e o proxy responde 503).
 
-## Planos (professores e escolas)
+## Planos (famílias, professores e escolas)
 
-Jogar é sempre grátis. Os planos valem para o adulto que cria turmas:
+Jogar é sempre grátis. Os planos são para os adultos que acompanham. A estratégia completa está em [docs/MONETIZACAO.md](docs/MONETIZACAO.md).
 
-| Plano | Turmas | Tarefas em aberto por turma | Planilhas |
-|---|---|---|---|
-| Grátis | 1 | 2 | não |
-| Professor Pro | 20 | 50 | sim |
-| Escola | 300 | 50 | sim |
+| Plano | Perfis | Turmas | Tarefas por turma | Planilhas | Fichas para imprimir | Relatório da semana e reforço |
+|---|---|---|---|---|---|---|
+| Grátis | 3 | 1 | 2 | — | — | — |
+| Professor Pro | 3 | 20 | 50 | ✓ | ✓ | — |
+| Família | 8 | 1 | 2 | — | ✓ | ✓ |
+| Escola | 8 | 300 | 50 | ✓ | ✓ | ✓ |
 
-Enquanto `PLANS_ENFORCE=false` (padrão), todo mundo tem o Professor Pro, então nada muda para quem já usa.
-Ao ligar (`PLANS_ENFORCE=true` e Redeploy), quem não tem assinatura passa para o Grátis.
+A pessoa escolhe o plano na página **Planos** (`/jogar#/planos`). Por enquanto não há pagamento: o plano vale na hora. O Stripe entra depois.
 
-Não há cobrança automática ainda. Os planos são concedidos à mão, com um comando no container da API
+Enquanto `PLANS_ENFORCE=false` (padrão), ninguém é limitado e a escolha fica só registrada.
+Ao ligar (`PLANS_ENFORCE=true` e Redeploy), cada conta tem só o que os seus planos liberam.
+
+Escola (e qualquer plano, se precisar) é concedido à mão, com um comando no container da API
 (no Coolify: **Terminal** do serviço `edugame-api`; localmente: `docker compose exec edugame-api …`):
 
 ```bash

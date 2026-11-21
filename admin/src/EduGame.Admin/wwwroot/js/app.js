@@ -221,7 +221,13 @@ function emptyRow(cols, text) {
 // ---------- Visão geral ----------
 async function overviewPage() {
   const days = prefs.days ?? 30;
-  const [o, s, origins] = await Promise.all([api.overview(), api.series(days, 12), api.origins(days)]);
+  const [ov, s, origins] = await Promise.all([api.overview(), api.series(days, 12), api.origins(days)]);
+  const o = ov.overview;
+  const PLAN_NAMES = { professor: "Professor Pro", familia: "Família", escola: "Escola" };
+  const SOURCE_NAMES = { escolha: "escolheu no site", manual: "manual", stripe: "pago" };
+  const planSummary = ov.plans.length
+    ? ov.plans.map((p) => `${PLAN_NAMES[p.plan] ?? p.plan}: ${num(p.users)} (${SOURCE_NAMES[p.source] ?? p.source})`).join(" · ")
+    : "ninguém escolheu um plano ainda";
   const accuracy = pct(o.correct7d, o.answers7d);
 
   const tiles = h(
@@ -237,7 +243,7 @@ async function overviewPage() {
     tile("Convidados que salvaram", num(o.converted), o.converted + o.guests ? `${pct(o.converted, o.converted + o.guests)} dos que começaram como convidado` : "nenhum convidado ainda"),
     tile("Partidas em 7 dias", num(o.sessions7d), `${pct(o.finished7d, o.sessions7d)} concluídas`),
     tile("Turmas", num(o.classrooms), `${num(o.classroomMembers)} alunos · ${num(o.assignments)} tarefas`),
-    tile("Planos pagos ativos", num(o.paying), "concedidos com o comando \"plano\""),
+    tile("Contas com plano", num(o.paying), planSummary),
   );
 
   const visitsNote =

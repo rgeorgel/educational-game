@@ -273,6 +273,7 @@ Páginas estáticas em `/blog` (lista) e `/blog/nome-do-post`, feitas para o Goo
 - Para publicar um post novo ou uma edição, rode `python3 scripts/build_blog.py` e faça o commit. O script gera `frontend/blog/` (posts, lista e `feed.xml`), com dados estruturados para o Google, e atualiza o `sitemap.xml` e o `llms.txt`.
 - Não edite `frontend/blog/` à mão: ele é apagado e gerado de novo a cada execução.
 - Depois do deploy, envie o `sitemap.xml` no Google Search Console para os posts novos serem encontrados mais rápido.
+- Também depois do deploy, avise o Bing e outros buscadores pelo IndexNow: `python3 scripts/indexnow.py --desde AAAA-MM-DD` (só as páginas com `lastmod` a partir dessa data), `python3 scripts/indexnow.py /blog/nome-do-post` (páginas escolhidas) ou sem argumentos (o sitemap inteiro). A chave é o arquivo `frontend/<chave>.txt`; não apague nem renomeie. O Google não usa IndexNow.
 
 ## Painel de super admin
 

@@ -31,6 +31,8 @@ SITE = "https://educa-game.georgel.ca"
 HOST = "educa-game.georgel.ca"
 ENDPOINT = "https://api.indexnow.org/indexnow"
 NS = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+# O Cloudflare bloqueia (403) o User-Agent padrão do Python ("Python-urllib/3.x").
+USER_AGENT = "educa-game-indexnow/1.0"
 
 RESPOSTAS = {
     200: "OK: URLs recebidas.",
@@ -68,12 +70,18 @@ def normalizar(url: str) -> str:
     return url
 
 
-def chave_no_ar(chave: str) -> bool:
+def chave_no_ar(chave: str) -> str | None:
+    """Devolve None se a chave está no ar; senão, o motivo."""
+    req = urllib.request.Request(f"{SITE}/{chave}.txt", headers={"User-Agent": USER_AGENT})
     try:
-        with urllib.request.urlopen(f"{SITE}/{chave}.txt", timeout=15) as r:
-            return r.read().decode().strip() == chave
-    except urllib.error.URLError:
-        return False
+        with urllib.request.urlopen(req, timeout=15) as r:
+            if r.read().decode().strip() == chave:
+                return None
+            return "o endereço respondeu, mas com outro conteúdo (deploy ainda não terminou?)"
+    except urllib.error.HTTPError as e:
+        return f"HTTP {e.code}"
+    except urllib.error.URLError as e:
+        return str(e.reason)
 
 
 def main() -> None:
@@ -95,13 +103,14 @@ def main() -> None:
     if args.simular:
         return
 
-    if not chave_no_ar(chave):
-        sys.exit(f"A chave não está no ar em {SITE}/{chave}.txt. Faça o deploy antes de enviar.")
+    motivo = chave_no_ar(chave)
+    if motivo:
+        sys.exit(f"A chave não está no ar em {SITE}/{chave}.txt ({motivo}). Faça o deploy antes de enviar.")
 
     req = urllib.request.Request(
         ENDPOINT,
         data=json.dumps(corpo).encode(),
-        headers={"Content-Type": "application/json; charset=utf-8"},
+        headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": USER_AGENT},
         method="POST",
     )
     try:

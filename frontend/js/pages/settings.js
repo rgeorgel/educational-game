@@ -3,7 +3,7 @@ import { errorMessage, h } from "../dom.js";
 import { getPrefs, setPrefs } from "../prefs.js";
 import { navigate } from "../router.js";
 import { store } from "../store.js";
-import { speak, voiceSupported } from "../voice.js";
+import { listVoices, onVoicesChanged, speak, voiceSupported } from "../voice.js";
 
 function radioGroup(name, legend, options, value, onChange) {
   return h(
@@ -21,6 +21,41 @@ function radioGroup(name, legend, options, value, onChange) {
   );
 }
 
+const SAMPLE = "Olá! Quanto é 3 mais 4?";
+
+/** Lista as vozes em português do aparelho, da melhor para a pior. */
+function voicePicker(prefs) {
+  const select = h("select", { id: "voice-select" });
+  const field = h("label", { class: "field" }, h("span", {}, "Voz"), select);
+  const hint = h("p", { class: "muted small", hidden: true }, "Vozes marcadas com 🌐 precisam de internet. Sem conexão, usamos uma voz do aparelho.");
+
+  function fill() {
+    const voices = listVoices();
+    const chosen = getPrefs().voiceURI;
+    const auto = voices[0] ? `Automática (${voices[0].name})` : "Automática";
+    select.replaceChildren(
+      h("option", { value: "" }, auto),
+      ...voices.map((v) => h("option", { value: v.voiceURI }, `${v.name}${v.localService ? "" : " 🌐"}`)),
+    );
+    select.value = voices.some((v) => v.voiceURI === chosen) ? chosen : "";
+    hint.hidden = !voices.some((v) => !v.localService);
+  }
+
+  select.addEventListener("change", () => {
+    setPrefs({ voiceURI: select.value });
+    speak(SAMPLE);
+  });
+  fill();
+  // No Chrome as vozes chegam depois; paramos de ouvir quando a página sai da tela.
+  let shown = false;
+  const stop = onVoicesChanged(() => {
+    if (select.isConnected) shown = true;
+    else if (shown) return stop();
+    fill();
+  });
+  return h("div", { class: "stack" }, field, hint);
+}
+
 export function settingsPage() {
   const prefs = getPrefs();
 
@@ -36,7 +71,12 @@ export function settingsPage() {
           h("span", {}, "Ler cada enunciado automaticamente (bom para quem está aprendendo a ler)."),
         ),
         h("p", { class: "muted small" }, "Em todo problema há também um botão 🔊 para ouvir quando quiser."),
-        h("button", { type: "button", class: "btn", onClick: () => speak("Olá! Quanto é 3 mais 4?") }, "🔊 Testar a voz"),
+        voicePicker(prefs),
+        radioGroup("voiceRate", "Velocidade", [["0.8", "Devagar"], ["0.95", "Normal"], ["1.1", "Rápida"]], String(prefs.voiceRate), (v) => {
+          setPrefs({ voiceRate: Number(v) });
+          speak(SAMPLE);
+        }),
+        h("button", { type: "button", class: "btn", onClick: () => speak(SAMPLE) }, "🔊 Testar a voz"),
       )
     : h("section", { class: "card" }, h("h2", {}, "Leitura em voz alta"), h("p", { class: "muted" }, "Este navegador não oferece leitura em voz alta."));
 

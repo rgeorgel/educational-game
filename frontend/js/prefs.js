@@ -8,6 +8,8 @@ const DEFAULTS = {
   text: "normal", // normal | grande
   motion: "normal", // normal | reduzido
   autoRead: false, // ler enunciados em voz alta automaticamente
+  voiceURI: "", // voz escolhida; vazio = a melhor voz em português do aparelho
+  voiceRate: 0.95, // velocidade da leitura
   sounds: true,
 };
 

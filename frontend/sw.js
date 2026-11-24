@@ -6,7 +6,7 @@
 // - Respostas e outras escritas (POST/PUT/DELETE): só rede (o servidor confere as respostas).
 // Ao sair da conta, o app pede para apagar o cache de dados (aparelhos compartilhados).
 
-const VERSION = "v14";
+const VERSION = "v15";
 const SHELL_CACHE = `edugame-shell-${VERSION}`;
 const DATA_CACHE = "edugame-data";
 

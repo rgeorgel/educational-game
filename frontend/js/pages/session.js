@@ -12,6 +12,11 @@ const ENCOURAGE = ["Quase! Vamos ver como faz.", "Não foi dessa vez — errar f
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
+// Depois que um desafio novo aparece, ignora toques na área de resposta por um instante.
+// No celular, um toque duplo em "Continuar" (ou o toque que chega atrasado enquanto a tela
+// troca) caía numa opção do desafio seguinte e contava como resposta errada.
+const INPUT_GUARD_MS = 600;
+
 const MODE_LABEL = {
   guardiao: "🛡️ Desafio do Guardião",
   nivelamento: "🧭 Teste de nivelamento",
@@ -115,7 +120,9 @@ export async function sessionPage({ sessionId }) {
     const feedback = h("div", { class: "feedback", hidden: true, role: "status", "aria-live": "assertive" });
 
     const answer = renderAnswer(problem, { onSubmit: (value) => submit(value) });
-    current = { problem, answer, feedbackShown: false, finished: false, hintButton, feedback };
+    const readyAt = performance.now() + INPUT_GUARD_MS;
+    const settling = () => performance.now() < readyAt;
+    current = { problem, answer, feedbackShown: false, finished: false, advancing: false, hintButton, feedback, settling };
 
     async function submit(value) {
       answer.lock();
@@ -157,6 +164,7 @@ export async function sessionPage({ sessionId }) {
       current.feedbackShown = true;
       current.finished = result.sessionFinished;
       const continueBtn = h("button", { type: "button", class: "btn btn-primary btn-block", onClick: next }, result.sessionFinished ? "Ver resultado" : "Continuar");
+      current.continueBtn = continueBtn;
       feedback.className = `feedback ${result.correct ? "is-correct" : "is-wrong"}`;
       feedback.replaceChildren();
       append(feedback, [
@@ -173,10 +181,28 @@ export async function sessionPage({ sessionId }) {
     }
 
     function next() {
+      // Um só avanço por desafio: toques repetidos em "Continuar" não fazem nada.
+      if (current.advancing) return;
+      current.advancing = true;
+      if (current.continueBtn) {
+        current.continueBtn.disabled = true;
+        if (!current.finished) current.continueBtn.textContent = "Carregando…";
+      }
       if (current.finished) navigate(`/resultado/${sessionId}`, { replace: true });
       else loadNext();
     }
     current.next = next;
+
+    const answerArea = h("div", { class: "answer-area" }, answer.node);
+    answerArea.addEventListener(
+      "click",
+      (e) => {
+        if (!settling()) return;
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      true, // captura: barra o toque antes de chegar ao botão da opção
+    );
 
     const card = h(
       "article",
@@ -188,13 +214,15 @@ export async function sessionPage({ sessionId }) {
       problem.visual ? h("p", { class: "visual", "aria-label": "Figura do problema" }, problem.visual) : null,
       problem.code ? h("pre", { class: "code-block", "aria-label": "Programa" }, h("code", {}, problem.code)) : null,
       problem.figure && problem.type !== "fracao-visual" ? h("div", { class: "figure-wrap" }, readOnlyFigure(problem.figure)) : null,
-      h("div", { class: "answer-area" }, answer.node),
+      answerArea,
       problem.hintsTotal > 0
         ? h("div", { class: "hints" }, hintButton, hintsList)
         : h("p", { class: "muted small" }, "No teste de nivelamento não há dicas. Tudo bem não saber — responda o que achar!"),
     );
 
     body.replaceChildren(card, feedback);
+    // Começa sempre do topo: a tela não fica rolada onde estava o "Continuar" do desafio anterior.
+    window.scrollTo({ top: 0, behavior: "instant" });
     card.querySelector("#prompt").focus({ preventScroll: true });
     if (getPrefs().autoRead) speak(readable(problem));
   }
@@ -209,6 +237,7 @@ export async function sessionPage({ sessionId }) {
       }
       return;
     }
+    if (current.settling()) return;
     if (current.answer.handleKey(e)) e.preventDefault();
   }
 

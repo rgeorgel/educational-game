@@ -6,7 +6,7 @@
 //
 // O idioma escolhido fica no aparelho e vai para a API no cabeçalho X-Lang (problemas, nomes do
 // mapa e mensagens de erro chegam traduzidos). Ordem de escolha: ?lang= no endereço (links das
-// páginas /en e /es), a escolha salva, o idioma do navegador e, por fim, o inglês.
+// páginas /en e /es), a escolha salva, o idioma do navegador e, por fim, o português.
 
 import en from "./i18n/en.js";
 import es from "./i18n/es.js";
@@ -55,7 +55,7 @@ function detect() {
     const code = normalize(tag);
     if (code) return code;
   }
-  return "en";
+  return "pt";
 }
 
 let current = detect();

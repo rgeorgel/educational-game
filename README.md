@@ -263,7 +263,7 @@ Sem SMTP:
 
 O jogo funciona em português do Brasil (padrão), inglês e espanhol.
 
-- **Escolha do idioma no jogo:** `?lang=en` no endereço (os links das páginas em inglês e espanhol já levam), senão a escolha salva no aparelho, senão o idioma do navegador (sem correspondência, inglês). A pessoa troca em Configurações ou, antes de entrar, no 🌐 do cabeçalho.
+- **Escolha do idioma no jogo:** `?lang=en` no endereço (os links das páginas em inglês e espanhol já levam), senão a escolha salva no aparelho, senão o idioma do navegador (sem correspondência, português). A pessoa troca em Configurações ou, antes de entrar, no 🌐 do cabeçalho.
 - **Interface (`frontend/js`):** os textos ficam em português dentro de `t("…")` (ou `tn(n, "1 coisa", "{n} coisas")` para plural), e o português é a chave dos dicionários `frontend/js/i18n/en.js` e `es.js`. Ao criar ou mudar um texto, acrescente a tradução nos dois arquivos e rode `python3 scripts/check_i18n.py --sobras` (a CI também roda). Sem tradução, a frase aparece em português.
 - **API:** o app manda o idioma no cabeçalho `X-Lang` (links de download usam `?lang=`); sem ele, português. No C#, `Lang.Tr("pt", "en", "es")` escolhe o texto e `Text` guarda os três (`EduGame.Problems/Lang.cs`). O idioma vale para problemas gerados, mensagens de erro, e-mails e planilhas CSV.
 - **Problemas:** cada gerador escreve o enunciado, as dicas e a explicação nos três idiomas. As listas sorteadas (nomes, objetos) têm o mesmo tamanho em todos os idiomas, para o desafio do dia continuar igual para todos (há teste para isso). Os desafios escritos à mão têm a tradução em `Curated/i18n/*.en.json` e `*.es.json`, pelo slug.

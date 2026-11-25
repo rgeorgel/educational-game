@@ -1,3 +1,4 @@
+import { t } from "../i18n.js";
 // Figuras de frações em SVG: "barra" (retângulo dividido) e "circulo" (pizza).
 
 const NS = "http://www.w3.org/2000/svg";
@@ -31,7 +32,7 @@ export function fractionFigure(figure, { interactive, isFilled, onToggle }) {
     viewBox: `0 0 ${width} ${height}`,
     class: `fraction-figure ${isCircle ? "is-circle" : "is-bar"}${interactive ? " is-interactive" : ""}`,
     role: interactive ? "group" : "img",
-    "aria-label": interactive ? `Figura com ${parts} partes iguais` : `Figura com ${parts} partes, ${figure.filled} pintadas`,
+    "aria-label": interactive ? t("Figura com {n} partes iguais", { n: parts }) : t("Figura com {n} partes, {p} pintadas", { n: parts, p: figure.filled }),
   });
 
   const pieces = [];
@@ -69,7 +70,7 @@ export function fractionFigure(figure, { interactive, isFilled, onToggle }) {
       p.classList.toggle("filled", on);
       if (interactive) {
         p.setAttribute("aria-checked", String(on));
-        p.setAttribute("aria-label", `Parte ${i + 1}${on ? ", pintada" : ""}`);
+        p.setAttribute("aria-label", `${t("Parte {n}", { n: i + 1 })}${on ? `, ${t("pintada")}` : ""}`);
       }
     });
   }

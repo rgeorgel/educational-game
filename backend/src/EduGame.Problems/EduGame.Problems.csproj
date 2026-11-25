@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Curated\*.json" />
+    <!-- WithCulture=false: os arquivos .en.json/.es.json ficam neste assembly (e não num assembly satélite). -->
+    <EmbeddedResource Include="Curated\i18n\*.json" WithCulture="false" />
   </ItemGroup>
 
 </Project>

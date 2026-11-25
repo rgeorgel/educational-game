@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Educa Game Blog</title>
+    <link>https://educa-game.georgel.ca/en/blog</link>
+    <description>Ideas for parents and teachers to teach math and logical reasoning with games.</description>
+    <language>en</language>
+    <item>
+      <title>Math games for kids: how to choose one that really teaches</title>
+      <link>https://educa-game.georgel.ca/en/blog/math-games-for-kids</link>
+      <guid>https://educa-game.georgel.ca/en/blog/math-games-for-kids</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Not every &quot;educational&quot; game teaches. See 7 signs of a good math game for kids, the warning signs, and how to use the game at home without fighting over screen time.</description>
+    </item>
+    <item>
+      <title>How to teach times tables without rote memorization: strategies and 6 activities to do at home</title>
+      <link>https://educa-game.georgel.ca/en/blog/how-to-teach-times-tables</link>
+      <guid>https://educa-game.georgel.ca/en/blog/how-to-teach-times-tables</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Times tables don&#x27;t have to be rote memorization. See how to teach multiplication with meaning, the tricks that shrink the hard facts down to 15, and 6 simple activities to practice at home.</description>
+    </item>
+    <item>
+      <title>Math in Brazil&#x27;s BNCC, Grades 1 to 5: what children learn each year</title>
+      <link>https://educa-game.georgel.ca/en/blog/brazil-bncc-elementary-math</link>
+      <guid>https://educa-game.georgel.ca/en/blog/brazil-bncc-elementary-math</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>A simple guide to the Mathematics section of Brazil&#x27;s national curriculum (BNCC) for the early grades: how to read the skill codes (EF02MA07 and others), the five thematic units and what is expected each year, from Grade 1 to Grade 5.</description>
+    </item>
+    <item>
+      <title>Logical reasoning for kids: 7 activities with patterns, sequences and balance scales</title>
+      <link>https://educa-game.georgel.ca/en/blog/logical-reasoning-for-kids</link>
+      <guid>https://educa-game.georgel.ca/en/blog/logical-reasoning-for-kids</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Logical reasoning can be trained like any other skill. See 7 simple activities, with examples and answers, to do at home or at school, and what Brazil&#x27;s BNCC says about the topic.</description>
+    </item>
+    <item>
+      <title>Sudoku for kids: benefits, rules and how to start with 4×4</title>
+      <link>https://educa-game.georgel.ca/en/blog/sudoku-for-kids</link>
+      <guid>https://educa-game.georgel.ca/en/blog/sudoku-for-kids</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Sudoku is a great logic exercise for kids and doesn&#x27;t require any arithmetic. See the benefits, the rules explained for children, a 4×4 to solve together and tips to move forward.</description>
+    </item>
+  </channel>
+</rss>

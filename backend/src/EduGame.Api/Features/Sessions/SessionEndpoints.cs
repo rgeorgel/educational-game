@@ -4,6 +4,7 @@ using EduGame.Domain.Players;
 using EduGame.Domain.Sessions;
 using EduGame.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Sessions;
 
@@ -19,7 +20,7 @@ public static class SessionEndpoints
             Guid profileId, StartRequest req, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             return await Handle(async () => Created(await sessions.StartStageAsync(profile, req.StageId, ct)));
         }).RequireAuthorization().WithTags("Sessions");
 
@@ -55,9 +56,9 @@ public static class SessionEndpoints
         group.MapPost("/problems/{problemId:guid}/answer", (Guid sessionId, Guid problemId, AnswerRequest req, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(req.Answer))
-                return Task.FromResult(ApiResults.Validation("answer", "Escolha ou digite uma resposta."));
+                return Task.FromResult(ApiResults.Validation("answer", Tr("Escolha ou digite uma resposta.", "Choose or type an answer.", "Elige o escribe una respuesta.")));
             if (req.Answer.Length > 400)
-                return Task.FromResult(ApiResults.Validation("answer", "Resposta longa demais."));
+                return Task.FromResult(ApiResults.Validation("answer", Tr("Resposta longa demais.", "Answer is too long.", "Respuesta demasiado larga.")));
             return WithSession(db, http, sessionId, ct, async s => Results.Ok(await sessions.AnswerAsync(s, problemId, req.Answer, ct)));
         });
 
@@ -71,9 +72,9 @@ public static class SessionEndpoints
     private static async Task<IResult> WithProfileAndSubject(AppDbContext db, HttpContext http, Guid profileId, string slug, CancellationToken ct, Func<PlayerProfile, Subject, Task<IResult>> action)
     {
         var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-        if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+        if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
         var subject = await db.Subjects.SingleOrDefaultAsync(s => s.Slug == slug, ct);
-        if (subject is null) return ApiResults.NotFound("Tópico não encontrado.");
+        if (subject is null) return ApiResults.NotFound(Tr("Tópico não encontrado.", "Subject not found.", "Tema no encontrado."));
         return await Handle(() => action(profile, subject));
     }
 
@@ -84,7 +85,7 @@ public static class SessionEndpoints
         var session = await db.GameSessions
             .Where(s => s.Id == sessionId && db.Profiles.Any(p => p.Id == s.ProfileId && p.UserId == userId))
             .SingleOrDefaultAsync(ct);
-        if (session is null) return ApiResults.NotFound("Sessão não encontrada.");
+        if (session is null) return ApiResults.NotFound(Tr("Sessão não encontrada.", "Session not found.", "Sesión no encontrada."));
         return await Handle(() => action(session));
     }
 

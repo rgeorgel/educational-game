@@ -1,9 +1,10 @@
 // Cliente da API. Mesma origem (nginx faz o proxy de /api), autenticação por cookie HttpOnly.
+import { getLang, t } from "./i18n.js";
 import { originForSignup } from "./origin.js";
 
 export class ApiError extends Error {
   constructor(status, problem) {
-    super(problem?.detail || problem?.title || `Erro ${status}`);
+    super(problem?.detail || problem?.title || t("Erro {status}", { status }));
     this.status = status;
     this.problem = problem;
   }
@@ -36,7 +37,10 @@ async function send(method, path, body) {
       res = await fetch(`/api${path}`, {
         method,
         credentials: "same-origin",
-        headers: body === undefined ? { Accept: "application/json" } : { "Content-Type": "application/json", Accept: "application/json" },
+        // X-Lang: a API responde no idioma do app (problemas, nomes do mapa, mensagens de erro).
+        headers: body === undefined
+          ? { Accept: "application/json", "X-Lang": getLang() }
+          : { "Content-Type": "application/json", Accept: "application/json", "X-Lang": getLang() },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } catch {
@@ -56,7 +60,7 @@ function reconnecting(on) {
     banner = document.createElement("div");
     banner.className = "reconnecting";
     banner.setAttribute("role", "status");
-    banner.textContent = "Reconectando ao servidor…";
+    banner.textContent = t("Reconectando ao servidor…");
     document.body.append(banner);
   } else if (!on && banner) {
     banner.remove();
@@ -68,7 +72,7 @@ async function request(method, path, body) {
   const res = await send(method, path, body);
   reconnecting(false);
   if (!res) {
-    throw new ApiError(0, { title: "Sem conexão", detail: "Não foi possível falar com o servidor. Verifique sua internet." });
+    throw new ApiError(0, { title: t("Sem conexão"), detail: t("Não foi possível falar com o servidor. Verifique sua internet.") });
   }
 
   if (res.status === 204) return null;
@@ -78,7 +82,9 @@ async function request(method, path, body) {
   if (!res.ok) {
     // 401 em /me é o esperado quando ninguém está logado (a inicialização trata); nas demais, a sessão expirou.
     if (res.status === 401 && !path.startsWith("/auth/") && path !== "/me") listeners.forEach((fn) => fn());
-    if (res.status === 429 && !data) throw new ApiError(429, { title: "Muitas tentativas", detail: "Espere um minuto e tente de novo." });
+    if (res.status === 429 && !data) throw new ApiError(429, { title: t("Muitas tentativas"), detail: t("Espere um minuto e tente de novo.") });
+    // Resposta do nginx durante um deploy (vem sempre em português).
+    if (res.headers.get("x-api-indisponivel") === "1") throw new ApiError(503, { title: t("Servidor reiniciando"), detail: t("Estamos atualizando o jogo. Tente de novo em alguns segundos.") });
     throw new ApiError(res.status, data);
   }
   return data;

@@ -1,4 +1,5 @@
 // Utilitários de DOM. Tudo é criado com createElement/textContent — nunca innerHTML com dados.
+import { t } from "./i18n.js";
 
 /**
  * Cria um elemento.
@@ -45,5 +46,5 @@ export function errorMessage(err) {
     const first = Object.values(problem.errors).flat()[0];
     if (first) return first;
   }
-  return problem?.detail || problem?.title || err?.message || "Algo deu errado. Tente de novo.";
+  return problem?.detail || problem?.title || err?.message || t("Algo deu errado. Tente de novo.");
 }

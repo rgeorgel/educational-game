@@ -2,6 +2,7 @@
 import "./components/index.js";
 import { api, onUnauthorized } from "./api.js";
 import { h } from "./dom.js";
+import { getLang, LANGUAGES, setLang, sitePath, t } from "./i18n.js";
 import { applyPrefs } from "./prefs.js";
 import { captureOrigin } from "./origin.js";
 import { authPage, forgotPasswordPage, resetPasswordPage, saveProgressPage } from "./pages/auth.js";
@@ -26,6 +27,9 @@ import { store } from "./store.js";
 
 applyPrefs();
 captureOrigin();
+// Textos fixos do jogar.html (o resto da página é montado já no idioma certo).
+document.querySelector(".skip-link")?.replaceChildren(t("Pular para o conteúdo"));
+document.querySelector("noscript p")?.replaceChildren(t("Este jogo precisa de JavaScript para funcionar."));
 
 const PUBLIC = ["/entrar", "/conta", "/cadastro"];
 // Páginas do adulto: não exigem escolher um perfil de jogador.
@@ -93,9 +97,9 @@ function renderHeader() {
   const nav = [];
   if (me && profile && !playing) {
     nav.push(
-      link("#/", "🏠", "Início", path === "/"),
-      link("#/progresso", "📈", "Progresso", path === "/progresso"),
-      h("a", { href: "#/avatar", class: "profile-chip", title: "Meu avatar" }, avatarView(profile, "sm"), h("span", { class: "nav-text" }, profile.nickname)),
+      link("#/", "🏠", t("Início"), path === "/"),
+      link("#/progresso", "📈", t("Progresso"), path === "/progresso"),
+      h("a", { href: "#/avatar", class: "profile-chip", title: t("Meu avatar") }, avatarView(profile, "sm"), h("span", { class: "nav-text" }, profile.nickname)),
     );
   }
   if (me && !playing) {
@@ -103,36 +107,53 @@ function renderHeader() {
       nav.push(
         h(
           "a",
-          { href: "#/salvar", class: "btn btn-primary btn-small save-btn", title: "Salvar progresso", "aria-label": "Salvar progresso", "aria-current": path === "/salvar" ? "page" : null },
+          { href: "#/salvar", class: "btn btn-primary btn-small save-btn", title: t("Salvar progresso"), "aria-label": t("Salvar progresso"), "aria-current": path === "/salvar" ? "page" : null },
           h("span", { "aria-hidden": "true" }, "💾"),
-          h("span", { class: "nav-text" }, " Salvar progresso"),
+          h("span", { class: "nav-text" }, ` ${t("Salvar progresso")}`),
         ),
       );
     }
     nav.push(
-      link("#/perfis", "👥", "Perfis", path === "/perfis"),
-      link("#/responsavel", "👪", "Responsável", path.startsWith("/responsavel") || path.startsWith("/turmas") || path.startsWith("/semana") || ["/bncc", "/fichas"].includes(path)),
-      me.isGuest ? null : link("#/planos", "⭐", "Planos", path === "/planos", { class: "nav-link nav-plans" }),
-      link("#/config", "⚙️", "Configurações", path === "/config", { class: "nav-link nav-settings" }),
-      h("button", { type: "button", class: "btn btn-ghost btn-small logout-btn", onClick: logout, title: "Sair", "aria-label": "Sair" }, h("span", { class: "nav-ico", "aria-hidden": "true" }, "🚪"), h("span", { class: "nav-text" }, "Sair")),
+      link("#/perfis", "👥", t("Perfis"), path === "/perfis"),
+      link("#/responsavel", "👪", t("Responsável"), path.startsWith("/responsavel") || path.startsWith("/turmas") || path.startsWith("/semana") || ["/bncc", "/fichas"].includes(path)),
+      me.isGuest ? null : link("#/planos", "⭐", t("Planos"), path === "/planos", { class: "nav-link nav-plans" }),
+      link("#/config", "⚙️", t("Configurações"), path === "/config", { class: "nav-link nav-settings" }),
+      h("button", { type: "button", class: "btn btn-ghost btn-small logout-btn", onClick: logout, title: t("Sair"), "aria-label": t("Sair") }, h("span", { class: "nav-ico", "aria-hidden": "true" }, "🚪"), h("span", { class: "nav-text" }, t("Sair"))),
     );
   }
+  // Antes de entrar (sem conta), o idioma fica à mão no cabeçalho; depois, em Configurações.
+  if (!me && !playing) nav.push(languagePicker());
 
   header.replaceChildren(
     h(
       "div",
       { class: "container header-inner" },
-      h("a", { href: me ? "#/" : "/", class: "brand", "aria-label": "Educa Game" }, h("span", { "aria-hidden": "true" }, "🧭"), h("span", { class: "brand-text" }, " Educa Game")),
-      h("nav", { class: "header-nav", "aria-label": "Principal" }, nav),
+      h("a", { href: me ? "#/" : sitePath("home"), class: "brand", "aria-label": "Educa Game" }, h("span", { "aria-hidden": "true" }, "🧭"), h("span", { class: "brand-text" }, " Educa Game")),
+      h("nav", { class: "header-nav", "aria-label": t("Principal") }, nav),
     ),
   );
   document.body.classList.toggle("is-playing", playing);
 }
 
+/** Seletor de idioma compacto (🌐 + lista). Trocar recarrega a página no idioma novo. */
+export function languagePicker() {
+  return h(
+    "label",
+    { class: "lang-picker", title: t("Idioma") },
+    h("span", { "aria-hidden": "true" }, "🌐"),
+    h("span", { class: "visually-hidden" }, t("Idioma")),
+    h(
+      "select",
+      { class: "lang-select", onChange: (e) => setLang(e.target.value) },
+      LANGUAGES.map((l) => h("option", { value: l.code, selected: l.code === getLang() }, l.label)),
+    ),
+  );
+}
+
 async function logout() {
   // Convidado não tem como entrar de novo: sair apaga o progresso deste aparelho.
   if (store.state.me?.isGuest) {
-    const ok = confirm("Você está jogando sem conta. Se sair, o progresso deste aparelho será APAGADO e não dá para recuperar.\n\nPara guardar, cancele e use \"Salvar progresso\".\n\nSair e apagar mesmo assim?");
+    const ok = confirm(t("Você está jogando sem conta. Se sair, o progresso deste aparelho será APAGADO e não dá para recuperar.\n\nPara guardar, cancele e use \"Salvar progresso\".\n\nSair e apagar mesmo assim?"));
     if (!ok) return;
     try {
       await api.deleteAccount();

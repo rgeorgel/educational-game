@@ -1,4 +1,5 @@
 // Roteador por hash: #/mapa/matematica → { subject: "matematica" }
+import { t } from "./i18n.js";
 
 const routes = [];
 let outlet = null;
@@ -78,7 +79,7 @@ async function render() {
   cleanup = view instanceof Node ? null : (view.cleanup ?? null);
   node.classList?.add("page-enter"); // transição suave entre telas (game.css)
   outlet.replaceChildren(node);
-  document.title = match.route.title ? `${match.route.title} · Educa Game` : "Educa Game";
+  document.title = match.route.title ? `${t(match.route.title)} · Educa Game` : "Educa Game";
 
   // Acessibilidade: leva o foco ao título da nova página.
   const heading = outlet.querySelector("h1");
@@ -101,13 +102,13 @@ function errorView(err) {
   const box = document.createElement("section");
   box.className = "card page-narrow";
   const title = document.createElement("h1");
-  title.textContent = "Ops! Algo deu errado.";
+  title.textContent = t("Ops! Algo deu errado.");
   const msg = document.createElement("p");
-  msg.textContent = err?.message || "Tente recarregar a página.";
+  msg.textContent = err?.message || t("Tente recarregar a página.");
   const back = document.createElement("a");
   back.href = "#/";
   back.className = "btn";
-  back.textContent = "Voltar ao início";
+  back.textContent = t("Voltar ao início");
   box.append(title, msg, back);
   return box;
 }

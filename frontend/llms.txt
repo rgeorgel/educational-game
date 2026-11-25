@@ -1,12 +1,14 @@
 # Educa Game
 
-> Educa Game é um jogo educativo grátis, em português do Brasil, de matemática e lógica para crianças a partir de 7 anos (sem idade máxima). Os desafios se adaptam ao nível de cada jogador, do Iniciante ao Expert. Não tem anúncios nem compras e dá para começar sem cadastro, só com um apelido.
+> Educa Game é um jogo educativo grátis, em português do Brasil, inglês e espanhol, de matemática e lógica para crianças a partir de 7 anos (sem idade máxima). Os desafios se adaptam ao nível de cada jogador, do Iniciante ao Expert. Não tem anúncios nem compras e dá para começar sem cadastro, só com um apelido.
 
 - Site: https://educa-game.georgel.ca/
 - Jogar: https://educa-game.georgel.ca/jogar
 - Para professores: https://educa-game.georgel.ca/professores
 - Currículo e alinhamento à BNCC: https://educa-game.georgel.ca/jogar#/bncc (dados em https://educa-game.georgel.ca/api/curriculum)
-- Idioma: português (pt-BR)
+- Idiomas: português (pt-BR), inglês e espanhol. O jogo troca de idioma em Configurações; os problemas, as dicas e as explicações também são traduzidos.
+- Em inglês: https://educa-game.georgel.ca/en/ (professores: https://educa-game.georgel.ca/en/teachers)
+- Em espanhol: https://educa-game.georgel.ca/es/ (professores: https://educa-game.georgel.ca/es/profesores)
 - Preço: jogar é grátis, sem anúncios e sem compras dentro do jogo. Planos opcionais para adultos: Família (R$ 9,90/mês: relatório da semana, treino de reforço, fichas para imprimir, até 8 perfis) e Professor Pro (R$ 19,90/mês: até 20 turmas, tarefas, planilhas e fichas). Detalhes: https://educa-game.georgel.ca/#planos
 - Plataformas: navegador do celular, tablet ou computador; instalável como app (PWA)
 - Público: a partir de 7 anos; crianças, adolescentes, famílias e professores
@@ -57,4 +59,20 @@ Artigos para pais e professores (lista completa em https://educa-game.georgel.ca
 - [Matemática na BNCC do 1º ao 5º ano: o que a criança aprende em cada ano](https://educa-game.georgel.ca/blog/bncc-matematica-anos-iniciais): Um guia simples da BNCC de Matemática nos anos iniciais: como ler os códigos das habilidades (EF02MA07 e outros), as cinco unidades temáticas e o que se espera em cada ano, do 1º ao 5º.
 - [Raciocínio lógico para crianças: 7 atividades com padrões, sequências e balanças](https://educa-game.georgel.ca/blog/raciocinio-logico-para-criancas): Raciocínio lógico se treina como qualquer habilidade. Veja 7 atividades simples, com exemplos e respostas, para fazer em casa ou na escola, e o que a BNCC diz sobre o tema.
 - [Sudoku para crianças: benefícios, regras e como começar pelo 4×4](https://educa-game.georgel.ca/blog/sudoku-para-criancas): Sudoku é um ótimo exercício de lógica para crianças e não exige contas. Veja os benefícios, as regras explicadas para a criança, um 4×4 para resolver junto e dicas para avançar.
+
+Em inglês (https://educa-game.georgel.ca/en/blog):
+
+- [Math games for kids: how to choose one that really teaches](https://educa-game.georgel.ca/en/blog/math-games-for-kids): Not every "educational" game teaches. See 7 signs of a good math game for kids, the warning signs, and how to use the game at home without fighting over screen time.
+- [How to teach times tables without rote memorization: strategies and 6 activities to do at home](https://educa-game.georgel.ca/en/blog/how-to-teach-times-tables): Times tables don't have to be rote memorization. See how to teach multiplication with meaning, the tricks that shrink the hard facts down to 15, and 6 simple activities to practice at home.
+- [Math in Brazil's BNCC, Grades 1 to 5: what children learn each year](https://educa-game.georgel.ca/en/blog/brazil-bncc-elementary-math): A simple guide to the Mathematics section of Brazil's national curriculum (BNCC) for the early grades: how to read the skill codes (EF02MA07 and others), the five thematic units and what is expected each year, from Grade 1 to Grade 5.
+- [Logical reasoning for kids: 7 activities with patterns, sequences and balance scales](https://educa-game.georgel.ca/en/blog/logical-reasoning-for-kids): Logical reasoning can be trained like any other skill. See 7 simple activities, with examples and answers, to do at home or at school, and what Brazil's BNCC says about the topic.
+- [Sudoku for kids: benefits, rules and how to start with 4×4](https://educa-game.georgel.ca/en/blog/sudoku-for-kids): Sudoku is a great logic exercise for kids and doesn't require any arithmetic. See the benefits, the rules explained for children, a 4×4 to solve together and tips to move forward.
+
+Em espanhol (https://educa-game.georgel.ca/es/blog):
+
+- [Juegos de matemáticas para niños: cómo elegir uno que enseñe de verdad](https://educa-game.georgel.ca/es/blog/juegos-de-matematicas-para-ninos): No todo juego "educativo" enseña. Mira 7 señales de un buen juego de matemáticas para niños, las señales de alerta y cómo usar el juego en casa sin pelear por la pantalla.
+- [Cómo enseñar las tablas de multiplicar sin memorizar a ciegas: estrategias y 6 actividades para hacer en casa](https://educa-game.georgel.ca/es/blog/como-ensenar-las-tablas-de-multiplicar): Las tablas no tienen por qué ser memoria a ciegas. Mira cómo enseñar la multiplicación con sentido, los trucos que reducen las cuentas difíciles a 15 y 6 actividades sencillas para practicar en casa.
+- [Matemáticas en la BNCC de Brasil, de 1.º a 5.º: lo que el niño aprende cada año](https://educa-game.georgel.ca/es/blog/bncc-matematicas-primaria-brasil): Una guía sencilla de la parte de Matemáticas del currículo nacional de Brasil (BNCC) en los primeros cursos: cómo leer los códigos de las habilidades (EF02MA07 y otros), las cinco unidades temáticas y lo que se espera cada año, de 1.º a 5.º.
+- [Razonamiento lógico para niños: 7 actividades con patrones, secuencias y balanzas](https://educa-game.georgel.ca/es/blog/razonamiento-logico-para-ninos): El razonamiento lógico se entrena como cualquier habilidad. Mira 7 actividades sencillas, con ejemplos y respuestas, para hacer en casa o en la escuela, y lo que dice la BNCC de Brasil sobre el tema.
+- [Sudoku para niños: beneficios, reglas y cómo empezar con el 4×4](https://educa-game.georgel.ca/es/blog/sudoku-para-ninos): El sudoku es un gran ejercicio de lógica para niños y no exige cuentas. Mira los beneficios, las reglas explicadas para el niño, un 4×4 para resolver juntos y consejos para avanzar.
 <!-- blog:fim -->

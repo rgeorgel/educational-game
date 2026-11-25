@@ -13,10 +13,13 @@
 
 import { h } from "../dom.js";
 import { fractionFigure } from "./figure.js";
+import { decimalSeparator, t } from "../i18n.js";
 
 const MAX_CHARS = 8;
+// Vírgula decimal em português e espanhol; ponto em inglês (a API aceita os dois).
+const SEP = decimalSeparator();
 
-function numericInput({ onSubmit, label = "Sua resposta", negative = false, decimal = false }) {
+function numericInput({ onSubmit, label = t("Sua resposta"), negative = false, decimal = false }) {
   let value = "";
   let locked = false;
 
@@ -33,8 +36,8 @@ function numericInput({ onSubmit, label = "Sua resposta", negative = false, deci
     if (/^[0-9]$/.test(key) && value.length < MAX_CHARS) value = value === "0" ? key : value === "−0" ? `−${key}` : value + key;
     else if (key === "back") value = value.slice(0, -1);
     else if (key === "minus" && negative) value = value.startsWith("−") ? value.slice(1) : `−${value}`;
-    else if (key === "comma" && decimal && !value.includes(",")) value = (value === "" || value === "−" ? `${value}0` : value) + ",";
-    else if (key === "ok" && /[0-9]/.test(value)) onSubmit(value.endsWith(",") ? value.slice(0, -1) : value);
+    else if (key === "comma" && decimal && !value.includes(SEP)) value = (value === "" || value === "−" ? `${value}0` : value) + SEP;
+    else if (key === "ok" && /[0-9]/.test(value)) onSubmit(value.endsWith(SEP) ? value.slice(0, -1) : value);
     update();
   };
 
@@ -91,7 +94,7 @@ function choiceInput(choices, { onSubmit, big = false, keys = [] }) {
   };
 
   return {
-    node: h("div", { class: `choices${choices.length === 2 ? " choices-two" : ""}`, role: "group", "aria-label": "Opções de resposta" }, buttons),
+    node: h("div", { class: `choices${choices.length === 2 ? " choices-two" : ""}`, role: "group", "aria-label": t("Opções de resposta") }, buttons),
     handleKey(e) {
       const extra = keys.findIndex((k) => k === e.key.toLowerCase());
       const index = extra >= 0 ? extra : Number(e.key) - 1;
@@ -119,23 +122,23 @@ function choiceInput(choices, { onSubmit, big = false, keys = [] }) {
 }
 
 function sequenceRow(sequence) {
-  const blank = h("span", { class: "seq-item seq-blank", "aria-label": "lacuna" }, "?");
+  const blank = h("span", { class: "seq-item seq-blank", "aria-label": t("lacuna") }, "?");
   const items = sequence.map((item) => (item === null ? blank : h("span", { class: "seq-item" }, item)));
-  const row = h("div", { class: "sequence", role: "list", "aria-label": "Sequência" }, items.map((i) => h("span", { role: "listitem", class: "seq-cell" }, i)));
+  const row = h("div", { class: "sequence", role: "list", "aria-label": t("Sequência") }, items.map((i) => h("span", { role: "listitem", class: "seq-cell" }, i)));
   return { row, blank };
 }
 
 /** Botão "Confirmar" padrão para tipos em que a resposta é montada aos poucos. */
 function confirmButton(onClick) {
-  return h("button", { type: "button", class: "btn btn-primary btn-block confirm-btn", disabled: true, onClick }, "Confirmar resposta");
+  return h("button", { type: "button", class: "btn btn-primary btn-block confirm-btn", disabled: true, onClick }, t("Confirmar resposta"));
 }
 
 // ---------- Ordenar ----------
 function orderInput(items, { onSubmit }) {
   let locked = false;
   const placed = [];
-  const pool = h("div", { class: "order-pool", role: "group", "aria-label": "Itens para ordenar" });
-  const slots = h("ol", { class: "order-slots", "aria-label": "Sua ordem" });
+  const pool = h("div", { class: "order-pool", role: "group", "aria-label": t("Itens para ordenar") });
+  const slots = h("ol", { class: "order-slots", "aria-label": t("Sua ordem") });
   const confirm = confirmButton(() => !locked && placed.length === items.length && onSubmit(placed.join("|")));
   const solution = h("p", { class: "order-solution", hidden: true });
 
@@ -151,7 +154,7 @@ function orderInput(items, { onSubmit }) {
           "li",
           { class: `order-slot${placed[i] ? " filled" : ""}` },
           placed[i]
-            ? h("button", { type: "button", class: "chip-btn placed", disabled: locked, "aria-label": `${placed[i]} (tocar para tirar)`, onClick: () => remove(placed[i]) }, placed[i])
+            ? h("button", { type: "button", class: "chip-btn placed", disabled: locked, "aria-label": t("{item} (tocar para tirar)", { item: placed[i] }), onClick: () => remove(placed[i]) }, placed[i])
             : h("span", { class: "muted" }, String(i + 1)),
         ),
       ),
@@ -172,7 +175,7 @@ function orderInput(items, { onSubmit }) {
 
   render();
   return {
-    node: h("div", { class: "answer-order" }, h("p", { class: "muted small" }, "Toque nos itens na ordem certa. Toque de novo para tirar."), slots, pool, solution, confirm),
+    node: h("div", { class: "answer-order" }, h("p", { class: "muted small" }, t("Toque nos itens na ordem certa. Toque de novo para tirar.")), slots, pool, solution, confirm),
     handleKey(e) {
       const free = items.filter((it) => !placed.includes(it));
       const index = Number(e.key) - 1;
@@ -193,7 +196,7 @@ function orderInput(items, { onSubmit }) {
     reveal(result) {
       slots.classList.add(result.correct ? "correct" : "wrong");
       if (!result.correct) {
-        solution.textContent = `Ordem certa: ${result.correctAnswer.split("|").join("  →  ")}`;
+        solution.textContent = t("Ordem certa: {ordem}", { ordem: result.correctAnswer.split("|").join("  →  ") });
         solution.hidden = false;
       }
     },
@@ -219,7 +222,7 @@ function gridInput(grid, { onSubmit }) {
       type: "button",
       class: classes.join(" "),
       disabled: given,
-      "aria-label": `Linha ${r + 1}, coluna ${c + 1}`,
+      "aria-label": t("Linha {r}, coluna {c}", { r: r + 1, c: c + 1 }),
       onClick: () => select(i),
     });
   });
@@ -227,18 +230,18 @@ function gridInput(grid, { onSubmit }) {
   const board = h("div", { class: `grid-board grid-${n}`, role: "grid", style: { "--n": String(n) } }, cells);
   const palette = h(
     "div",
-    { class: "grid-palette", role: "group", "aria-label": "Números" },
+    { class: "grid-palette", role: "group", "aria-label": t("Números") },
     Array.from({ length: grid.maxValue }, (_, k) => h("button", { type: "button", class: "key", onClick: () => set(k + 1) }, String(k + 1))),
-    h("button", { type: "button", class: "key key-back", "aria-label": "Apagar", onClick: () => set(null) }, "⌫"),
+    h("button", { type: "button", class: "key key-back", "aria-label": t("Apagar"), onClick: () => set(null) }, "⌫"),
   );
   const confirm = confirmButton(() => !locked && values.every((v) => v !== null) && onSubmit(values.join(",")));
-  const target = grid.target ? h("p", { class: "muted small center" }, `Soma mágica: ${grid.target}`) : null;
+  const target = grid.target ? h("p", { class: "muted small center" }, t("Soma mágica: {n}", { n: grid.target })) : null;
 
   function render() {
     cells.forEach((cell, i) => {
       cell.textContent = values[i] ?? "";
       cell.classList.toggle("selected", i === selected && !locked);
-      if (grid.cells[i] === null) cell.setAttribute("aria-label", `Linha ${Math.floor(i / n) + 1}, coluna ${(i % n) + 1}: ${values[i] ?? "vazia"}`);
+      if (grid.cells[i] === null) cell.setAttribute("aria-label", `${t("Linha {r}, coluna {c}", { r: Math.floor(i / n) + 1, c: (i % n) + 1 })}: ${values[i] ?? t("vazia")}`);
     });
     confirm.disabled = locked || values.some((v) => v === null);
   }
@@ -334,13 +337,13 @@ function paintInput(figure, { onSubmit }) {
 
   function update() {
     svg.update();
-    counter.textContent = `${painted.size} de ${figure.parts} partes pintadas`;
+    counter.textContent = t("{a} de {b} partes pintadas", { a: painted.size, b: figure.parts });
     confirm.disabled = locked || painted.size === 0;
   }
   update();
 
   return {
-    node: h("div", { class: "answer-paint" }, h("p", { class: "muted small center" }, "Toque nas partes para pintar ou despintar."), svg.node, counter, confirm),
+    node: h("div", { class: "answer-paint" }, h("p", { class: "muted small center" }, t("Toque nas partes para pintar ou despintar.")), svg.node, counter, confirm),
     handleKey(e) {
       if (e.key === "Enter") {
         confirm.click();
@@ -373,7 +376,8 @@ const renderers = {
   },
 
   "verdadeiro-falso"(problem, opts) {
-    return choiceInput(problem.choices, { ...opts, big: true, keys: ["v", "f"] });
+    // Atalhos de teclado: V/F (verdadeiro/falso, verdadero/falso) ou T/F (true/false).
+    return choiceInput(problem.choices, { ...opts, big: true, keys: [problem.choices[0][0].toLowerCase(), problem.choices[1][0].toLowerCase()] });
   },
 
   ordenar(problem, opts) {
@@ -392,7 +396,7 @@ const renderers = {
     const { row, blank } = sequenceRow(problem.sequence);
     const input = problem.choices
       ? choiceInput(problem.choices, { ...opts, big: true })
-      : numericInput({ ...opts, label: "Número que falta", negative: problem.acceptsNegative, decimal: problem.acceptsDecimal });
+      : numericInput({ ...opts, label: t("Número que falta"), negative: problem.acceptsNegative, decimal: problem.acceptsDecimal });
     return {
       ...input,
       node: h("div", { class: "answer-sequence" }, row, input.node),
@@ -407,7 +411,7 @@ const renderers = {
 
 export function renderAnswer(problem, opts) {
   const render = renderers[problem.type];
-  if (!render) throw new Error(`Tipo de desafio desconhecido: ${problem.type}`);
+  if (!render) throw new Error(t("Tipo de desafio desconhecido: {tipo}", { tipo: problem.type }));
   return render(problem, opts);
 }
 

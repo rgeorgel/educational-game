@@ -1,3 +1,5 @@
+using static EduGame.Problems.Lang;
+
 namespace EduGame.Problems.Tools;
 
 /// <summary>Uma categoria de um problema "quem é quem" (ex.: animais, cores).</summary>
@@ -31,7 +33,7 @@ public sealed record LinkClue(int CategoryA, int ItemA, int CategoryB, int ItemB
 
     public override string Text(string[] people, LogicCategory[] cats)
     {
-        var who = $"Quem {cats[CategoryA].Has(cats[CategoryA].Items[ItemA])}";
+        var who = $"{Tr("Quem", "Whoever", "Quien")} {cats[CategoryA].Has(cats[CategoryA].Items[ItemA])}";
         var what = Positive ? cats[CategoryB].Has(cats[CategoryB].Items[ItemB]) : cats[CategoryB].HasNot(cats[CategoryB].Items[ItemB]);
         return $"{who} {what}.";
     }

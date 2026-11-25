@@ -1,3 +1,4 @@
+import { decimalSeparator, t } from "../i18n.js";
 // Web Components reutilizáveis (light DOM, para herdar o CSS global).
 
 /** <progress-bar value="40" label="40% para Médio" level="iniciante"></progress-bar> */
@@ -38,7 +39,7 @@ class ProgressBar extends HTMLElement {
       tick.className = `progress-mark${value >= Number(mark) ? " reached" : ""}`;
       tick.style.setProperty("left", `${Math.max(0, Math.min(100, Number(mark)))}%`);
       tick.setAttribute("aria-hidden", "true");
-      tick.title = "O Desafio do Guardião abre aqui";
+      tick.title = t("O Desafio do Guardião abre aqui");
       track.append(tick);
     }
     this.replaceChildren(track);
@@ -61,7 +62,7 @@ class StarRating extends HTMLElement {
     const stars = Number(this.getAttribute("stars")) || 0;
     const max = Number(this.getAttribute("max")) || 3;
     this.setAttribute("role", "img");
-    this.setAttribute("aria-label", `${stars} de ${max} estrelas`);
+    this.setAttribute("aria-label", t("{a} de {b} estrelas", { a: stars, b: max }));
     this.replaceChildren(
       ...Array.from({ length: max }, (_, i) => {
         const s = document.createElement("span");
@@ -82,13 +83,14 @@ class NumericKeypad extends HTMLElement {
   connectedCallback() {
     if (this.childElementCount) return;
     this.setAttribute("role", "group");
-    this.setAttribute("aria-label", "Teclado numérico");
+    this.setAttribute("aria-label", t("Teclado numérico"));
     const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "back", "0", "ok"];
     // Teclas extras só quando o problema aceita (para não entregar dicas).
     if (this.hasAttribute("negative")) keys.push("minus");
     if (this.hasAttribute("decimal")) keys.push("comma");
-    const labels = { back: "⌫", ok: "OK", minus: "−", comma: "," };
-    const aria = { back: "Apagar", ok: "Confirmar resposta", minus: "Sinal de menos", comma: "Vírgula" };
+    const sep = decimalSeparator();
+    const labels = { back: "⌫", ok: "OK", minus: "−", comma: sep };
+    const aria = { back: t("Apagar"), ok: t("Confirmar resposta"), minus: t("Sinal de menos"), comma: sep === "." ? t("Ponto decimal") : t("Vírgula") };
     for (const key of keys) {
       const btn = document.createElement("button");
       btn.type = "button";

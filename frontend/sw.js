@@ -6,13 +6,15 @@
 // - Respostas e outras escritas (POST/PUT/DELETE): só rede (o servidor confere as respostas).
 // Ao sair da conta, o app pede para apagar o cache de dados (aparelhos compartilhados).
 
-const VERSION = "v16";
+const VERSION = "v17";
 const SHELL_CACHE = `edugame-shell-${VERSION}`;
 const DATA_CACHE = "edugame-data";
 
 const SHELL = [
   "/",
   "/index.html",
+  "/en/",
+  "/es/",
   "/jogar",
   "/jogar.html",
   "/css/landing.css",
@@ -27,6 +29,9 @@ const SHELL = [
   "/js/effects.js",
   "/js/share.js",
   "/js/origin.js",
+  "/js/i18n.js",
+  "/js/i18n/en.js",
+  "/js/i18n/es.js",
   "/js/main.js",
   "/js/api.js",
   "/js/dom.js",
@@ -91,13 +96,14 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
   if (url.pathname.startsWith("/api/")) {
-    if (CACHEABLE_API.some((re) => re.test(url.pathname))) event.respondWith(networkFirst(request, DATA_CACHE, offlineApi));
+    if (CACHEABLE_API.some((re) => re.test(url.pathname))) event.respondWith(networkFirst(request, DATA_CACHE, () => offlineApi(request)));
     return; // demais chamadas da API: direto na rede
   }
 
-  // Navegação: sem rede, entrega a página do cache (o jogo em /jogar; o resto cai na landing).
+  // Navegação: sem rede, entrega a página do cache (o jogo em /jogar; o resto cai na landing do idioma).
   if (request.mode === "navigate") {
-    const page = url.pathname.startsWith("/jogar") ? "/jogar.html" : "/index.html";
+    const lang = url.pathname.match(/^\/(en|es)(\/|$)/)?.[1];
+    const page = url.pathname.startsWith("/jogar") ? "/jogar.html" : lang ? `/${lang}/` : "/index.html";
     event.respondWith(networkFirst(request, SHELL_CACHE, () => caches.match(page)));
     return;
   }
@@ -125,8 +131,16 @@ async function networkFirst(request, cacheName, fallback) {
   }
 }
 
-function offlineApi() {
-  return new Response(JSON.stringify({ title: "Sem conexão", detail: "Você está offline. Conecte-se à internet para continuar jogando." }), {
+// Aviso de "sem conexão" no idioma do app (o app manda o idioma no cabeçalho X-Lang).
+const OFFLINE = {
+  pt: { title: "Sem conexão", detail: "Você está offline. Conecte-se à internet para continuar jogando." },
+  en: { title: "No connection", detail: "You're offline. Connect to the internet to keep playing." },
+  es: { title: "Sin conexión", detail: "No tienes conexión. Conéctate a internet para seguir jugando." },
+};
+
+function offlineApi(request) {
+  const message = OFFLINE[request.headers.get("X-Lang")] ?? OFFLINE.pt;
+  return new Response(JSON.stringify(message), {
     status: 503,
     headers: { "Content-Type": "application/problem+json" },
   });

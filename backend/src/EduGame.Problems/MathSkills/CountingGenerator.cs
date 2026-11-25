@@ -1,3 +1,5 @@
+using static EduGame.Problems.Lang;
+
 namespace EduGame.Problems.MathSkills;
 
 /// <summary>Contagem e comparação de números: contar objetos, antecessor/sucessor, maior/menor.</summary>
@@ -6,9 +8,11 @@ public sealed class CountingGenerator : ProblemGenerator
     public override string Key => "mat.contagem";
     public override string SkillSlug => "contagem-comparacao";
 
-    private static readonly (string Emoji, string Name, bool Feminine)[] Things =
+    // O gênero vale para o português e o espanhol (maçãs/manzanas, peixes/peces…).
+    private static readonly (string Emoji, Text Name, bool Feminine)[] Things =
     [
-        ("🍎", "maçãs", true), ("⭐", "estrelas", true), ("🐟", "peixes", false), ("🎈", "balões", false), ("🌸", "flores", true), ("⚽", "bolas", true),
+        ("🍎", new("maçãs", "apples", "manzanas"), true), ("⭐", new("estrelas", "stars", "estrellas"), true), ("🐟", new("peixes", "fish", "peces"), false),
+        ("🎈", new("balões", "balloons", "globos"), false), ("🌸", new("flores", "flowers", "flores"), true), ("⚽", new("bolas", "balls", "pelotas"), true),
     ];
 
     public override GeneratedProblem Generate(Random rng) => rng.Next(5) switch
@@ -27,10 +31,15 @@ public sealed class CountingGenerator : ProblemGenerator
         var count = b - a - 1;
         var content = new ProblemContent(
             ProblemTypes.Numero,
-            $"Quantos números inteiros existem entre {a} e {b}? (sem contar o {a} nem o {b})",
+            Tr($"Quantos números inteiros existem entre {a} e {b}? (sem contar o {a} nem o {b})",
+               $"How many whole numbers are there between {a} and {b}? (not counting {a} or {b})",
+               $"¿Cuántos números enteros hay entre {a} y {b}? (sin contar el {a} ni el {b})"),
             count.ToString(),
-            [$"Comece a contar pelo número logo depois de {a}: {a + 1}, {a + 2}…", $"Pare no número logo antes de {b}, que é {b - 1}."],
-            $"Os números vão de {a + 1} até {b - 1}: são {count} números.")
+            [
+                Tr($"Comece a contar pelo número logo depois de {a}: {a + 1}, {a + 2}…", $"Start counting from the number right after {a}: {a + 1}, {a + 2}…", $"Empieza a contar por el número justo después de {a}: {a + 1}, {a + 2}…"),
+                Tr($"Pare no número logo antes de {b}, que é {b - 1}.", $"Stop at the number right before {b}, which is {b - 1}.", $"Para en el número justo antes de {b}, que es {b - 1}."),
+            ],
+            Tr($"Os números vão de {a + 1} até {b - 1}: são {count} números.", $"The numbers go from {a + 1} to {b - 1}: that's {count} numbers.", $"Los números van de {a + 1} a {b - 1}: son {count} números."))
         ;
         return new(content, 880 + count * 10);
     }
@@ -43,10 +52,13 @@ public sealed class CountingGenerator : ProblemGenerator
         var groups = Enumerable.Range(0, (n + 4) / 5).Select(i => Repeat(emoji, Math.Min(5, n - i * 5)));
         var content = new ProblemContent(
             ProblemTypes.Numero,
-            $"{(feminine ? "Quantas" : "Quantos")} {name} há?",
+            Tr($"{(feminine ? "Quantas" : "Quantos")} {name} há?", $"How many {name} are there?", $"¿{(feminine ? "Cuántas" : "Cuántos")} {name} hay?"),
             n.ToString(),
-            ["Conte um por um, apontando com o dedo.", "Os itens estão em grupos de 5. Conte os grupos de 5 e depois os que sobram."],
-            $"Há {n} {name}.")
+            [
+                Tr("Conte um por um, apontando com o dedo.", "Count them one by one, pointing with your finger.", "Cuenta uno por uno, señalando con el dedo."),
+                Tr("Os itens estão em grupos de 5. Conte os grupos de 5 e depois os que sobram.", "The items are in groups of 5. Count the groups of 5 and then the ones left over.", "Los objetos están en grupos de 5. Cuenta los grupos de 5 y después los que sobran."),
+            ],
+            Tr($"Há {n} {name}.", $"There are {n} {name}.", $"Hay {n} {name}."))
         { Visual = string.Join(' ', groups) };
         return new(content, 100 + n * 12);
     }
@@ -67,17 +79,24 @@ public sealed class CountingGenerator : ProblemGenerator
         if (crossesHundred && max == 1000) difficulty += 120;
         if (!after) difficulty += 60;
 
-        List<string> hints = [after ? "O número que vem depois é sempre 1 a mais." : "O número que vem antes é sempre 1 a menos."];
+        List<string> hints =
+        [
+            after
+                ? Tr("O número que vem depois é sempre 1 a mais.", "The number that comes after is always 1 more.", "El número que viene después siempre es 1 más.")
+                : Tr("O número que vem antes é sempre 1 a menos.", "The number that comes before is always 1 less.", "El número que viene antes siempre es 1 menos."),
+        ];
         if (crossesTen)
         {
             hints.Add(after
-                ? "Quando as unidades passam de 9, elas voltam para 0 e as dezenas aumentam 1."
-                : "Quando as unidades estão em 0, voltar 1 deixa as unidades em 9 e diminui 1 dezena.");
+                ? Tr("Quando as unidades passam de 9, elas voltam para 0 e as dezenas aumentam 1.", "When the ones go past 9, they go back to 0 and the tens go up by 1.", "Cuando las unidades pasan de 9, vuelven a 0 y las decenas aumentan 1.")
+                : Tr("Quando as unidades estão em 0, voltar 1 deixa as unidades em 9 e diminui 1 dezena.", "When the ones are at 0, going back 1 makes the ones 9 and takes away 1 ten.", "Cuando las unidades están en 0, retroceder 1 deja las unidades en 9 y quita 1 decena."));
         }
 
         var content = new ProblemContent(
             ProblemTypes.Numero,
-            after ? $"Qual número vem logo depois de {n}?" : $"Qual número vem logo antes de {n}?",
+            after
+                ? Tr($"Qual número vem logo depois de {n}?", $"Which number comes right after {n}?", $"¿Qué número viene justo después de {n}?")
+                : Tr($"Qual número vem logo antes de {n}?", $"Which number comes right before {n}?", $"¿Qué número viene justo antes de {n}?"),
             answer.ToString(),
             hints,
             after ? $"{n} + 1 = {answer}" : $"{n} − 1 = {answer}");
@@ -114,16 +133,16 @@ public sealed class CountingGenerator : ProblemGenerator
         if (!bigger) difficulty += 50;
 
         var answer = bigger ? numbers.Max() : numbers.Min();
-        var word = bigger ? "maior" : "menor";
+        var word = bigger ? Tr("maior", "biggest", "mayor") : Tr("menor", "smallest", "menor");
         var content = new ProblemContent(
             ProblemTypes.MultiplaEscolha,
-            $"Qual é o {word} número?",
+            Tr($"Qual é o {word} número?", $"Which is the {word} number?", $"¿Cuál es el número {word}?"),
             answer.ToString(),
             [
-                "Compare primeiro o algarismo mais à esquerda (o de maior valor).",
-                "Se ele for igual, compare o próximo algarismo.",
+                Tr("Compare primeiro o algarismo mais à esquerda (o de maior valor).", "First compare the leftmost digit (the one with the greatest value).", "Compara primero la cifra de más a la izquierda (la de mayor valor)."),
+                Tr("Se ele for igual, compare o próximo algarismo.", "If it's the same, compare the next digit.", "Si es igual, compara la siguiente cifra."),
             ],
-            $"O {word} número é {answer}.")
+            Tr($"O {word} número é {answer}.", $"The {word} number is {answer}.", $"El número {word} es {answer}."))
         { Choices = [.. numbers.OrderBy(_ => rng.Next()).Select(n => n.ToString())] };
         return new(content, difficulty);
     }

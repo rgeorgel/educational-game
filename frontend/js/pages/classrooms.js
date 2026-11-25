@@ -5,14 +5,15 @@ import { store } from "../store.js";
 import { profileReportCard } from "./guardian.js";
 import { assignmentsSection, exportSection, planBanner, skillsSection } from "./assignments.js";
 import { planPromo } from "./plans.js";
+import { t, tn } from "../i18n.js";
 
 export async function classroomsPage() {
   if (store.state.me?.isGuest) {
     return h(
       "section",
       { class: "page-narrow" },
-      h("h1", {}, "Minhas turmas"),
-      h("p", { class: "card" }, "Para criar turmas, primeiro ", h("a", { href: "#/salvar" }, "crie uma conta"), ". Contas de convidado não podem criar turmas."),
+      h("h1", {}, t("Minhas turmas")),
+      h("p", { class: "card" }, t("Para criar turmas, primeiro "), h("a", { href: "#/salvar" }, t("crie uma conta")), t(". Contas de convidado não podem criar turmas.")),
     );
   }
   const [classes, plan, billing] = await Promise.all([api.classrooms(), api.myPlan().catch(() => null), api.billingStatus().catch(() => null)]);
@@ -34,16 +35,16 @@ export async function classroomsPage() {
         }
       },
     },
-    h("input", { name: "name", maxlength: "60", placeholder: "Ex.: 5º ano B", "aria-label": "Nome da turma", required: true }),
-    h("button", { type: "submit", class: "btn btn-primary btn-small" }, "Criar turma"),
+    h("input", { name: "name", maxlength: "60", placeholder: t("Ex.: 5º ano B"), "aria-label": t("Nome da turma"), required: true }),
+    h("button", { type: "submit", class: "btn btn-primary btn-small" }, t("Criar turma")),
   );
 
   return h(
     "section",
     { class: "page-narrow" },
-    h("h1", {}, "Minhas turmas"),
-    h("p", { class: "muted" }, "Crie uma turma e passe o código para as famílias. Cada responsável decide se o perfil do filho entra na turma."),
-    h("p", { class: "muted small" }, "Todas as habilidades do jogo estão ligadas à BNCC: ", h("a", { href: "#/bncc" }, "ver currículo e BNCC"), ". Para treinar no papel: ", h("a", { href: "#/fichas" }, "fichas para imprimir"), "."),
+    h("h1", {}, t("Minhas turmas")),
+    h("p", { class: "muted" }, t("Crie uma turma e passe o código para as famílias. Cada responsável decide se o perfil do filho entra na turma.")),
+    h("p", { class: "muted small" }, t("Todas as habilidades do jogo estão ligadas à BNCC: "), h("a", { href: "#/bncc" }, t("ver currículo e BNCC")), t(". Para treinar no papel: "), h("a", { href: "#/fichas" }, t("fichas para imprimir")), "."),
     planPromo(plan, "professor", billing),
     planBanner(plan),
     h("div", { class: "card stack" }, form, error),
@@ -59,12 +60,12 @@ export async function classroomsPage() {
                 "a",
                 { class: "card class-card", href: `#/turmas/${c.id}` },
                 h("strong", {}, `🏫 ${c.name}`),
-                h("span", { class: "muted small" }, `${c.members} ${c.members === 1 ? "aluno" : "alunos"} · código `, h("code", {}, c.code)),
+                h("span", { class: "muted small" }, `${tn(c.members, "{n} aluno", "{n} alunos")} · ${t("código")} `, h("code", {}, c.code)),
               ),
             ),
           ),
         )
-      : h("p", { class: "muted" }, "Você ainda não tem turmas."),
+      : h("p", { class: "muted" }, t("Você ainda não tem turmas.")),
   );
 }
 
@@ -73,9 +74,9 @@ export async function classroomPage({ id }) {
   const assignments = await assignmentsSection(report);
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
 
-  const del = h("button", { type: "button", class: "btn btn-danger btn-small" }, "Apagar turma");
+  const del = h("button", { type: "button", class: "btn btn-danger btn-small" }, t("Apagar turma"));
   del.addEventListener("click", async () => {
-    if (!confirm(`Apagar a turma "${report.name}"? Os perfis dos alunos não são apagados.`)) return;
+    if (!confirm(t("Apagar a turma \"{nome}\"? Os perfis dos alunos não são apagados.", { nome: report.name }))) return;
     try {
       await api.deleteClassroom(id);
       navigate("/turmas");
@@ -86,9 +87,9 @@ export async function classroomPage({ id }) {
   });
 
   const students = report.students.map((s) => {
-    const remove = h("button", { type: "button", class: "btn btn-ghost btn-small" }, "Remover da turma");
+    const remove = h("button", { type: "button", class: "btn btn-ghost btn-small" }, t("Remover da turma"));
     remove.addEventListener("click", async () => {
-      if (!confirm(`Remover ${s.nickname} da turma?`)) return;
+      if (!confirm(t("Remover {nome} da turma?", { nome: s.nickname }))) return;
       await api.removeStudent(id, s.id);
       navigate(`/turmas/${id}`);
     });
@@ -102,21 +103,21 @@ export async function classroomPage({ id }) {
   return h(
     "section",
     { class: "page" },
-    h("p", {}, h("a", { href: "#/turmas" }, "← Minhas turmas")),
+    h("p", {}, h("a", { href: "#/turmas" }, t("← Minhas turmas"))),
     h("h1", {}, `🏫 ${report.name}`),
     h(
       "div",
       { class: "card class-code" },
-      h("p", { class: "muted small" }, "Código para as famílias entrarem na turma:"),
+      h("p", { class: "muted small" }, t("Código para as famílias entrarem na turma:")),
       h("p", { class: "code-big" }, report.code),
-      h("p", { class: "muted small" }, "Na Área do responsável, em cada perfil: \"Turmas da escola\" → digite o código."),
+      h("p", { class: "muted small" }, t("Na Área do responsável, em cada perfil: \"Turmas da escola\" → digite o código.")),
     ),
     assignments,
     counts.length
-      ? h("section", { class: "card" }, h("h2", {}, "O que a turma mais precisa praticar"), h("ul", {}, counts.map(([skill, n]) => h("li", {}, `${skill} — ${n} ${n === 1 ? "aluno" : "alunos"}`, bnccBySkill[skill]?.length ? h("span", { class: "muted small" }, ` · BNCC: ${bnccBySkill[skill].join(", ")}`) : null))))
+      ? h("section", { class: "card" }, h("h2", {}, t("O que a turma mais precisa praticar")), h("ul", {}, counts.map(([skill, n]) => h("li", {}, `${skill} — ${tn(n, "{n} aluno", "{n} alunos")}`, bnccBySkill[skill]?.length ? h("span", { class: "muted small" }, ` · BNCC: ${bnccBySkill[skill].join(", ")}`) : null))))
       : null,
     skillsSection(report),
-    students.length ? h("div", { class: "report-grid" }, students) : h("p", { class: "card muted" }, "Nenhum aluno entrou ainda."),
+    students.length ? h("div", { class: "report-grid" }, students) : h("p", { class: "card muted" }, t("Nenhum aluno entrou ainda.")),
     exportSection(report),
     error,
     h("div", { class: "actions-left" }, del),

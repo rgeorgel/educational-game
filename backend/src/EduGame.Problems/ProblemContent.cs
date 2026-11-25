@@ -26,8 +26,10 @@ public static class ProblemTypes
 
     public static readonly IReadOnlyList<string> All = [Numero, MultiplaEscolha, CompletarSequencia, VerdadeiroFalso, Ordenar, Grade, FracaoVisual];
 
-    public const string True = "Verdadeiro";
-    public const string False = "Falso";
+    /// <summary>Rótulo de "verdadeiro" no idioma atual (é também a resposta guardada no problema).</summary>
+    public static string True => Lang.Tr("Verdadeiro", "True", "Verdadero");
+
+    public static string False => Lang.Tr("Falso", "False", "Falso");
 }
 
 /// <summary>Conteúdo completo de um problema gerado (inclui a resposta — nunca enviar ao cliente antes da resposta).</summary>

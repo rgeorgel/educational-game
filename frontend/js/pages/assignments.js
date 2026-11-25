@@ -2,11 +2,12 @@
 import { api } from "../api.js";
 import { errorMessage, h } from "../dom.js";
 import { navigate } from "../router.js";
+import { fmtDate, getLang, locale, t, tn } from "../i18n.js";
 
-const dateFmt = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
-export const dueText = (d) => (d ? `até ${dateFmt.format(new Date(`${d}T00:00:00Z`))}` : "sem prazo");
+const dateFmt = new Intl.DateTimeFormat(locale(), { day: "2-digit", month: "2-digit", timeZone: "UTC" });
+export const dueText = (d) => (d ? t("até {data}", { data: dateFmt.format(new Date(`${d}T00:00:00Z`)) }) : t("sem prazo"));
 export const starsText = (n) => "★".repeat(n) + "☆".repeat(3 - n);
-const STATUS = { feita: "✅ feita", tentou: "🟨 tentou", pendente: "⬜ não começou" };
+const STATUS = { feita: t("✅ feita"), tentou: t("🟨 tentou"), pendente: t("⬜ não começou") };
 
 function todayIso() {
   const d = new Date();
@@ -24,18 +25,18 @@ async function assignmentForm(classroomId, onError) {
   }
   const stageSelect = h(
     "select",
-    { name: "stageId", required: true, "aria-label": "Etapa" },
-    h("option", { value: "" }, "Escolha a etapa…"),
+    { name: "stageId", required: true, "aria-label": t("Etapa") },
+    h("option", { value: "" }, t("Escolha a etapa…")),
     [...groups].map(([label, list]) => h("optgroup", { label }, list.map((s) => h("option", { value: String(s.id) }, `${s.regionIcon} ${s.regionName} — ${s.name}`)))),
   );
   const starsSelect = h(
     "select",
-    { name: "minStars", "aria-label": "Estrelas mínimas" },
-    [1, 2, 3].map((n) => h("option", { value: String(n) }, `${starsText(n)} (${n} ${n === 1 ? "estrela" : "estrelas"})`)),
+    { name: "minStars", "aria-label": t("Estrelas mínimas") },
+    [1, 2, 3].map((n) => h("option", { value: String(n) }, `${starsText(n)} (${tn(n, "{n} estrela", "{n} estrelas")})`)),
   );
-  const due = h("input", { type: "date", name: "dueDate", min: todayIso(), "aria-label": "Prazo (opcional)" });
-  const note = h("input", { name: "note", maxlength: "140", placeholder: "Recado para a turma (opcional)", "aria-label": "Recado" });
-  const submit = h("button", { type: "submit", class: "btn btn-primary btn-small" }, "Passar tarefa");
+  const due = h("input", { type: "date", name: "dueDate", min: todayIso(), "aria-label": t("Prazo (opcional)") });
+  const note = h("input", { name: "note", maxlength: "140", placeholder: t("Recado para a turma (opcional)"), "aria-label": t("Recado") });
+  const submit = h("button", { type: "submit", class: "btn btn-primary btn-small" }, t("Passar tarefa"));
 
   const form = h(
     "form",
@@ -58,8 +59,8 @@ async function assignmentForm(classroomId, onError) {
         }
       },
     },
-    h("label", {}, h("span", { class: "small muted" }, "Etapa"), stageSelect),
-    h("div", { class: "assignment-form-row" }, h("label", {}, h("span", { class: "small muted" }, "Para contar como feita"), starsSelect), h("label", {}, h("span", { class: "small muted" }, "Prazo (opcional)"), due)),
+    h("label", {}, h("span", { class: "small muted" }, t("Etapa")), stageSelect),
+    h("div", { class: "assignment-form-row" }, h("label", {}, h("span", { class: "small muted" }, t("Para contar como feita")), starsSelect), h("label", {}, h("span", { class: "small muted" }, t("Prazo (opcional)")), due)),
     note,
     submit,
   );
@@ -67,9 +68,9 @@ async function assignmentForm(classroomId, onError) {
 }
 
 function assignmentItem(classroomId, a) {
-  const remove = h("button", { type: "button", class: "btn btn-ghost btn-small" }, "Apagar");
+  const remove = h("button", { type: "button", class: "btn btn-ghost btn-small" }, t("Apagar"));
   remove.addEventListener("click", async () => {
-    if (!confirm(`Apagar a tarefa "${a.stage.name}"?`)) return;
+    if (!confirm(t("Apagar a tarefa \"{nome}\"?", { nome: a.stage.name }))) return;
     await api.deleteAssignment(classroomId, a.id);
     navigate(`/turmas/${classroomId}`);
   });
@@ -80,18 +81,18 @@ function assignmentItem(classroomId, a) {
     h(
       "div",
       { class: "assignment-head" },
-      h("div", {}, h("strong", {}, `${a.stage.subjectIcon} ${a.stage.name}`), h("p", { class: "muted small" }, `${a.stage.regionName} · ${a.stage.levelName} · ${starsText(a.minStars)} · ${dueText(a.dueDate)}${a.active ? "" : " (encerrada)"}`)),
+      h("div", {}, h("strong", {}, `${a.stage.subjectIcon} ${a.stage.name}`), h("p", { class: "muted small" }, `${a.stage.regionName} · ${a.stage.levelName} · ${starsText(a.minStars)} · ${dueText(a.dueDate)}${a.active ? "" : ` (${t("encerrada")})`}`)),
       remove,
     ),
     a.note ? h("p", { class: "small" }, `“${a.note}”`) : null,
-    h("progress-bar", { value: String(pct), label: `${a.done} de ${a.total} alunos fizeram` }),
+    h("progress-bar", { value: String(pct), label: t("{a} de {b} alunos fizeram", { a: a.done, b: a.total }) }),
     h(
       "details",
       {},
-      h("summary", { class: "small" }, `${a.done} de ${a.total} ${a.total === 1 ? "aluno fez" : "alunos fizeram"}`),
+      h("summary", { class: "small" }, a.total === 1 ? t("{a} de {b} aluno fez", { a: a.done, b: a.total }) : t("{a} de {b} alunos fizeram", { a: a.done, b: a.total })),
       a.students.length
         ? h("ul", { class: "assignment-students" }, a.students.map((s) => h("li", {}, `${s.avatar} ${s.nickname}`, h("span", { class: "muted small" }, ` · ${STATUS[s.status]}${s.status === "tentou" ? ` (${starsText(s.bestStars)})` : ""}`))))
-        : h("p", { class: "muted small" }, "Ainda não há alunos na turma."),
+        : h("p", { class: "muted small" }, t("Ainda não há alunos na turma.")),
     ),
   );
 }
@@ -106,11 +107,11 @@ export async function assignmentsSection(report) {
   return h(
     "section",
     { class: "card stack" },
-    h("h2", {}, "📚 Tarefas"),
-    h("p", { class: "muted small" }, "Peça uma etapa para a turma. Os alunos veem a tarefa na tela inicial e podem jogá-la mesmo que ainda não tenham chegado nela no mapa."),
+    h("h2", {}, t("📚 Tarefas")),
+    h("p", { class: "muted small" }, t("Peça uma etapa para a turma. Os alunos veem a tarefa na tela inicial e podem jogá-la mesmo que ainda não tenham chegado nela no mapa.")),
     form,
     error,
-    report.assignments.length ? h("ul", { class: "assignment-list" }, report.assignments.map((a) => assignmentItem(report.id, a))) : h("p", { class: "muted small" }, "Nenhuma tarefa ainda."),
+    report.assignments.length ? h("ul", { class: "assignment-list" }, report.assignments.map((a) => assignmentItem(report.id, a))) : h("p", { class: "muted small" }, t("Nenhuma tarefa ainda.")),
   );
 }
 
@@ -130,15 +131,15 @@ export function skillsSection(report) {
   return h(
     "section",
     { class: "card" },
-    h("h2", {}, "Por habilidade (BNCC)"),
-    h("p", { class: "muted small" }, "Habilidades que a turma já praticou, com os códigos da BNCC. ", h("a", { href: "#/bncc" }, "Ver o currículo completo"), "."),
+    h("h2", {}, t("Por habilidade (BNCC)")),
+    h("p", { class: "muted small" }, t("Habilidades que a turma já praticou, com os códigos da BNCC. "), h("a", { href: "#/bncc" }, t("Ver o currículo completo")), "."),
     h(
       "div",
       { class: "table-scroll" },
       h(
         "table",
         { class: "class-skills" },
-        h("thead", {}, h("tr", {}, h("th", {}, "Habilidade"), h("th", { class: "n" }, "Praticaram"), h("th", { class: "n" }, "Dominam"), h("th", { class: "n" }, "Pedem revisão"), h("th", { class: "n" }, "Acertos"))),
+        h("thead", {}, h("tr", {}, h("th", {}, t("Habilidade")), h("th", { class: "n" }, t("Praticaram")), h("th", { class: "n" }, t("Dominam")), h("th", { class: "n" }, t("Pedem revisão")), h("th", { class: "n" }, t("Acertos")))),
         h("tbody", {}, rows),
       ),
     ),
@@ -147,28 +148,29 @@ export function skillsSection(report) {
 
 export function exportSection(report) {
   const plan = report.plan;
-  const link = (tipo, label) => h("a", { class: "btn btn-small", href: `/api/classrooms/${report.id}/export.csv?tipo=${tipo}`, download: "" }, label);
+  const link = (tipo, label) => h("a", { class: "btn btn-small", href: `/api/classrooms/${report.id}/export.csv?tipo=${tipo}&lang=${getLang()}`, download: "" }, label);
   return h(
     "section",
     { class: "card stack" },
-    h("h2", {}, "⬇️ Baixar planilha"),
+    h("h2", {}, t("⬇️ Baixar planilha")),
     plan.canExport
       ? [
-          h("p", { class: "muted small" }, "Abre no Excel ou no Google Planilhas. Só apelidos e progresso, sem dados pessoais."),
-          h("div", { class: "actions-left" }, link("alunos", "Alunos (nível, acertos, tarefas)"), link("habilidades", "Habilidades (BNCC)")),
+          h("p", { class: "muted small" }, t("Abre no Excel ou no Google Planilhas. Só apelidos e progresso, sem dados pessoais.")),
+          h("div", { class: "actions-left" }, link("alunos", t("Alunos (nível, acertos, tarefas)")), link("habilidades", t("Habilidades (BNCC)"))),
         ]
-      : h("p", { class: "muted small" }, "Exportar a planilha da turma faz parte do plano Professor Pro. ", h("a", { href: "#/planos" }, "Ver planos"), "."),
+      : h("p", { class: "muted small" }, t("Exportar a planilha da turma faz parte do plano Professor Pro. "), h("a", { href: "#/planos" }, t("Ver planos")), "."),
   );
 }
 
 export function planBanner(plan) {
   if (!plan?.enforced) return null;
-  const until = plan.endsAt ? ` até ${new Date(plan.endsAt).toLocaleDateString("pt-BR")}` : "";
+  const until = plan.endsAt ? ` ${t("até {data}", { data: fmtDate(plan.endsAt) })}` : "";
   // Mostra os limites de turma quando a cobrança está ligada.
+  const limits = tn(plan.maxClassrooms, "Até {n} turma, {m} tarefas em aberto por turma", "Até {n} turmas, {m} tarefas em aberto por turma", { m: plan.maxActiveAssignmentsPerClassroom });
   return h(
     "p",
     { class: "card plan-banner small" },
-    h("strong", {}, `Plano: ${plan.name}${until}. `),
-    `Até ${plan.maxClassrooms} ${plan.maxClassrooms === 1 ? "turma" : "turmas"}, ${plan.maxActiveAssignmentsPerClassroom} tarefas em aberto por turma${plan.canExport ? ", com planilhas" : ""}.`,
+    h("strong", {}, `${t("Plano: {nome}", { nome: plan.name })}${until}. `),
+    `${limits}${plan.canExport ? t(", com planilhas") : ""}.`,
   );
 }

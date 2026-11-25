@@ -3,6 +3,7 @@ using EduGame.Domain.Content;
 using EduGame.Domain.Players;
 using EduGame.Domain.Sessions;
 using EduGame.Infrastructure.Identity;
+using EduGame.Infrastructure.Seeding;
 using EduGame.Problems;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -55,6 +56,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         c => JsonSerializer.Serialize(c, Json).GetHashCode(),
         c => c);
 
+    /// <summary>Lê nomes e descrições do catálogo no idioma da requisição (o banco guarda o português).</summary>
+    private static readonly ValueConverter<string, string> Translated = new(v => v, v => CatalogText.Translate(v));
+
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
@@ -83,7 +87,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         {
             e.HasIndex(x => x.Slug).IsUnique();
             e.Property(x => x.Slug).HasMaxLength(64);
-            e.Property(x => x.Name).HasMaxLength(128);
+            e.Property(x => x.Name).HasMaxLength(128).HasConversion(Translated);
             e.Property(x => x.Icon).HasMaxLength(16);
         });
 
@@ -91,7 +95,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         {
             e.HasIndex(x => new { x.SubjectId, x.Slug }).IsUnique();
             e.Property(x => x.Slug).HasMaxLength(64);
-            e.Property(x => x.Name).HasMaxLength(128);
+            e.Property(x => x.Name).HasMaxLength(128).HasConversion(Translated);
             e.Property(x => x.Icon).HasMaxLength(16);
             e.HasOne(x => x.Subject).WithMany(s => s.Levels).HasForeignKey(x => x.SubjectId);
         });
@@ -100,8 +104,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         {
             e.HasIndex(x => new { x.SubjectId, x.Slug }).IsUnique();
             e.Property(x => x.Slug).HasMaxLength(64);
-            e.Property(x => x.Name).HasMaxLength(128);
-            e.Property(x => x.Description).HasMaxLength(512);
+            e.Property(x => x.Name).HasMaxLength(128).HasConversion(Translated);
+            e.Property(x => x.Description).HasMaxLength(512).HasConversion(Translated);
             e.Property(x => x.BnccCodes).HasDefaultValueSql("'{}'::text[]");
             e.HasOne(x => x.Subject).WithMany().HasForeignKey(x => x.SubjectId);
             e.HasOne(x => x.Level).WithMany().HasForeignKey(x => x.LevelId);
@@ -111,9 +115,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         {
             e.HasKey(x => x.Code);
             e.Property(x => x.Code).HasMaxLength(16);
-            e.Property(x => x.Component).HasMaxLength(32);
-            e.Property(x => x.Grade).HasMaxLength(32);
-            e.Property(x => x.Summary).HasMaxLength(512);
+            e.Property(x => x.Component).HasMaxLength(32).HasConversion(Translated);
+            e.Property(x => x.Grade).HasMaxLength(32).HasConversion(Translated);
+            e.Property(x => x.Summary).HasMaxLength(512).HasConversion(Translated);
         });
 
         b.Entity<ProblemTemplate>(e =>
@@ -135,8 +139,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         {
             e.HasIndex(x => new { x.SubjectId, x.Slug }).IsUnique();
             e.Property(x => x.Slug).HasMaxLength(64);
-            e.Property(x => x.Name).HasMaxLength(128);
-            e.Property(x => x.Description).HasMaxLength(512);
+            e.Property(x => x.Name).HasMaxLength(128).HasConversion(Translated);
+            e.Property(x => x.Description).HasMaxLength(512).HasConversion(Translated);
             e.Property(x => x.Icon).HasMaxLength(16);
             e.HasOne(x => x.Subject).WithMany().HasForeignKey(x => x.SubjectId);
             e.HasOne(x => x.Level).WithMany().HasForeignKey(x => x.LevelId);
@@ -146,7 +150,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         {
             e.HasIndex(x => new { x.RegionId, x.Slug }).IsUnique();
             e.Property(x => x.Slug).HasMaxLength(64);
-            e.Property(x => x.Name).HasMaxLength(128);
+            e.Property(x => x.Name).HasMaxLength(128).HasConversion(Translated);
             e.HasOne(x => x.Region).WithMany(r => r.Stages).HasForeignKey(x => x.RegionId);
         });
 

@@ -24,6 +24,10 @@ public abstract class ProblemGenerator : IProblemGenerator
 
     protected static string Num(decimal value) => AnswerChecker.FormatNumber(value);
 
+    /// <summary>"Quanto é 3 + 4?" no idioma atual.</summary>
+    protected static string HowMuch(string expression) =>
+        Lang.Tr($"Quanto é {expression}?", $"What is {expression}?", $"¿Cuánto es {expression}?");
+
     /// <summary>
     /// Problema de resposta numérica. Use <paramref name="negatives"/>/<paramref name="decimals"/> para a habilidade inteira
     /// (e não só quando a resposta é negativa/decimal), senão o teclado entregaria a dica.

@@ -7,6 +7,7 @@ using EduGame.Domain.Progression;
 using EduGame.Infrastructure;
 using EduGame.Problems;
 using Microsoft.EntityFrameworkCore;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Family;
 
@@ -49,9 +50,9 @@ public static class FamilyEndpoints
         profiles.MapGet("/weekly-report", async (Guid profileId, HttpContext http, AppDbContext db, PlanService plans, GameClock clock, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             var plan = await plans.ForUserAsync(http.User.UserId(), ct);
-            if (!plan.WeeklyReport) return PlanService.Locked("O relatório da semana", Domain.Billing.Plans.FamilySlug);
+            if (!plan.WeeklyReport) return PlanService.Locked(Tr("O relatório da semana", "The weekly report", "El informe de la semana"), Domain.Billing.Plans.FamilySlug);
             return Results.Ok(await BuildWeeklyAsync(db, profile, clock, ct));
         });
 
@@ -59,26 +60,26 @@ public static class FamilyEndpoints
         profiles.MapGet("/goals", async (Guid profileId, HttpContext http, AppDbContext db, GameClock clock, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             return Results.Ok(await GoalsAsync(db, profileId, clock.Now.AddDays(-7), ct));
         });
 
         profiles.MapPost("/goals", async (Guid profileId, CreateGoalRequest req, HttpContext http, AppDbContext db, PlanService plans, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             var plan = await plans.ForUserAsync(http.User.UserId(), ct);
-            if (!plan.Reinforcement) return PlanService.Locked("O treino de reforço", Domain.Billing.Plans.FamilySlug);
+            if (!plan.Reinforcement) return PlanService.Locked(Tr("O treino de reforço", "Extra practice", "El refuerzo"), Domain.Billing.Plans.FamilySlug);
 
             var skill = await db.Skills.AsNoTracking()
                 .Where(s => s.Slug == req.SkillSlug && (req.SubjectSlug == null || s.Subject!.Slug == req.SubjectSlug) && s.Templates.Any(t => t.Active))
                 .FirstOrDefaultAsync(ct);
-            if (skill is null) return ApiResults.Validation("skillSlug", "Habilidade não encontrada.");
+            if (skill is null) return ApiResults.Validation("skillSlug", Tr("Habilidade não encontrada.", "Skill not found.", "Habilidad no encontrada."));
 
             var active = await db.PracticeGoals.Where(g => g.ProfileId == profileId && g.CompletedAt == null).ToListAsync(ct);
             if (active.FirstOrDefault(g => g.SkillId == skill.Id) is { } existing) return Results.Ok(new { existing.Id });
             if (active.Count >= PracticeGoal.MaxActivePerProfile)
-                return ApiResults.Conflict($"Cada perfil pode ter até {PracticeGoal.MaxActivePerProfile} treinos de reforço em aberto. Apague um ou espere concluir.");
+                return ApiResults.Conflict(Tr($"Cada perfil pode ter até {PracticeGoal.MaxActivePerProfile} treinos de reforço em aberto. Apague um ou espere concluir.", $"Each profile can have up to {PracticeGoal.MaxActivePerProfile} open extra practices. Delete one or wait for one to finish.", $"Cada perfil puede tener hasta {PracticeGoal.MaxActivePerProfile} refuerzos abiertos. Borra uno o espera a que termine."));
 
             var goal = new PracticeGoal { ProfileId = profileId, SkillId = skill.Id };
             db.PracticeGoals.Add(goal);
@@ -89,7 +90,7 @@ public static class FamilyEndpoints
         profiles.MapDelete("/goals/{goalId:guid}", async (Guid profileId, Guid goalId, HttpContext http, AppDbContext db, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             await db.PracticeGoals.Where(g => g.Id == goalId && g.ProfileId == profileId).ExecuteDeleteAsync(ct);
             return Results.NoContent();
         });
@@ -98,9 +99,9 @@ public static class FamilyEndpoints
         profiles.MapPost("/goals/{goalId:guid}/start", async (Guid profileId, Guid goalId, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             var goal = await db.PracticeGoals.SingleOrDefaultAsync(g => g.Id == goalId && g.ProfileId == profileId, ct);
-            if (goal is null) return ApiResults.NotFound("Treino não encontrado.");
+            if (goal is null) return ApiResults.NotFound(Tr("Treino não encontrado.", "Practice not found.", "Refuerzo no encontrado."));
             var session = await sessions.StartReinforcementAsync(profile, goal, ct);
             return Results.Created($"/api/sessions/{session.Id}", new { sessionId = session.Id });
         });
@@ -110,16 +111,16 @@ public static class FamilyEndpoints
             HttpContext http, AppDbContext db, PlanService plans, CancellationToken ct) =>
         {
             var plan = await plans.ForUserAsync(http.User.UserId(), ct);
-            if (!plan.Worksheets) return PlanService.Locked("As fichas para imprimir", Domain.Billing.Plans.FamilySlug);
+            if (!plan.Worksheets) return PlanService.Locked(Tr("As fichas para imprimir", "Printable worksheets", "Las fichas para imprimir"), Domain.Billing.Plans.FamilySlug);
 
             var row = await db.Skills.AsNoTracking()
                 .Where(s => s.Slug == skill && (subject == null || s.Subject!.Slug == subject))
                 .Select(s => new { s.Id, s.Slug, s.Name, s.Description, s.BnccCodes, SubjectSlug = s.Subject!.Slug, SubjectName = s.Subject.Name, SubjectIcon = s.Subject.Icon, LevelSlug = s.Level!.Slug, LevelName = s.Level.Name })
                 .FirstOrDefaultAsync(ct);
-            if (row is null) return ApiResults.Validation("skill", "Habilidade não encontrada.");
+            if (row is null) return ApiResults.Validation("skill", Tr("Habilidade não encontrada.", "Skill not found.", "Habilidad no encontrada."));
 
             var generators = ProblemFactory.Default.ForSkill(row.Slug).ToList();
-            if (generators.Count == 0) return ApiResults.Validation("skill", "Esta habilidade ainda não tem fichas para imprimir.");
+            if (generators.Count == 0) return ApiResults.Validation("skill", Tr("Esta habilidade ainda não tem fichas para imprimir.", "This skill doesn't have printable worksheets yet.", "Esta habilidad todavía no tiene fichas para imprimir."));
 
             var level = LevelProgress.BySlug(row.LevelSlug);
             var (difficultyName, target) = difficulty switch
@@ -144,7 +145,7 @@ public static class FamilyEndpoints
                 problems.Add(new WorksheetProblem(number, c.Type, c.Prompt, c.Visual, c.Choices, c.Sequence, c.Grid, c.Code));
                 answers.Add(new WorksheetAnswer(number, c.Answer, c.Explanation));
             }
-            if (problems.Count == 0) return ApiResults.Validation("skill", "Esta habilidade é só para jogar na tela (não tem versão para imprimir).");
+            if (problems.Count == 0) return ApiResults.Validation("skill", Tr("Esta habilidade é só para jogar na tela (não tem versão para imprimir).", "This skill is screen-only (there's no printable version).", "Esta habilidad es solo para jugar en pantalla (no tiene versión para imprimir)."));
 
             var skillRef = new SkillRef(row.Id, row.Slug, row.Name, row.SubjectSlug, row.SubjectName, row.SubjectIcon, row.LevelName, BnccRefDto.For(row.BnccCodes));
             return Results.Ok(new Worksheet(skillRef, row.Description, difficultyName, baseSeed, problems, answers));
@@ -226,12 +227,12 @@ public static class FamilyEndpoints
         var goals = await GoalsAsync(db, profile.Id, weekStart, ct);
 
         var tips = new List<string>();
-        if (thisWeek.ActiveDays < 3) tips.Add("Pouca prática nesta semana. Sessões curtas em 3 ou mais dias ajudam mais do que uma sessão longa.");
-        else if (thisWeek.ActiveDays >= 5) tips.Add($"Ótima constância: {thisWeek.ActiveDays} dias de prática na semana!");
-        if (attention.Count > 0) tips.Add($"Vale criar um treino de reforço de \"{attention[0].Name}\": é onde houve mais dificuldade.");
+        if (thisWeek.ActiveDays < 3) tips.Add(Tr("Pouca prática nesta semana. Sessões curtas em 3 ou mais dias ajudam mais do que uma sessão longa.", "Not much practice this week. Short sessions on 3 or more days help more than one long session.", "Poca práctica esta semana. Sesiones cortas en 3 o más días ayudan más que una sesión larga."));
+        else if (thisWeek.ActiveDays >= 5) tips.Add(Tr($"Ótima constância: {thisWeek.ActiveDays} dias de prática na semana!", $"Great consistency: {thisWeek.ActiveDays} days of practice this week!", $"¡Excelente constancia: {thisWeek.ActiveDays} días de práctica en la semana!"));
+        if (attention.Count > 0) tips.Add(Tr($"Vale criar um treino de reforço de \"{attention[0].Name}\": é onde houve mais dificuldade.", $"Consider creating extra practice for \"{attention[0].Name}\": that's where it was hardest.", $"Conviene crear un refuerzo de \"{attention[0].Name}\": es donde hubo más dificultad."));
         var improved = skills.Where(s => s.RatingChange >= 40).OrderByDescending(s => s.RatingChange).FirstOrDefault();
-        if (improved is not null) tips.Add($"Evoluiu bem em \"{improved.Skill.Name}\". Vale elogiar!");
-        if (thisWeek.Problems == 0) tips.Add("Nenhum problema nesta semana. Que tal o desafio do dia? Leva só 1 minuto.");
+        if (improved is not null) tips.Add(Tr($"Evoluiu bem em \"{improved.Skill.Name}\". Vale elogiar!", $"Made great progress in \"{improved.Skill.Name}\". Worth some praise!", $"Avanzó mucho en \"{improved.Skill.Name}\". ¡Merece un elogio!"));
+        if (thisWeek.Problems == 0) tips.Add(Tr("Nenhum problema nesta semana. Que tal o desafio do dia? Leva só 1 minuto.", "No problems this week. How about the daily challenge? It only takes 1 minute.", "Ningún problema esta semana. ¿Qué tal el desafío del día? Solo lleva 1 minuto."));
 
         return new WeeklyReport(profile.Id, profile.Nickname, profile.Avatar, from, today, thisWeek, lastWeek, dayList, skills, attention, medalList, goals, tips);
     }

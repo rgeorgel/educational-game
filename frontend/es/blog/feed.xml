@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Blog de Educa Game</title>
+    <link>https://educa-game.georgel.ca/es/blog</link>
+    <description>Ideas para que familias y profesores enseñen matemáticas y razonamiento lógico con juegos.</description>
+    <language>es</language>
+    <item>
+      <title>Juegos de matemáticas para niños: cómo elegir uno que enseñe de verdad</title>
+      <link>https://educa-game.georgel.ca/es/blog/juegos-de-matematicas-para-ninos</link>
+      <guid>https://educa-game.georgel.ca/es/blog/juegos-de-matematicas-para-ninos</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>No todo juego &quot;educativo&quot; enseña. Mira 7 señales de un buen juego de matemáticas para niños, las señales de alerta y cómo usar el juego en casa sin pelear por la pantalla.</description>
+    </item>
+    <item>
+      <title>Cómo enseñar las tablas de multiplicar sin memorizar a ciegas: estrategias y 6 actividades para hacer en casa</title>
+      <link>https://educa-game.georgel.ca/es/blog/como-ensenar-las-tablas-de-multiplicar</link>
+      <guid>https://educa-game.georgel.ca/es/blog/como-ensenar-las-tablas-de-multiplicar</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Las tablas no tienen por qué ser memoria a ciegas. Mira cómo enseñar la multiplicación con sentido, los trucos que reducen las cuentas difíciles a 15 y 6 actividades sencillas para practicar en casa.</description>
+    </item>
+    <item>
+      <title>Matemáticas en la BNCC de Brasil, de 1.º a 5.º: lo que el niño aprende cada año</title>
+      <link>https://educa-game.georgel.ca/es/blog/bncc-matematicas-primaria-brasil</link>
+      <guid>https://educa-game.georgel.ca/es/blog/bncc-matematicas-primaria-brasil</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>Una guía sencilla de la parte de Matemáticas del currículo nacional de Brasil (BNCC) en los primeros cursos: cómo leer los códigos de las habilidades (EF02MA07 y otros), las cinco unidades temáticas y lo que se espera cada año, de 1.º a 5.º.</description>
+    </item>
+    <item>
+      <title>Razonamiento lógico para niños: 7 actividades con patrones, secuencias y balanzas</title>
+      <link>https://educa-game.georgel.ca/es/blog/razonamiento-logico-para-ninos</link>
+      <guid>https://educa-game.georgel.ca/es/blog/razonamiento-logico-para-ninos</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>El razonamiento lógico se entrena como cualquier habilidad. Mira 7 actividades sencillas, con ejemplos y respuestas, para hacer en casa o en la escuela, y lo que dice la BNCC de Brasil sobre el tema.</description>
+    </item>
+    <item>
+      <title>Sudoku para niños: beneficios, reglas y cómo empezar con el 4×4</title>
+      <link>https://educa-game.georgel.ca/es/blog/sudoku-para-ninos</link>
+      <guid>https://educa-game.georgel.ca/es/blog/sudoku-para-ninos</guid>
+      <pubDate>Sat, 21 Nov 2026 12:00:00 +0000</pubDate>
+      <description>El sudoku es un gran ejercicio de lógica para niños y no exige cuentas. Mira los beneficios, las reglas explicadas para el niño, un 4×4 para resolver juntos y consejos para avanzar.</description>
+    </item>
+  </channel>
+</rss>

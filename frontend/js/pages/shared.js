@@ -1,4 +1,5 @@
 import { errorMessage, h } from "../dom.js";
+import { t } from "../i18n.js";
 
 /** Selo do nível (Iniciante, Médio…) com a cor do nível. */
 export function levelBadge(level) {
@@ -12,10 +13,10 @@ export function levelBadge(level) {
 export function levelProgress(progress) {
   const next = progress.nextLevel;
   let label;
-  if (!next) label = progress.percent >= 100 ? "Nível máximo dominado!" : `${progress.percent}% do nível máximo`;
-  else if (progress.guardianAvailable) label = `${progress.percent}% · Guardião liberado!`;
-  else if (progress.readyForNextLevel) label = `${progress.percent}% · ${next.name} em breve`;
-  else label = `${progress.percent}% · o Guardião abre em ${progress.guardianAt}%`;
+  if (!next) label = progress.percent >= 100 ? t("Nível máximo dominado!") : t("{p}% do nível máximo", { p: progress.percent });
+  else if (progress.guardianAvailable) label = t("{p}% · Guardião liberado!", { p: progress.percent });
+  else if (progress.readyForNextLevel) label = t("{p}% · {nivel} em breve", { p: progress.percent, nivel: next.name });
+  else label = t("{p}% · o Guardião abre em {g}%", { p: progress.percent, g: progress.guardianAt });
 
   // Habilidades mais longe do domínio (as que mais ajudam a barra a subir).
   const missing = (progress.skills ?? [])
@@ -30,24 +31,24 @@ export function levelProgress(progress) {
     h("div", { class: "level-progress-head" }, levelBadge(progress.level), h("span", { class: "muted small" }, label)),
     h("progress-bar", {
       value: String(progress.percent),
-      label: next ? `${progress.percent}% do nível ${progress.level.name}; o Guardião abre em ${progress.guardianAt}%` : label,
+      label: next ? t("{p}% do nível {nivel}; o Guardião abre em {g}%", { p: progress.percent, nivel: progress.level.name, g: progress.guardianAt }) : label,
       level: progress.level.slug,
       mark: next ? String(progress.guardianAt) : null,
     }),
     h(
       "p",
       { class: "muted small" },
-      `${progress.masteredSkills} de ${progress.totalSkills} habilidades dominadas`,
-      missing.length && !progress.guardianAvailable ? ` · Para avançar, pratique: ${missing.map((m) => `${m.name} (${m.pct}%)`).join(", ")}` : "",
+      t("{a} de {b} habilidades dominadas", { a: progress.masteredSkills, b: progress.totalSkills }),
+      missing.length && !progress.guardianAvailable ? ` · ${t("Para avançar, pratique: {lista}", { lista: missing.map((m) => `${m.name} (${m.pct}%)`).join(", ") })}` : "",
     ),
   );
 }
 
 export const STATUS_LABEL = {
-  notStarted: "Não iniciada",
-  practicing: "Praticando",
-  mastered: "Dominada",
-  needsReview: "Precisa revisar",
+  notStarted: t("Não iniciada"),
+  practicing: t("Praticando"),
+  mastered: t("Dominada"),
+  needsReview: t("Precisa revisar"),
 };
 
 export function statusChip(status) {
@@ -67,7 +68,7 @@ export async function startAndPlay(start, button, errorBox) {
   }
 }
 
-export function loading(text = "Carregando…") {
+export function loading(text = t("Carregando…")) {
   return h("p", { class: "loading", role: "status" }, text);
 }
 

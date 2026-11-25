@@ -9,6 +9,10 @@
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#2f6fde" />
     <link rel="canonical" href="https://educa-game.georgel.ca/privacidade" />
+    <link rel="alternate" hreflang="pt-BR" href="https://educa-game.georgel.ca/privacidade" />
+    <link rel="alternate" hreflang="en" href="https://educa-game.georgel.ca/en/privacy" />
+    <link rel="alternate" hreflang="es" href="https://educa-game.georgel.ca/es/privacidad" />
+    <link rel="alternate" hreflang="x-default" href="https://educa-game.georgel.ca/privacidade" />
     <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/css/tokens.css" />
     <link rel="stylesheet" href="/css/base.css" />
@@ -23,7 +27,7 @@
         <nav class="lp-nav" aria-label="Principal">
           <a href="/" class="lp-nav-link">Início</a>
           <a href="/termos" class="lp-nav-link">Termos de uso</a>
-          <a href="/jogar#/entrar" class="lp-btn lp-btn-primary lp-btn-small">Jogar</a>
+          <a href="/jogar?lang=pt#/entrar" class="lp-btn lp-btn-primary lp-btn-small">Jogar</a>
         </nav>
       </div>
     </header>
@@ -146,7 +150,7 @@
         <h2 id="cookies">8. Cookies e armazenamento no aparelho</h2>
         <ul>
           <li><strong>Cookie de login</strong> (<code>edugame.auth</code>): essencial, mantém você conectado. Para convidados, é ele que guarda o progresso no aparelho.</li>
-          <li><strong>Armazenamento local do navegador:</strong> preferências (tema, tamanho do texto, leitura em voz alta), o perfil escolhido e a origem do primeiro acesso.</li>
+          <li><strong>Armazenamento local do navegador:</strong> preferências (idioma, tema, tamanho do texto, leitura em voz alta), o perfil escolhido e a origem do primeiro acesso.</li>
           <li><strong>Cache para funcionar com internet fraca:</strong> arquivos do próprio jogo.</li>
           <li><strong>Google Analytics</strong> (<code>_ga</code> e <code>_ga_…</code>, duram até 2 anos): só nas páginas de apresentação e no blog, e só depois que você clica em <em>Aceitar</em> no aviso de cookies. Sem o aceite, o script do Google nem é carregado. O jogo (<code>/jogar</code>) não usa esses cookies.</li>
         </ul>
@@ -202,12 +206,18 @@
         <span><span aria-hidden="true">🧭</span> Educa Game</span>
         <nav aria-label="Rodapé">
           <a href="/">Início</a>
-          <a href="/jogar#/entrar">Jogar</a>
+          <a href="/jogar?lang=pt#/entrar">Jogar</a>
           <a href="/termos">Termos de uso</a>
           <a href="/privacidade" aria-current="page">Privacidade</a>
           <a href="/blog">Blog</a>
         </nav>
       </div>
+      <p class="lp-container lp-langs" id="idiomas" aria-label="Idioma">
+        <span aria-hidden="true">🌐</span>
+        <a href="/privacidade" lang="pt-BR" hreflang="pt-BR" aria-current="true">Português</a>
+        <a href="/en/privacy" lang="en" hreflang="en">English</a>
+        <a href="/es/privacidad" lang="es" hreflang="es">Español</a>
+      </p>
       <p class="lp-container lp-footer-legal">Feito por <a href="https://georgel.ca" target="_blank" rel="noopener">Ricardo Georgel</a></p>
     </footer>
   </body>

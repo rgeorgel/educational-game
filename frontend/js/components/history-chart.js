@@ -2,6 +2,7 @@
 // Uma série só: o título nomeia o que está plotado (sem legenda). Tooltip por coluna
 // no hover e no foco do teclado; a tabela ao lado traz os mesmos números.
 import { h } from "../dom.js";
+import { locale, t } from "../i18n.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const svg = (tag, attrs = {}) => {
@@ -10,8 +11,8 @@ const svg = (tag, attrs = {}) => {
   return el;
 };
 
-const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "short" });
-const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short" });
+const weekday = new Intl.DateTimeFormat(locale(), { weekday: "short" });
+const dayMonth = new Intl.DateTimeFormat(locale(), { day: "numeric", month: "short" });
 const parse = (iso) => new Date(`${iso}T12:00:00`);
 
 /** Topo "redondo" do eixo: 4, 5, 10, 20, 25, 50… */
@@ -39,7 +40,7 @@ export function historyChart(days) {
   const barW = Math.min(24, slot - 6);
   const y = (v) => pad.top + innerH - (v / max) * innerH;
 
-  const root = svg("svg", { viewBox: `0 0 ${W} ${H}`, class: "history-chart", role: "img", "aria-label": "Problemas resolvidos por dia" });
+  const root = svg("svg", { viewBox: `0 0 ${W} ${H}`, class: "history-chart", role: "img", "aria-label": t("Problemas resolvidos por dia") });
 
   // Grade recessiva: 3 linhas finas + base.
   for (const t of [0, max / 2, max]) {
@@ -79,13 +80,13 @@ export function historyChart(days) {
 
     // Alvo de hover/foco maior que a coluna.
     const hit = svg("rect", { x: pad.left + slot * i, y: pad.top, width: slot, height: innerH, class: "hit", tabindex: 0 });
-    const text = `${isToday ? "Hoje" : dayMonth.format(date)}: ${d.problems} problemas, ${d.correct} certos, ${d.xp} XP`;
+    const text = t("{dia}: {p} problemas, {c} certos, {xp} XP", { dia: isToday ? t("Hoje") : dayMonth.format(date), p: d.problems, c: d.correct, xp: d.xp });
     hit.setAttribute("aria-label", text);
     const show = () => {
       tooltip.replaceChildren(
-        h("strong", {}, `${d.problems} problemas`),
-        h("span", {}, `${d.correct} certos · ${d.xp} XP`),
-        h("span", { class: "muted" }, isToday ? "Hoje" : `${weekday.format(date)}, ${dayMonth.format(date)}`),
+        h("strong", {}, t("{p} problemas", { p: d.problems })),
+        h("span", {}, t("{c} certos · {xp} XP", { c: d.correct, xp: d.xp })),
+        h("span", { class: "muted" }, isToday ? t("Hoje") : `${weekday.format(date)}, ${dayMonth.format(date)}`),
       );
       tooltip.hidden = false;
       const pct = (cx / W) * 100;
@@ -110,11 +111,11 @@ export function historyChart(days) {
   const table = h(
     "details",
     { class: "chart-table" },
-    h("summary", {}, "Ver como tabela"),
+    h("summary", {}, t("Ver como tabela")),
     h(
       "table",
       {},
-      h("thead", {}, h("tr", {}, h("th", { scope: "col" }, "Dia"), h("th", { scope: "col" }, "Problemas"), h("th", { scope: "col" }, "Certos"), h("th", { scope: "col" }, "XP"))),
+      h("thead", {}, h("tr", {}, h("th", { scope: "col" }, t("Dia")), h("th", { scope: "col" }, t("Problemas")), h("th", { scope: "col" }, t("Certos")), h("th", { scope: "col" }, "XP"))),
       h(
         "tbody",
         {},

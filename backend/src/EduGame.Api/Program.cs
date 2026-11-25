@@ -83,6 +83,17 @@ var app = builder.Build();
 
 app.UseForwardedHeaders();
 
+// Idioma da requisição: o app manda X-Lang ("pt", "en" ou "es"), ou ?lang= nos links de download
+// (ex.: planilha CSV); sem nenhum dos dois, português.
+// Vale para problemas gerados, nomes do catálogo, mensagens de erro, planilhas e e-mails.
+app.Use(async (ctx, next) =>
+{
+    var lang = ctx.Request.Headers["X-Lang"].ToString();
+    if (string.IsNullOrEmpty(lang)) lang = ctx.Request.Query["lang"].ToString();
+    EduGame.Problems.Lang.Set(lang);
+    await next();
+});
+
 // Identifica quem respondeu: ajuda a diagnosticar proxies apontando para o serviço errado.
 app.Use((ctx, next) =>
 {
@@ -148,6 +159,7 @@ api.MapGet("/curriculum", async (AppDbContext db, HttpContext http, Cancellation
     var subjects = await db.Subjects.AsNoTracking().OrderBy(s => s.Order).Include(s => s.Levels).ToListAsync(ct);
     var skills = await db.Skills.AsNoTracking().Where(s => s.Templates.Any(t => t.Active)).OrderBy(s => s.Order).ToListAsync(ct);
     http.Response.Headers.CacheControl = "public, max-age=3600";
+    http.Response.Headers.Vary = "X-Lang";
     return Results.Ok(subjects.Select(subject => new
     {
         subject.Slug,

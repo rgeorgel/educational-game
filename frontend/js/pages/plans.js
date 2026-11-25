@@ -4,12 +4,13 @@ import { api } from "../api.js";
 import { errorMessage, h } from "../dom.js";
 import { navigate } from "../router.js";
 import { store } from "../store.js";
+import { fmtDate, t } from "../i18n.js";
 
 const FEATURES = {
-  gratis: ["Jogar tudo: Matemática e Lógica, todos os níveis", "Até 3 perfis", "1 turma com até 2 tarefas abertas", "Relatório básico dos últimos 7 dias"],
-  professor: ["Até 20 turmas", "Até 50 tarefas abertas por turma", "Relatório da turma por habilidade (BNCC)", "Planilhas da turma (Excel e Google Planilhas)", "Fichas para imprimir com gabarito"],
-  familia: ["Até 8 perfis (todos os filhos)", "Relatório da semana, comparado com a semana anterior", "Treino de reforço: você escolhe a habilidade e ela aparece para a criança", "Fichas para imprimir com gabarito"],
-  escola: ["Tudo do Professor Pro e da Família", "Até 300 turmas", "Contrato e nota fiscal"],
+  gratis: [t("Jogar tudo: Matemática e Lógica, todos os níveis"), t("Até 3 perfis"), t("1 turma com até 2 tarefas abertas"), t("Relatório básico dos últimos 7 dias")],
+  professor: [t("Até 20 turmas"), t("Até 50 tarefas abertas por turma"), t("Relatório da turma por habilidade (BNCC)"), t("Planilhas da turma (Excel e Google Planilhas)"), t("Fichas para imprimir com gabarito")],
+  familia: [t("Até 8 perfis (todos os filhos)"), t("Relatório da semana, comparado com a semana anterior"), t("Treino de reforço: você escolhe a habilidade e ela aparece para a criança"), t("Fichas para imprimir com gabarito")],
+  escola: [t("Tudo do Professor Pro e da Família"), t("Até 300 turmas"), t("Contrato e nota fiscal")],
 };
 
 /** Aviso para quando o recurso é de outro plano (erro 403 da API com "plan"). */
@@ -20,13 +21,13 @@ export function lockedCard(err) {
     "div",
     { class: "card plan-locked" },
     h("p", {}, "🔒 ", errorMessage(err)),
-    h("a", { href: "#/planos", class: "btn btn-primary btn-small" }, "Ver planos"),
+    h("a", { href: "#/planos", class: "btn btn-primary btn-small" }, t("Ver planos")),
   );
 }
 
 const PROMO = {
-  familia: { icon: "👪", title: "Plano Família", price: "R$ 9,90/mês", text: "Relatório da semana de cada filho, treino de reforço escolhido por você, fichas para imprimir e até 8 perfis." },
-  professor: { icon: "🏫", title: "Professor Pro", price: "R$ 19,90/mês", text: "Até 20 turmas, tarefas para a turma, relatório por habilidade da BNCC, planilhas e fichas para imprimir." },
+  familia: { icon: "👪", title: t("Plano Família"), price: t("R$ 9,90/mês"), text: t("Relatório da semana de cada filho, treino de reforço escolhido por você, fichas para imprimir e até 8 perfis.") },
+  professor: { icon: "🏫", title: t("Professor Pro"), price: t("R$ 19,90/mês"), text: t("Até 20 turmas, tarefas para a turma, relatório por habilidade da BNCC, planilhas e fichas para imprimir.") },
 };
 
 /**
@@ -48,28 +49,28 @@ export function planPromo(plan, focus, billing) {
     h(
       "div",
       {},
-      h("h2", {}, promo.title, " ", h("span", { class: "plan-promo-price" }, launch ? "grátis durante o lançamento" : promo.price)),
+      h("h2", {}, promo.title, " ", h("span", { class: "plan-promo-price" }, launch ? t("grátis durante o lançamento") : promo.price)),
       h("p", { class: "small" }, promo.text),
-      h("p", { class: "muted small" }, `Seu plano agora: ${plan.name}.`),
+      h("p", { class: "muted small" }, t("Seu plano agora: {nome}.", { nome: plan.name })),
     ),
-    h("a", { href: "#/planos", class: "btn btn-primary" }, canTrial ? `Testar ${billing.trialDays ?? 7} dias grátis` : "Conhecer os planos"),
+    h("a", { href: "#/planos", class: "btn btn-primary" }, canTrial ? t("Testar {n} dias grátis", { n: billing.trialDays ?? 7 }) : t("Conhecer os planos")),
   );
 }
 
-const shortDate = (iso) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+const shortDate = (iso) => fmtDate(iso, { day: "2-digit", month: "2-digit" });
 
 /** "Seu plano: Família (teste grátis até 03/12) · Ver planos" */
 export function planLine(plan) {
   if (!plan) return null;
-  const trial = plan.trials?.find((t) => t.slug === plan.slug);
+  const trial = plan.trials?.find((item) => item.slug === plan.slug);
   return h(
     "p",
     { class: "muted small plan-line" },
-    "Seu plano: ",
+    t("Seu plano: "),
     h("strong", {}, plan.name),
-    trial ? ` (teste grátis até ${shortDate(trial.endsAt)})` : null,
+    trial ? ` (${t("teste grátis até {data}", { data: shortDate(trial.endsAt) })})` : null,
     " · ",
-    h("a", { href: "#/planos" }, "ver planos"),
+    h("a", { href: "#/planos" }, t("ver planos")),
   );
 }
 
@@ -124,47 +125,47 @@ export async function plansPage() {
     const isPaid = paid.includes(offer.slug);
     const isCurrent = mine && (isPaid || offer.slug === current || mine.plans?.some((p) => p.slug === offer.slug && offer.slug !== "gratis"));
     const paidOffer = stripe && billing.paidPlans.includes(offer.slug);
-    const trial = mine?.trials?.find((t) => t.slug === offer.slug);
-    const trialNote = trial ? h("p", { class: "plan-current" }, `✓ Teste grátis até ${shortDate(trial.endsAt)}`) : null;
+    const trial = mine?.trials?.find((item) => item.slug === offer.slug);
+    const trialNote = trial ? h("p", { class: "plan-current" }, `✓ ${t("Teste grátis até {data}", { data: shortDate(trial.endsAt) })}`) : null;
     let action;
     if (!offer.selfService) {
-      action = h("p", { class: "muted small" }, "Para escolas e redes de ensino: fale com a gente.");
+      action = h("p", { class: "muted small" }, t("Para escolas e redes de ensino: fale com a gente."));
     } else if (!store.state.me) {
-      action = h("a", { class: "btn btn-primary", href: "#/cadastro" }, paidOffer ? `Criar conta e testar ${trialDays} dias grátis` : "Criar conta");
+      action = h("a", { class: "btn btn-primary", href: "#/cadastro" }, paidOffer ? t("Criar conta e testar {n} dias grátis", { n: trialDays }) : t("Criar conta"));
     } else if (isGuest) {
-      action = h("a", { class: "btn btn-primary", href: "#/salvar" }, offer.slug === "gratis" ? "Salvar progresso" : "Salvar progresso para assinar");
+      action = h("a", { class: "btn btn-primary", href: "#/salvar" }, offer.slug === "gratis" ? t("Salvar progresso") : t("Salvar progresso para assinar"));
     } else if (isPaid) {
-      const manage = h("button", { type: "button", class: "btn" }, "Gerenciar assinatura");
+      const manage = h("button", { type: "button", class: "btn" }, t("Gerenciar assinatura"));
       busy(manage, async () => location.assign((await api.billingPortal()).url));
-      action = [h("p", { class: "plan-current" }, "✓ Assinatura ativa"), manage];
+      action = [h("p", { class: "plan-current" }, t("✓ Assinatura ativa")), manage];
     } else if (isCurrent && !(paidOffer && (mine?.chosen === offer.slug || trial))) {
-      action = trialNote ?? h("p", { class: "plan-current" }, "✓ Seu plano atual");
+      action = trialNote ?? h("p", { class: "plan-current" }, t("✓ Seu plano atual"));
     } else if (paidOffer) {
       // Quem escolheu este plano no lançamento ou está em teste grátis também vê "Assinar" para continuar depois.
       // Quem nunca testou este plano começa com o teste grátis (sem cartão); "Assinar" continua ao lado.
       const canTrial = !trial && mine?.trialAvailable?.includes(offer.slug);
-      const btn = h("button", { type: "button", class: `btn ${canTrial ? "" : "btn-primary"}` }, `Assinar ${offer.name}`);
+      const btn = h("button", { type: "button", class: `btn ${canTrial ? "" : "btn-primary"}` }, t("Assinar {nome}", { nome: offer.name }));
       busy(btn, async () => location.assign((await api.checkout(offer.slug)).url));
       let trialBtn = null;
       if (canTrial) {
-        trialBtn = h("button", { type: "button", class: "btn btn-primary" }, `Testar ${trialDays} dias grátis`);
+        trialBtn = h("button", { type: "button", class: "btn btn-primary" }, t("Testar {n} dias grátis", { n: trialDays }));
         busy(trialBtn, async () => {
           await api.startTrial(offer.slug);
           navigate("/planos");
         });
       }
       action = [
-        trialNote ?? (mine?.chosen === offer.slug ? h("p", { class: "muted small" }, "Você escolheu este plano no lançamento.") : null),
+        trialNote ?? (mine?.chosen === offer.slug ? h("p", { class: "muted small" }, t("Você escolheu este plano no lançamento.")) : null),
         trialBtn,
         btn,
-        canTrial ? h("p", { class: "muted small" }, `Sem cartão e sem compromisso: o teste acaba sozinho em ${trialDays} dias.`) : null,
+        canTrial ? h("p", { class: "muted small" }, t("Sem cartão e sem compromisso: o teste acaba sozinho em {n} dias.", { n: trialDays })) : null,
       ];
     } else if (offer.slug === "gratis" && stripe && paid.length) {
-      action = h("p", { class: "muted small" }, "Para voltar ao Grátis, cancele em \"Gerenciar assinatura\".");
+      action = h("p", { class: "muted small" }, t("Para voltar ao Grátis, cancele em \"Gerenciar assinatura\"."));
     } else if (offer.slug === "gratis" && stripe && mine?.trials?.length) {
-      action = h("p", { class: "muted small" }, "Você volta para o Grátis sozinho quando o teste acabar, sem cobrança.");
+      action = h("p", { class: "muted small" }, t("Você volta para o Grátis sozinho quando o teste acabar, sem cobrança."));
     } else {
-      const btn = h("button", { type: "button", class: `btn ${offer.slug === "gratis" ? "" : "btn-primary"}` }, offer.slug === "gratis" ? "Voltar para o Grátis" : `Escolher ${offer.name}`);
+      const btn = h("button", { type: "button", class: `btn ${offer.slug === "gratis" ? "" : "btn-primary"}` }, offer.slug === "gratis" ? t("Voltar para o Grátis") : t("Escolher {nome}", { nome: offer.name }));
       busy(btn, async () => {
         await api.choosePlan(offer.slug);
         navigate("/planos");
@@ -176,8 +177,8 @@ export async function plansPage() {
       { class: `card plan-card${offer.slug === "familia" || offer.slug === "professor" ? " plan-featured" : ""}${isCurrent ? " plan-is-current" : ""}` },
       h("p", { class: "muted small" }, offer.audience),
       h("h2", {}, offer.name),
-      h("p", { class: "plan-price" }, offer.priceLabel, offer.slug !== "gratis" && offer.selfService && !stripe ? h("span", { class: "plan-free-now" }, "grátis durante o lançamento") : null,
-        paidOffer ? h("span", { class: "plan-free-now" }, `${trialDays} dias grátis para testar`) : null),
+      h("p", { class: "plan-price" }, offer.priceLabel, offer.slug !== "gratis" && offer.selfService && !stripe ? h("span", { class: "plan-free-now" }, t("grátis durante o lançamento")) : null,
+        paidOffer ? h("span", { class: "plan-free-now" }, t("{n} dias grátis para testar", { n: trialDays })) : null),
       h("ul", { class: "plan-features" }, (FEATURES[offer.slug] ?? []).map((f) => h("li", {}, f))),
       action,
     );
@@ -185,28 +186,28 @@ export async function plansPage() {
 
   const banner =
     returned === "sucesso"
-      ? h("p", { class: "card notice success small" }, paid.length ? "🎉 Pagamento confirmado! Sua assinatura já está ativa." : "Pagamento recebido. A confirmação pode levar alguns minutos; atualize a página daqui a pouco.")
+      ? h("p", { class: "card notice success small" }, paid.length ? t("🎉 Pagamento confirmado! Sua assinatura já está ativa.") : t("Pagamento recebido. A confirmação pode levar alguns minutos; atualize a página daqui a pouco."))
       : returned === "cancelado"
-        ? h("p", { class: "card notice small" }, "Pagamento cancelado. Nada foi cobrado.")
+        ? h("p", { class: "card notice small" }, t("Pagamento cancelado. Nada foi cobrado."))
         : null;
 
   return h(
     "section",
     { class: "page" },
-    h("h1", {}, "Planos"),
+    h("h1", {}, t("Planos")),
     h(
       "p",
       { class: "muted" },
-      "Para as crianças, o jogo é sempre grátis e sem anúncios. Os planos são para os adultos que acompanham: famílias e professores.",
+      t("Para as crianças, o jogo é sempre grátis e sem anúncios. Os planos são para os adultos que acompanham: famílias e professores."),
     ),
     banner,
     stripe
-      ? h("p", { class: "card notice small" }, h("strong", {}, "Pagamento seguro pelo Stripe "), "(cartão). Sem fidelidade: cancele quando quiser em \"Gerenciar assinatura\" e o plano vale até o fim do período pago.")
+      ? h("p", { class: "card notice small" }, h("strong", {}, t("Pagamento seguro pelo Stripe ")), t("(cartão). Sem fidelidade: cancele quando quiser em \"Gerenciar assinatura\" e o plano vale até o fim do período pago."))
       : h(
           "p",
           { class: "card notice small" },
-          h("strong", {}, "Lançamento: "),
-          "escolher um plano não cobra nada agora. Quando o pagamento começar, avisaremos antes e você decide se continua.",
+          h("strong", {}, t("Lançamento: ")),
+          t("escolher um plano não cobra nada agora. Quando o pagamento começar, avisaremos antes e você decide se continua."),
         ),
     mine ? planLine(mine) : null,
     error,

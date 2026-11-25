@@ -652,6 +652,21 @@
   font-size: 0.85rem;
 }
 
+/* Idiomas do site (rodapé). */
+.lp-langs {
+  margin: var(--space-3) auto 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font-size: 0.9rem;
+}
+
+.lp-langs a[aria-current="true"] {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 960px) {
   .lp-hero-inner,

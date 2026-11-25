@@ -21,6 +21,13 @@ jobs:
       # Os testes de integração usam Testcontainers (Docker já disponível no runner)
       - run: dotnet test --no-build -c Release --logger "console;verbosity=normal"
 
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Traduções do jogo (inglês e espanhol) completas
+        run: python3 scripts/check_i18n.py --sobras
+
   docker:
     runs-on: ubuntu-latest
     steps:

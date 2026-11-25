@@ -2,9 +2,10 @@ import { api } from "../api.js";
 import { errorMessage, formData, h } from "../dom.js";
 import { navigate } from "../router.js";
 import { store } from "../store.js";
+import { sitePath, t } from "../i18n.js";
 
 const CONSENT_TEXT =
-  "Sou maior de idade e responsável pelas crianças que vão jogar. Autorizo o uso dos dados de progresso (apelido e respostas) apenas para o funcionamento do jogo.";
+  t("Sou maior de idade e responsável pelas crianças que vão jogar. Autorizo o uso dos dados de progresso (apelido e respostas) apenas para o funcionamento do jogo.");
 
 /** Autorização com links para os termos e a política (abrem em outra aba para não perder o formulário). */
 function consentLabel() {
@@ -16,10 +17,10 @@ function consentLabel() {
       "span",
       {},
       CONSENT_TEXT,
-      " Li e aceito os ",
-      h("a", { href: "/termos", target: "_blank", rel: "noopener" }, "termos de uso"),
-      " e a ",
-      h("a", { href: "/privacidade", target: "_blank", rel: "noopener" }, "política de privacidade"),
+      ` ${t("Li e aceito os")} `,
+      h("a", { href: sitePath("terms"), target: "_blank", rel: "noopener" }, t("termos de uso")),
+      ` ${t("e a")} `,
+      h("a", { href: sitePath("privacy"), target: "_blank", rel: "noopener" }, t("política de privacidade")),
       ".",
     ),
   );
@@ -30,9 +31,9 @@ function avatarPicker(avatars) {
   return h(
     "fieldset",
     { class: "avatar-picker" },
-    h("legend", {}, "Escolha um avatar"),
+    h("legend", {}, t("Escolha um avatar")),
     avatars.map((a, i) =>
-      h("label", { class: "avatar-option" }, h("input", { type: "radio", name: "avatar", value: a, checked: i === 0 }), h("span", { "aria-hidden": "true" }, a), h("span", { class: "visually-hidden" }, `Avatar ${i + 1}`)),
+      h("label", { class: "avatar-option" }, h("input", { type: "radio", name: "avatar", value: a, checked: i === 0 }), h("span", { "aria-hidden": "true" }, a), h("span", { class: "visually-hidden" }, t("Avatar {n}", { n: i + 1 }))),
     ),
   );
 }
@@ -44,7 +45,7 @@ export async function authPage(initialTab) {
 
   // ---------- Jogar agora (sem cadastro) ----------
   const playError = h("p", { class: "form-error", role: "alert", hidden: true });
-  const playButton = h("button", { type: "submit", class: "btn btn-primary btn-block btn-big" }, "Começar a jogar");
+  const playButton = h("button", { type: "submit", class: "btn btn-primary btn-block btn-big" }, t("Começar a jogar"));
   const playForm = h(
     "form",
     {
@@ -54,7 +55,7 @@ export async function authPage(initialTab) {
         e.preventDefault();
         const data = formData(playForm);
         playError.hidden = true;
-        if (!data.nickname?.trim()) return showError(playError, "Escolha um apelido para começar.");
+        if (!data.nickname?.trim()) return showError(playError, t("Escolha um apelido para começar."));
         playButton.disabled = true;
         try {
           const me = await api.startAsGuest(data.nickname, data.avatar);
@@ -68,32 +69,32 @@ export async function authPage(initialTab) {
         }
       },
     },
-    h("label", { class: "field" }, h("span", {}, "Como você quer ser chamado?"), h("input", { name: "nickname", maxlength: "20", autocomplete: "off", placeholder: "Ex.: Luna", required: true })),
-    h("small", { class: "muted" }, "Use um apelido, não o nome completo."),
+    h("label", { class: "field" }, h("span", {}, t("Como você quer ser chamado?")), h("input", { name: "nickname", maxlength: "20", autocomplete: "off", placeholder: t("Ex.: Luna"), required: true })),
+    h("small", { class: "muted" }, t("Use um apelido, não o nome completo.")),
     avatarPicker(avatars),
     playError,
     playButton,
-    h("p", { class: "muted small" }, "Sem cadastro: o progresso fica guardado neste aparelho. Quando quiser jogar em outro aparelho ou não correr o risco de perder, é só salvar o progresso com uma conta."),
+    h("p", { class: "muted small" }, t("Sem cadastro: o progresso fica guardado neste aparelho. Quando quiser jogar em outro aparelho ou não correr o risco de perder, é só salvar o progresso com uma conta.")),
   );
 
   // ---------- Entrar / Criar conta ----------
   let accountMode = "entrar";
   const accountError = h("p", { class: "form-error", role: "alert", hidden: true });
-  const accountTitle = h("h2", {}, "Entrar");
-  const accountSubmit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, "Entrar");
+  const accountTitle = h("h2", {}, t("Entrar"));
+  const accountSubmit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, t("Entrar"));
   const consent = consentLabel();
   consent.hidden = true;
-  const passwordHint = h("small", { class: "muted", hidden: true }, "Mínimo de 8 caracteres.");
-  const forgotLink = h("a", { href: "#/esqueci", class: "small forgot-link" }, "Esqueci minha senha");
+  const passwordHint = h("small", { class: "muted", hidden: true }, t("Mínimo de 8 caracteres."));
+  const forgotLink = h("a", { href: "#/esqueci", class: "small forgot-link" }, t("Esqueci minha senha"));
 
   const accountForm = h(
     "form",
     { class: "stack", novalidate: true, onSubmit: onAccountSubmit },
-    h("label", { class: "field" }, h("span", {}, "E-mail"), h("input", { type: "email", name: "email", autocomplete: "email", required: true })),
+    h("label", { class: "field" }, h("span", {}, t("E-mail")), h("input", { type: "email", name: "email", autocomplete: "email", required: true })),
     h(
       "label",
       { class: "field" },
-      h("span", {}, "Senha"),
+      h("span", {}, t("Senha")),
       h("input", { type: "password", name: "password", autocomplete: "current-password", required: true, minlength: "8" }),
       passwordHint,
     ),
@@ -107,8 +108,8 @@ export async function authPage(initialTab) {
     e.preventDefault();
     const data = formData(accountForm);
     accountError.hidden = true;
-    if (!data.email || !data.password) return showError(accountError, "Preencha e-mail e senha.");
-    if (accountMode === "criar" && !data.acceptTerms) return showError(accountError, "Para criar a conta, marque a autorização.");
+    if (!data.email || !data.password) return showError(accountError, t("Preencha e-mail e senha."));
+    if (accountMode === "criar" && !data.acceptTerms) return showError(accountError, t("Para criar a conta, marque a autorização."));
     accountSubmit.disabled = true;
     try {
       const me = accountMode === "criar" ? await api.register(data.email, data.password, true) : await api.login(data.email, data.password);
@@ -123,12 +124,12 @@ export async function authPage(initialTab) {
 
   // ---------- Abas ----------
   const panels = {
-    jogar: h("div", {}, h("h1", {}, "Bora jogar!"), playForm),
+    jogar: h("div", {}, h("h1", {}, t("Bora jogar!")), playForm),
     conta: h("div", {}, accountTitle, accountForm),
   };
-  const tabPlay = h("button", { type: "button", role: "tab", class: "tab" }, "Jogar agora");
-  const tabLogin = h("button", { type: "button", role: "tab", class: "tab" }, "Entrar");
-  const tabCreate = h("button", { type: "button", role: "tab", class: "tab" }, "Criar conta");
+  const tabPlay = h("button", { type: "button", role: "tab", class: "tab" }, t("Jogar agora"));
+  const tabLogin = h("button", { type: "button", role: "tab", class: "tab" }, t("Entrar"));
+  const tabCreate = h("button", { type: "button", role: "tab", class: "tab" }, t("Criar conta"));
 
   function setTab(tab) {
     const isPlay = tab === "jogar";
@@ -137,8 +138,8 @@ export async function authPage(initialTab) {
     if (!isPlay) {
       accountMode = tab;
       const create = tab === "criar";
-      accountTitle.textContent = create ? "Criar conta (responsável)" : "Entrar";
-      accountSubmit.textContent = create ? "Criar conta" : "Entrar";
+      accountTitle.textContent = create ? t("Criar conta (responsável)") : t("Entrar");
+      accountSubmit.textContent = create ? t("Criar conta") : t("Entrar");
       consent.hidden = !create;
       passwordHint.hidden = !create;
       forgotLink.hidden = create;
@@ -158,7 +159,7 @@ export async function authPage(initialTab) {
   return h(
     "section",
     { class: "page-narrow auth" },
-    h("div", { class: "hero" }, h("div", { class: "hero-icon", "aria-hidden": "true" }, "🧭"), h("p", { class: "muted" }, "Matemática e lógica em uma expedição cheia de desafios.")),
+    h("div", { class: "hero" }, h("div", { class: "hero-icon", "aria-hidden": "true" }, "🧭"), h("p", { class: "muted" }, t("Matemática e lógica em uma expedição cheia de desafios."))),
     h("div", { class: "card" }, h("div", { class: "tabs", role: "tablist" }, tabPlay, tabLogin, tabCreate), panels.jogar, panels.conta),
   );
 }
@@ -172,11 +173,11 @@ function showError(box, msg) {
 export function saveProgressPage() {
   const me = store.state.me;
   if (!me?.isGuest) {
-    return h("section", { class: "page-narrow" }, h("h1", {}, "Progresso salvo ✅"), h("p", { class: "muted" }, `Sua conta (${me?.email ?? ""}) já guarda o progresso. Entre com ela em qualquer aparelho.`), h("a", { href: "#/", class: "btn btn-primary" }, "Voltar ao início"));
+    return h("section", { class: "page-narrow" }, h("h1", {}, t("Progresso salvo ✅")), h("p", { class: "muted" }, t("Sua conta ({email}) já guarda o progresso. Entre com ela em qualquer aparelho.", { email: me?.email ?? "" })), h("a", { href: "#/", class: "btn btn-primary" }, t("Voltar ao início")));
   }
 
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
-  const submit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, "Salvar meu progresso");
+  const submit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, t("Salvar meu progresso"));
   const form = h(
     "form",
     {
@@ -186,8 +187,8 @@ export function saveProgressPage() {
         e.preventDefault();
         const data = formData(form);
         error.hidden = true;
-        if (!data.email || !data.password) return showError(error, "Preencha e-mail e senha.");
-        if (!data.acceptTerms) return showError(error, "Peça para um responsável marcar a autorização.");
+        if (!data.email || !data.password) return showError(error, t("Preencha e-mail e senha."));
+        if (!data.acceptTerms) return showError(error, t("Peça para um responsável marcar a autorização."));
         submit.disabled = true;
         try {
           store.setMe(await api.saveProgress(data.email, data.password, true));
@@ -199,8 +200,8 @@ export function saveProgressPage() {
         }
       },
     },
-    h("label", { class: "field" }, h("span", {}, "E-mail do responsável"), h("input", { type: "email", name: "email", autocomplete: "email", required: true })),
-    h("label", { class: "field" }, h("span", {}, "Senha"), h("input", { type: "password", name: "password", autocomplete: "new-password", required: true, minlength: "8" }), h("small", { class: "muted" }, "Mínimo de 8 caracteres.")),
+    h("label", { class: "field" }, h("span", {}, t("E-mail do responsável")), h("input", { type: "email", name: "email", autocomplete: "email", required: true })),
+    h("label", { class: "field" }, h("span", {}, t("Senha")), h("input", { type: "password", name: "password", autocomplete: "new-password", required: true, minlength: "8" }), h("small", { class: "muted" }, t("Mínimo de 8 caracteres."))),
     consentLabel(),
     error,
     submit,
@@ -209,22 +210,22 @@ export function saveProgressPage() {
   return h(
     "section",
     { class: "page-narrow" },
-    h("h1", {}, "💾 Salvar progresso"),
+    h("h1", {}, t("💾 Salvar progresso")),
     h(
       "div",
       { class: "card stack" },
-      h("p", {}, "Hoje o seu progresso está guardado só neste aparelho. Com uma conta você:"),
-      h("ul", { class: "benefits" }, h("li", {}, "não perde nada se trocar ou limpar o aparelho;"), h("li", {}, "continua jogando no celular, no tablet ou no computador;"), h("li", {}, "pode participar de turmas da escola.")),
-      h("p", { class: "muted small" }, "Tudo o que você já conquistou continua: medalhas, estrelas, níveis e XP."),
+      h("p", {}, t("Hoje o seu progresso está guardado só neste aparelho. Com uma conta você:")),
+      h("ul", { class: "benefits" }, h("li", {}, t("não perde nada se trocar ou limpar o aparelho;")), h("li", {}, t("continua jogando no celular, no tablet ou no computador;")), h("li", {}, t("pode participar de turmas da escola."))),
+      h("p", { class: "muted small" }, t("Tudo o que você já conquistou continua: medalhas, estrelas, níveis e XP.")),
       form,
     ),
   );
 }
 
-/** "Esqueci minha senha": pede o e-mail e manda o link. A resposta é sempre a mesma (não revela quem tem conta). */
+/** t("Esqueci minha senha"): pede o e-mail e manda o link. A resposta é sempre a mesma (não revela quem tem conta). */
 export function forgotPasswordPage() {
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
-  const submit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, "Enviar link");
+  const submit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, t("Enviar link"));
   const done = h("div", { class: "notice success card stack", role: "status", hidden: true });
   const form = h(
     "form",
@@ -235,13 +236,13 @@ export function forgotPasswordPage() {
         e.preventDefault();
         const { email } = formData(form);
         error.hidden = true;
-        if (!email?.trim()) return showError(error, "Informe o e-mail da conta.");
+        if (!email?.trim()) return showError(error, t("Informe o e-mail da conta."));
         submit.disabled = true;
         try {
           const res = await api.forgotPassword(email.trim());
           done.replaceChildren(
-            h("p", {}, "📬 ", res?.message ?? "Se houver uma conta com este e-mail, enviamos um link para criar uma senha nova."),
-            h("p", { class: "muted small" }, "O link vale por 2 horas. Não chegou? Confira a caixa de spam ou peça de novo em alguns minutos."),
+            h("p", {}, "📬 ", res?.message ?? t("Se houver uma conta com este e-mail, enviamos um link para criar uma senha nova.")),
+            h("p", { class: "muted small" }, t("O link vale por 2 horas. Não chegou? Confira a caixa de spam ou peça de novo em alguns minutos.")),
           );
           done.hidden = false;
           form.hidden = true;
@@ -252,23 +253,23 @@ export function forgotPasswordPage() {
         }
       },
     },
-    h("label", { class: "field" }, h("span", {}, "E-mail da conta"), h("input", { type: "email", name: "email", autocomplete: "email", required: true })),
+    h("label", { class: "field" }, h("span", {}, t("E-mail da conta")), h("input", { type: "email", name: "email", autocomplete: "email", required: true })),
     error,
     submit,
   );
   return h(
     "section",
     { class: "page-narrow" },
-    h("h1", {}, "🔑 Esqueci minha senha"),
-    h("div", { class: "card stack" }, h("p", {}, "Informe o e-mail da conta. Vamos mandar um link para você criar uma senha nova."), form, done),
-    h("p", { class: "small" }, h("a", { href: "#/conta" }, "← Voltar para entrar")),
+    h("h1", {}, t("🔑 Esqueci minha senha")),
+    h("div", { class: "card stack" }, h("p", {}, t("Informe o e-mail da conta. Vamos mandar um link para você criar uma senha nova.")), form, done),
+    h("p", { class: "small" }, h("a", { href: "#/conta" }, t("← Voltar para entrar"))),
   );
 }
 
 /** Link do e-mail: escolhe a senha nova e já entra. */
 export function resetPasswordPage({ userId, token }) {
   const error = h("p", { class: "form-error", role: "alert", hidden: true });
-  const submit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, "Salvar nova senha");
+  const submit = h("button", { type: "submit", class: "btn btn-primary btn-block" }, t("Salvar nova senha"));
   const form = h(
     "form",
     {
@@ -278,8 +279,8 @@ export function resetPasswordPage({ userId, token }) {
         e.preventDefault();
         const { password, confirm } = formData(form);
         error.hidden = true;
-        if (!password || password.length < 8) return showError(error, "A senha precisa ter pelo menos 8 caracteres.");
-        if (password !== confirm) return showError(error, "As duas senhas não são iguais.");
+        if (!password || password.length < 8) return showError(error, t("A senha precisa ter pelo menos 8 caracteres."));
+        if (password !== confirm) return showError(error, t("As duas senhas não são iguais."));
         submit.disabled = true;
         try {
           store.signOut();
@@ -287,16 +288,16 @@ export function resetPasswordPage({ userId, token }) {
           navigate("/perfis", { replace: true });
         } catch (err) {
           showError(error, errorMessage(err));
-          if (err?.status === 400 && /link/i.test(errorMessage(err))) error.append(" ", h("a", { href: "#/esqueci" }, "Pedir novo link"));
+          if (err?.status === 400 && /link/i.test(errorMessage(err))) error.append(" ", h("a", { href: "#/esqueci" }, t("Pedir novo link")));
         } finally {
           submit.disabled = false;
         }
       },
     },
-    h("label", { class: "field" }, h("span", {}, "Nova senha"), h("input", { type: "password", name: "password", autocomplete: "new-password", required: true, minlength: "8" }), h("small", { class: "muted" }, "Mínimo de 8 caracteres.")),
-    h("label", { class: "field" }, h("span", {}, "Repita a nova senha"), h("input", { type: "password", name: "confirm", autocomplete: "new-password", required: true, minlength: "8" })),
+    h("label", { class: "field" }, h("span", {}, t("Nova senha")), h("input", { type: "password", name: "password", autocomplete: "new-password", required: true, minlength: "8" }), h("small", { class: "muted" }, t("Mínimo de 8 caracteres."))),
+    h("label", { class: "field" }, h("span", {}, t("Repita a nova senha")), h("input", { type: "password", name: "confirm", autocomplete: "new-password", required: true, minlength: "8" })),
     error,
     submit,
   );
-  return h("section", { class: "page-narrow" }, h("h1", {}, "🔑 Criar nova senha"), h("div", { class: "card stack" }, form));
+  return h("section", { class: "page-narrow" }, h("h1", {}, t("🔑 Criar nova senha")), h("div", { class: "card stack" }, form));
 }

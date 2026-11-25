@@ -4,6 +4,7 @@ using EduGame.Infrastructure;
 using EduGame.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Billing;
 
@@ -28,13 +29,13 @@ public static class BillingEndpoints
             var userId = http.User.UserId();
             var user = await db.Users.SingleAsync(u => u.Id == userId, ct);
             if (user.IsGuest || user.Email is null)
-                return ApiResults.Forbidden("Para assinar, salve o progresso criando uma conta.");
+                return ApiResults.Forbidden(Tr("Para assinar, salve o progresso criando uma conta.", "To subscribe, save your progress by creating an account.", "Para suscribirte, guarda el progreso creando una cuenta."));
             if (!StripeSettings.PaidPlans.Contains(req.Plan))
-                return ApiResults.Validation("plan", "Escolha o plano Professor Pro ou Família.");
+                return ApiResults.Validation("plan", Tr("Escolha o plano Professor Pro ou Família.", "Choose the Teacher Pro or Family plan.", "Elige el plan Profesor Pro o Familia."));
 
             var current = await plans.ForUserAsync(userId, ct);
             if (current.Paid.Contains(req.Plan))
-                return ApiResults.Conflict("Você já assina este plano. Use \"Gerenciar assinatura\" para mudar ou cancelar.");
+                return ApiResults.Conflict(Tr("Você já assina este plano. Use \"Gerenciar assinatura\" para mudar ou cancelar.", "You already subscribe to this plan. Use \"Manage subscription\" to change or cancel.", "Ya tienes este plan. Usa \"Gestionar suscripción\" para cambiarlo o cancelarlo."));
 
             try
             {
@@ -59,7 +60,7 @@ public static class BillingEndpoints
             catch (StripeException ex)
             {
                 http.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("Stripe").LogError(ex, "Erro ao criar o Checkout do Stripe.");
-                return Results.Problem("Não foi possível abrir o pagamento agora. Tente de novo em alguns minutos.", statusCode: StatusCodes.Status502BadGateway);
+                return Results.Problem(Tr("Não foi possível abrir o pagamento agora. Tente de novo em alguns minutos.", "Couldn't open the payment page right now. Try again in a few minutes.", "No se pudo abrir el pago ahora. Vuelve a intentarlo en unos minutos."), statusCode: StatusCodes.Status502BadGateway);
             }
         }).RequireAuthorization().RequireRateLimiting(RateLimits.Auth);
 
@@ -68,7 +69,7 @@ public static class BillingEndpoints
             if (!stripe.Enabled) return Unavailable();
             var userId = http.User.UserId();
             var customerId = await db.Users.Where(u => u.Id == userId).Select(u => u.StripeCustomerId).SingleOrDefaultAsync(ct);
-            if (customerId is null) return ApiResults.NotFound("Você ainda não tem assinatura paga.");
+            if (customerId is null) return ApiResults.NotFound(Tr("Você ainda não tem assinatura paga.", "You don't have a paid subscription yet.", "Todavía no tienes una suscripción de pago."));
             try
             {
                 return Results.Ok(new { url = await gateway.CreatePortalAsync(customerId, $"{BaseUrl(http, stripe)}/jogar#/planos", ct) });
@@ -76,7 +77,7 @@ public static class BillingEndpoints
             catch (StripeException ex)
             {
                 http.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("Stripe").LogError(ex, "Erro ao abrir o portal do Stripe.");
-                return Results.Problem("Não foi possível abrir a área da assinatura agora. Tente de novo em alguns minutos.", statusCode: StatusCodes.Status502BadGateway);
+                return Results.Problem(Tr("Não foi possível abrir a área da assinatura agora. Tente de novo em alguns minutos.", "Couldn't open the subscription area right now. Try again in a few minutes.", "No se pudo abrir el área de la suscripción ahora. Vuelve a intentarlo en unos minutos."), statusCode: StatusCodes.Status502BadGateway);
             }
         }).RequireAuthorization().RequireRateLimiting(RateLimits.Auth);
 
@@ -103,7 +104,7 @@ public static class BillingEndpoints
     }
 
     private static IResult Unavailable() =>
-        Results.Problem("O pagamento ainda não está ativo. Por enquanto, escolha o plano na página de planos.", statusCode: StatusCodes.Status503ServiceUnavailable);
+        Results.Problem(Tr("O pagamento ainda não está ativo. Por enquanto, escolha o plano na página de planos.", "Payments aren't active yet. For now, choose the plan on the plans page.", "El pago todavía no está activo. Por ahora, elige el plan en la página de planes."), statusCode: StatusCodes.Status503ServiceUnavailable);
 
     /// <summary>Endereço público para os links de volta. Em produção use App:PublicBaseUrl (PUBLIC_BASE_URL).</summary>
     private static string BaseUrl(HttpContext http, StripeSettings stripe) =>

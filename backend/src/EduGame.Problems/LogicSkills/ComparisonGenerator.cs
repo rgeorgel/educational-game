@@ -1,3 +1,5 @@
+using static EduGame.Problems.Lang;
+
 namespace EduGame.Problems.LogicSkills;
 
 /// <summary>Maior, menor ou igual: escolher o sinal (&gt;, &lt;, =) entre números e expressões.</summary>
@@ -28,16 +30,21 @@ public sealed class ComparisonGenerator : ProblemGenerator
         var sign = left.Value > right.Value ? ">" : left.Value < right.Value ? "<" : "=";
         if (sign == "=") difficulty += 30;
 
-        var hints = new List<string> { "A \"boca\" do sinal fica aberta para o lado maior: 7 > 5 e 3 < 8." };
+        var hints = new List<string>
+        {
+            Tr("A \"boca\" do sinal fica aberta para o lado maior: 7 > 5 e 3 < 8.", "The \"mouth\" of the sign opens toward the bigger side: 7 > 5 and 3 < 8.", "La \"boca\" del signo se abre hacia el lado mayor: 7 > 5 y 3 < 8."),
+        };
         if (left.IsExpression || right.IsExpression)
-            hints.Insert(0, "Calcule primeiro o valor de cada lado.");
+            hints.Insert(0, Tr("Calcule primeiro o valor de cada lado.", "First work out the value of each side.", "Calcula primero el valor de cada lado."));
 
         var content = new ProblemContent(
             ProblemTypes.MultiplaEscolha,
-            "Qual sinal completa a comparação?",
+            Tr("Qual sinal completa a comparação?", "Which sign completes the comparison?", "¿Qué signo completa la comparación?"),
             sign,
             hints,
-            $"{Describe(left)} e {Describe(right)}, então {left.Text} {sign} {right.Text}.")
+            Tr($"{Describe(left)} e {Describe(right)}, então {left.Text} {sign} {right.Text}.",
+               $"{Describe(left)} and {Describe(right)}, so {left.Text} {sign} {right.Text}.",
+               $"{Describe(left)} y {Describe(right)}, así que {left.Text} {sign} {right.Text}."))
         {
             Visual = $"{left.Text}  ?  {right.Text}",
             Choices = Signs,
@@ -45,7 +52,7 @@ public sealed class ComparisonGenerator : ProblemGenerator
         return new(content, difficulty);
     }
 
-    private static string Describe(Side s) => s.IsExpression ? $"{s.Text} = {s.Value}" : $"o número {s.Text}";
+    private static string Describe(Side s) => s.IsExpression ? $"{s.Text} = {s.Value}" : Tr($"o número {s.Text}", $"the number {s.Text}", $"el número {s.Text}");
 
     private static Side Num(int n) => new(n.ToString(), n);
 

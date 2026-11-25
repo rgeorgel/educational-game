@@ -82,7 +82,7 @@ public sealed class StripeGateway(StripeSettings settings) : IStripeGateway
         var customer = await new CustomerService(Client).CreateAsync(new CustomerCreateOptions
         {
             Email = email,
-            PreferredLocales = ["pt-BR"],
+            PreferredLocales = [EduGame.Problems.Lang.HtmlTag],
             Metadata = new Dictionary<string, string> { ["userId"] = userId.ToString() },
         }, cancellationToken: ct);
         return customer.Id;
@@ -100,7 +100,7 @@ public sealed class StripeGateway(StripeSettings settings) : IStripeGateway
             SubscriptionData = new SessionSubscriptionDataOptions { Metadata = metadata },
             Metadata = metadata,
             AllowPromotionCodes = true,
-            Locale = "pt-BR",
+            Locale = EduGame.Problems.Lang.HtmlTag,
             SuccessUrl = successUrl,
             CancelUrl = cancelUrl,
         }, new RequestOptions { IdempotencyKey = $"checkout-{userId}-{plan}-{DateTime.UtcNow:yyyyMMddHHmm}" }, ct);
@@ -113,7 +113,7 @@ public sealed class StripeGateway(StripeSettings settings) : IStripeGateway
         {
             Customer = customerId,
             ReturnUrl = returnUrl,
-            Locale = "pt-BR",
+            Locale = EduGame.Problems.Lang.HtmlTag,
             Configuration = await PortalConfigurationAsync(ct),
         }, cancellationToken: ct);
         return session.Url;

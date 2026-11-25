@@ -1,3 +1,5 @@
+using static EduGame.Problems.Lang;
+
 namespace EduGame.Problems.LogicSkills;
 
 /// <summary>Padrões visuais que se repetem (AB, ABC, AAB, ABB, AABB…).</summary>
@@ -43,10 +45,13 @@ public sealed class VisualPatternGenerator : ProblemGenerator
 
         var content = new ProblemContent(
             ProblemTypes.CompletarSequencia,
-            "Qual figura completa o padrão?",
+            Tr("Qual figura completa o padrão?", "Which picture completes the pattern?", "¿Qué figura completa el patrón?"),
             answer,
-            ["Procure o pedaço que se repete.", $"O pedaço que se repete é: {unitText}"],
-            $"O padrão repete {unitText}, então a figura que falta é {answer}.")
+            [
+                Tr("Procure o pedaço que se repete.", "Look for the part that repeats.", "Busca el trozo que se repite."),
+                Tr($"O pedaço que se repete é: {unitText}", $"The part that repeats is: {unitText}", $"El trozo que se repite es: {unitText}"),
+            ],
+            Tr($"O padrão repete {unitText}, então a figura que falta é {answer}.", $"The pattern repeats {unitText}, so the missing picture is {answer}.", $"El patrón repite {unitText}, así que la figura que falta es {answer}."))
         {
             Sequence = sequence,
             Choices = Choices(rng, answer, extra is null ? used : [.. used, extra], count: Math.Min(4, used.Count + 1)),

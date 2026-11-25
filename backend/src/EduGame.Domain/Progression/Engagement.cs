@@ -1,3 +1,5 @@
+using EduGame.Problems;
+
 namespace EduGame.Domain.Progression;
 
 /// <summary>
@@ -60,32 +62,35 @@ public static class Review
             .Select(x => x.SkillId)];
 }
 
-public sealed record AvatarItem(string Slug, string Name, string Value, int XpRequired);
+public sealed record AvatarItem(string Slug, Text NameText, string Value, int XpRequired)
+{
+    public string Name => NameText.Current;
+}
 
 /// <summary>Itens de avatar desbloqueados com XP (sem compras).</summary>
 public static class AvatarItems
 {
     public static IReadOnlyList<AvatarItem> Accessories { get; } =
     [
-        new("nenhum", "Nenhum", "", 0),
-        new("laco", "Laço", "🎀", 50),
-        new("bone", "Boné", "🧢", 150),
-        new("oculos", "Óculos escuros", "🕶️", 300),
-        new("cartola", "Cartola", "🎩", 600),
-        new("fones", "Fones de ouvido", "🎧", 1000),
-        new("medalha", "Medalha", "🏅", 1500),
-        new("coroa", "Coroa", "👑", 2500),
+        new("nenhum", new("Nenhum", "None", "Ninguno"), "", 0),
+        new("laco", new("Laço", "Bow", "Lazo"), "🎀", 50),
+        new("bone", new("Boné", "Cap", "Gorra"), "🧢", 150),
+        new("oculos", new("Óculos escuros", "Sunglasses", "Gafas de sol"), "🕶️", 300),
+        new("cartola", new("Cartola", "Top hat", "Sombrero de copa"), "🎩", 600),
+        new("fones", new("Fones de ouvido", "Headphones", "Auriculares"), "🎧", 1000),
+        new("medalha", new("Medalha", "Medal", "Medalla"), "🏅", 1500),
+        new("coroa", new("Coroa", "Crown", "Corona"), "👑", 2500),
     ];
 
     /// <summary>Cores de fundo do avatar. O valor é um nome de token de cor do front.</summary>
     public static IReadOnlyList<AvatarItem> Colors { get; } =
     [
-        new("padrao", "Padrão", "padrao", 0),
-        new("menta", "Menta", "menta", 100),
-        new("lavanda", "Lavanda", "lavanda", 250),
-        new("pessego", "Pêssego", "pessego", 500),
-        new("ceu", "Céu", "ceu", 800),
-        new("ouro", "Ouro", "ouro", 2000),
+        new("padrao", new("Padrão", "Default", "Predeterminado"), "padrao", 0),
+        new("menta", new("Menta", "Mint", "Menta"), "menta", 100),
+        new("lavanda", new("Lavanda", "Lavender", "Lavanda"), "lavanda", 250),
+        new("pessego", new("Pêssego", "Peach", "Melocotón"), "pessego", 500),
+        new("ceu", new("Céu", "Sky", "Cielo"), "ceu", 800),
+        new("ouro", new("Ouro", "Gold", "Oro"), "ouro", 2000),
     ];
 
     public static bool IsUnlocked(IReadOnlyList<AvatarItem> list, string slug, int xp) =>

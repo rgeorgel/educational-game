@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Auth;
 
@@ -78,13 +79,13 @@ public static class AuthEndpoints
         {
             var user = await users.FindByEmailAsync(req.Email?.Trim() ?? "");
             if (user is null)
-                return Results.Problem(title: "Login inválido", detail: "E-mail ou senha incorretos.", statusCode: StatusCodes.Status401Unauthorized);
+                return Results.Problem(title: Tr("Login inválido", "Invalid login", "Inicio de sesión no válido"), detail: Tr("E-mail ou senha incorretos.", "Wrong email or password.", "Correo o contraseña incorrectos."), statusCode: StatusCodes.Status401Unauthorized);
 
             var result = await signIn.PasswordSignInAsync(user, req.Password ?? "", isPersistent: true, lockoutOnFailure: true);
             if (result.IsLockedOut)
-                return Results.Problem(title: "Conta bloqueada", detail: "Muitas tentativas. Tente de novo em alguns minutos.", statusCode: StatusCodes.Status429TooManyRequests);
+                return Results.Problem(title: Tr("Conta bloqueada", "Account locked", "Cuenta bloqueada"), detail: Tr("Muitas tentativas. Tente de novo em alguns minutos.", "Too many attempts. Try again in a few minutes.", "Demasiados intentos. Vuelve a intentarlo en unos minutos."), statusCode: StatusCodes.Status429TooManyRequests);
             if (!result.Succeeded)
-                return Results.Problem(title: "Login inválido", detail: "E-mail ou senha incorretos.", statusCode: StatusCodes.Status401Unauthorized);
+                return Results.Problem(title: Tr("Login inválido", "Invalid login", "Inicio de sesión no válido"), detail: Tr("E-mail ou senha incorretos.", "Wrong email or password.", "Correo o contraseña incorrectos."), statusCode: StatusCodes.Status401Unauthorized);
 
             user.LastSeenAt = DateTimeOffset.UtcNow;
             await users.UpdateAsync(user);
@@ -99,14 +100,14 @@ public static class AuthEndpoints
         {
             var email = req.Email?.Trim() ?? "";
             if (!new EmailAddressAttribute().IsValid(email) || email.Length > 254)
-                return ApiResults.Validation("email", "Informe um e-mail válido.");
+                return ApiResults.Validation("email", Tr("Informe um e-mail válido.", "Enter a valid email address.", "Escribe un correo válido."));
 
             var baseUrl = publicUrl.For(http.Request);
             if (baseUrl is null || (!emailSettings.Enabled && env.IsProduction()))
             {
                 logs.CreateLogger("Auth").LogError("Recuperação de senha indisponível: configure PUBLIC_BASE_URL, SMTP_HOST e EMAIL_FROM.");
                 return Results.Problem(title: "Indisponível", statusCode: StatusCodes.Status503ServiceUnavailable,
-                    detail: "A recuperação de senha está indisponível no momento. Tente mais tarde ou fale com o suporte.");
+                    detail: Tr("A recuperação de senha está indisponível no momento. Tente mais tarde ou fale com o suporte.", "Password recovery is unavailable right now. Try again later or contact support.", "La recuperación de contraseña no está disponible en este momento. Inténtalo más tarde o contacta con soporte."));
             }
 
             var user = await users.FindByEmailAsync(email);
@@ -116,14 +117,14 @@ public static class AuthEndpoints
                 var token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(await users.GeneratePasswordResetTokenAsync(user)));
                 emails.Enqueue(EmailTemplates.PasswordReset(user.Email, $"{baseUrl}/jogar#/nova-senha/{user.Id:N}/{token}"));
             }
-            return Results.Accepted(value: new { message = "Se houver uma conta com este e-mail, enviamos um link para criar uma senha nova." });
+            return Results.Accepted(value: new { message = Tr("Se houver uma conta com este e-mail, enviamos um link para criar uma senha nova.", "If there is an account with this email, we sent a link to create a new password.", "Si hay una cuenta con este correo, te enviamos un enlace para crear una contraseña nueva.") });
         });
 
         // Link do e-mail: troca a senha, destrava a conta e já entra.
         auth.MapPost("/reset-password", async (ResetPasswordRequest req, HttpContext http, UserManager<AppUser> users, SignInManager<AppUser> signIn,
             AppDbContext db, GameClock clock, EmailQueue emails, PublicUrl publicUrl, CancellationToken ct) =>
         {
-            var invalidLink = ApiResults.Validation("token", "Este link não vale mais. Peça um novo em \"Esqueci minha senha\".");
+            var invalidLink = ApiResults.Validation("token", Tr("Este link não vale mais. Peça um novo em \"Esqueci minha senha\".", "This link is no longer valid. Request a new one under \"Forgot my password\".", "Este enlace ya no es válido. Pide uno nuevo en \"Olvidé mi contraseña\"."));
             if (!Guid.TryParse(req.UserId, out var userId)) return invalidLink;
             var user = await users.FindByIdAsync(userId.ToString());
             if (user is null || user.IsGuest || user.Email is null) return invalidLink;
@@ -135,7 +136,7 @@ public static class AuthEndpoints
             var password = req.Password ?? "";
             foreach (var validator in users.PasswordValidators)
                 if (!(await validator.ValidateAsync(users, user, password)).Succeeded)
-                    return ApiResults.Validation("password", "A senha precisa ter pelo menos 8 caracteres.");
+                    return ApiResults.Validation("password", Tr("A senha precisa ter pelo menos 8 caracteres.", "The password must have at least 8 characters.", "La contraseña debe tener al menos 8 caracteres."));
 
             var result = await users.ResetPasswordAsync(user, token, password);
             if (!result.Succeeded) return result.Errors.Any(e => e.Code == "InvalidToken") ? invalidLink : IdentityError(result);
@@ -164,15 +165,15 @@ public static class AuthEndpoints
         {
             var user = await users.GetUserAsync(http.User);
             if (user is null) return Results.Unauthorized();
-            if (!user.IsGuest) return ApiResults.Conflict("Esta conta já está salva.");
+            if (!user.IsGuest) return ApiResults.Conflict(Tr("Esta conta já está salva.", "This account is already saved.", "Esta cuenta ya está guardada."));
             if (ValidateAccountData(req.Email, req.AcceptTerms, out var email) is { } invalid) return invalid;
             if (await users.FindByEmailAsync(email) is not null)
-                return ApiResults.Validation("email", "Já existe uma conta com este e-mail. Use outro e-mail ou entre nessa conta (o progresso deste aparelho não é juntado).");
+                return ApiResults.Validation("email", Tr("Já existe uma conta com este e-mail. Use outro e-mail ou entre nessa conta (o progresso deste aparelho não é juntado).", "There is already an account with this email. Use another email or sign in to that account (progress on this device won't be merged).", "Ya existe una cuenta con este correo. Usa otro correo o entra en esa cuenta (el progreso de este dispositivo no se une)."));
 
             var password = req.Password ?? "";
             foreach (var validator in users.PasswordValidators)
                 if (!(await validator.ValidateAsync(users, user, password)).Succeeded)
-                    return ApiResults.Validation("password", "A senha precisa ter pelo menos 8 caracteres.");
+                    return ApiResults.Validation("password", Tr("A senha precisa ter pelo menos 8 caracteres.", "The password must have at least 8 characters.", "La contraseña debe tener al menos 8 caracteres."));
 
             user.IsGuest = false;
             user.Email = email;
@@ -233,9 +234,9 @@ public static class AuthEndpoints
     {
         email = rawEmail?.Trim() ?? "";
         if (!acceptTerms)
-            return ApiResults.Validation("acceptTerms", "É preciso aceitar os termos e autorizar o uso dos dados para criar a conta.");
+            return ApiResults.Validation("acceptTerms", Tr("É preciso aceitar os termos e autorizar o uso dos dados para criar a conta.", "You need to accept the terms and authorize the use of data to create the account.", "Hay que aceptar los términos y autorizar el uso de los datos para crear la cuenta."));
         if (!new EmailAddressAttribute().IsValid(email) || email.Length > 254)
-            return ApiResults.Validation("email", "Informe um e-mail válido.");
+            return ApiResults.Validation("email", Tr("Informe um e-mail válido.", "Enter a valid email address.", "Escribe un correo válido."));
         return null;
     }
 
@@ -243,8 +244,8 @@ public static class AuthEndpoints
     {
         var duplicate = result.Errors.Any(e => e.Code is "DuplicateEmail" or "DuplicateUserName");
         return duplicate
-            ? ApiResults.Validation("email", "Já existe uma conta com este e-mail.")
-            : ApiResults.Validation("password", "A senha precisa ter pelo menos 8 caracteres.");
+            ? ApiResults.Validation("email", Tr("Já existe uma conta com este e-mail.", "There is already an account with this email.", "Ya existe una cuenta con este correo."))
+            : ApiResults.Validation("password", Tr("A senha precisa ter pelo menos 8 caracteres.", "The password must have at least 8 characters.", "La contraseña debe tener al menos 8 caracteres."));
     }
 }
 

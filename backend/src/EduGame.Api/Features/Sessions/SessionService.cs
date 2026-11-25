@@ -9,6 +9,7 @@ using EduGame.Infrastructure;
 using EduGame.Problems;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Sessions;
 
@@ -95,7 +96,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
     public async Task<GameSession> StartStageAsync(PlayerProfile profile, int stageId, CancellationToken ct)
     {
         var stage = await db.Stages.Include(s => s.Region).SingleOrDefaultAsync(s => s.Id == stageId, ct)
-            ?? throw new SessionException(SessionError.NotFound, "Etapa não encontrada.");
+            ?? throw new SessionException(SessionError.NotFound, Tr("Etapa não encontrada.", "Stage not found.", "Etapa no encontrada."));
 
         var subjectId = stage.Region!.SubjectId;
         var ordered = await StageOrder.ForSubjectAsync(db, subjectId, ct);
@@ -104,7 +105,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         var index = ordered.FindIndex(s => s.Id == stage.Id);
         // Etapa pedida pelo professor (tarefa de uma turma do aluno) pode ser jogada mesmo bloqueada no mapa.
         if (!StageOrder.IsUnlocked(ordered, index, bestStars, current.Order) && !await IsAssignedAsync(profile.Id, stage.Id, ct))
-            throw new SessionException(SessionError.Locked, "Esta etapa ainda está bloqueada. Conclua a anterior primeiro!");
+            throw new SessionException(SessionError.Locked, Tr("Esta etapa ainda está bloqueada. Conclua a anterior primeiro!", "This stage is still locked. Finish the previous one first!", "Esta etapa todavía está bloqueada. ¡Termina la anterior primero!"));
 
         return await CreateAsync(new GameSession
         {
@@ -121,7 +122,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
     {
         var status = await progress.ForSubjectAsync(profile.Id, subject, ct);
         if (!status.GuardianAvailable)
-            throw new SessionException(SessionError.NotAvailable, $"O Desafio do Guardião abre quando o avanço do nível chega a {LevelProgress.GuardianThreshold}%.");
+            throw new SessionException(SessionError.NotAvailable, Tr($"O Desafio do Guardião abre quando o avanço do nível chega a {LevelProgress.GuardianThreshold}%.", $"The Guardian Challenge opens when your level progress reaches {LevelProgress.GuardianThreshold}%.", $"El Desafío del Guardián se abre cuando el avance del nivel llega al {LevelProgress.GuardianThreshold} %."));
 
         var level = await progress.CurrentLevelAsync(profile.Id, subject.Id, ct);
         var skills = await db.Skills.Where(s => s.SubjectId == subject.Id && s.LevelId == level.Id).Select(s => s.Id).ToListAsync(ct);
@@ -140,7 +141,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
     {
         var status = await progress.ForSubjectAsync(profile.Id, subject, ct);
         if (!status.PlacementAvailable)
-            throw new SessionException(SessionError.NotAvailable, "O teste de nivelamento só pode ser feito antes de começar a trilha.");
+            throw new SessionException(SessionError.NotAvailable, Tr("O teste de nivelamento só pode ser feito antes de começar a trilha.", "The placement test can only be taken before starting the trail.", "La prueba de nivel solo se puede hacer antes de empezar el camino."));
 
         var skills = await db.Skills.Where(s => s.SubjectId == subject.Id).Select(s => s.Id).ToListAsync(ct);
         return await CreateAsync(new GameSession
@@ -162,7 +163,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         if (existing is not null)
         {
             if (existing.IsFinished)
-                throw new SessionException(SessionError.Finished, "Você já fez o desafio de hoje. Volte amanhã para um novo!");
+                throw new SessionException(SessionError.Finished, Tr("Você já fez o desafio de hoje. Volte amanhã para um novo!", "You've already done today's challenge. Come back tomorrow for a new one!", "Ya hiciste el desafío de hoy. ¡Vuelve mañana para uno nuevo!"));
             return existing;
         }
 
@@ -193,7 +194,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
             rows.Select(x => new Review.Candidate(x.m.SkillId, LevelProgress.BySlug(x.LevelSlug), x.m.Rating, x.m.AttemptsCount, x.m.LastPracticedAt)),
             clock.Now);
         if (picked.Count == 0)
-            throw new SessionException(SessionError.NotAvailable, "Jogue algumas etapas primeiro: a revisão usa o que você já praticou.");
+            throw new SessionException(SessionError.NotAvailable, Tr("Jogue algumas etapas primeiro: a revisão usa o que você já praticou.", "Play a few stages first: the review uses what you've already practiced.", "Juega algunas etapas primero: el repaso usa lo que ya practicaste."));
 
         return await CreateAsync(new GameSession
         {
@@ -260,7 +261,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         {
             var curated = await PickCuratedAsync(session, skillId, target - template.DifficultyOffset, fixedSeed, ct);
             seed = curated.Id; // a "semente" de um problema curado é o id dele
-            generated = new GeneratedProblem(curated.Content, curated.Difficulty);
+            generated = new GeneratedProblem(CuratedCatalog.Translated(curated.Slug) ?? curated.Content, curated.Difficulty);
         }
         else
         {
@@ -393,11 +394,11 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
     {
         var problem = await FindProblemAsync(session, problemId, ct);
         if (problem.Attempt is not null)
-            throw new SessionException(SessionError.AlreadyAnswered, "Este problema já foi respondido.");
+            throw new SessionException(SessionError.AlreadyAnswered, Tr("Este problema já foi respondido.", "This problem has already been answered.", "Este problema ya fue respondido."));
         if (session.Mode == SessionModes.Placement)
-            throw new SessionException(SessionError.NoHintsLeft, "No teste de nivelamento não há dicas — tudo bem não saber!");
+            throw new SessionException(SessionError.NoHintsLeft, Tr("No teste de nivelamento não há dicas — tudo bem não saber!", "There are no hints in the placement test — it's okay not to know!", "En la prueba de nivel no hay pistas: ¡no pasa nada por no saber!"));
         if (problem.HintsRevealed >= problem.Content.Hints.Count)
-            throw new SessionException(SessionError.NoHintsLeft, "Não há mais dicas para este problema.");
+            throw new SessionException(SessionError.NoHintsLeft, Tr("Não há mais dicas para este problema.", "There are no more hints for this problem.", "No hay más pistas para este problema."));
 
         problem.HintsRevealed++;
         await db.SaveChangesAsync(ct);
@@ -407,10 +408,10 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
     public async Task<AnswerResponse> AnswerAsync(GameSession session, Guid problemId, string answer, CancellationToken ct)
     {
         if (session.IsFinished)
-            throw new SessionException(SessionError.Finished, "Esta sessão já terminou.");
+            throw new SessionException(SessionError.Finished, Tr("Esta sessão já terminou.", "This session is already over.", "Esta sesión ya terminó."));
         var problem = await FindProblemAsync(session, problemId, ct);
         if (problem.Attempt is not null)
-            throw new SessionException(SessionError.AlreadyAnswered, "Este problema já foi respondido.");
+            throw new SessionException(SessionError.AlreadyAnswered, Tr("Este problema já foi respondido.", "This problem has already been answered.", "Este problema ya fue respondido."));
 
         var now = clock.Now;
         var correct = AnswerChecker.IsCorrect(problem.Content, answer);
@@ -473,7 +474,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         catch (DbUpdateException e) when (e.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
             // Duas respostas simultâneas para o mesmo problema: o índice único barra a segunda.
-            throw new SessionException(SessionError.AlreadyAnswered, "Este problema já foi respondido.");
+            throw new SessionException(SessionError.AlreadyAnswered, Tr("Este problema já foi respondido.", "This problem has already been answered.", "Este problema ya fue respondido."));
         }
 
         return new AnswerResponse(
@@ -683,7 +684,7 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
 
     private async Task<SessionProblem> FindProblemAsync(GameSession session, Guid problemId, CancellationToken ct) =>
         await db.SessionProblems.Include(p => p.Attempt).SingleOrDefaultAsync(p => p.Id == problemId && p.SessionId == session.Id, ct)
-        ?? throw new SessionException(SessionError.NotServed, "Problema não encontrado nesta sessão.");
+        ?? throw new SessionException(SessionError.NotServed, Tr("Problema não encontrado nesta sessão.", "Problem not found in this session.", "Problema no encontrado en esta sesión."));
 
     private async Task<ProblemDto> ToDtoAsync(SessionProblem p, GameSession session, CancellationToken ct)
     {

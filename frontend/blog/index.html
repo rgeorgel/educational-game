@@ -9,6 +9,10 @@
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#2f6fde" />
     <link rel="canonical" href="https://educa-game.georgel.ca/blog" />
+    <link rel="alternate" hreflang="pt-BR" href="https://educa-game.georgel.ca/blog" />
+    <link rel="alternate" hreflang="en" href="https://educa-game.georgel.ca/en/blog" />
+    <link rel="alternate" hreflang="es" href="https://educa-game.georgel.ca/es/blog" />
+    <link rel="alternate" hreflang="x-default" href="https://educa-game.georgel.ca/blog" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Educa Game" />
     <meta property="og:locale" content="pt_BR" />
@@ -82,7 +86,8 @@
           <a href="/" class="lp-nav-link">Início</a>
           <a href="/professores" class="lp-nav-link">Professores</a>
           <a href="/blog" class="lp-nav-link" aria-current="page">Blog</a>
-          <a href="/jogar#/entrar" class="lp-btn lp-btn-primary lp-btn-small" data-cta="play">Jogar agora</a>
+          <a href="#idiomas" class="lp-nav-link" title="Idioma · Language · Idioma" aria-label="Idioma · Language · Idioma">🌐</a>
+          <a href="/jogar?lang=pt#/entrar" class="lp-btn lp-btn-primary lp-btn-small" data-cta="play">Jogar agora</a>
         </nav>
       </div>
     </header>
@@ -141,13 +146,19 @@
         <span><span aria-hidden="true">🧭</span> Educa Game</span>
         <nav aria-label="Rodapé">
           <a href="/">Início</a>
-          <a href="/jogar#/entrar">Jogar</a>
+          <a href="/jogar?lang=pt#/entrar">Jogar</a>
           <a href="/professores">Professores</a>
           <a href="/blog">Blog</a>
           <a href="/termos">Termos de uso</a>
           <a href="/privacidade">Privacidade</a>
         </nav>
       </div>
+      <p class="lp-container lp-langs" id="idiomas" aria-label="Idioma">
+        <span aria-hidden="true">🌐</span>
+        <a href="/blog" lang="pt-BR" hreflang="pt-BR" aria-current="true">Português</a>
+        <a href="/en/blog" lang="en" hreflang="en">English</a>
+        <a href="/es/blog" lang="es" hreflang="es">Español</a>
+      </p>
       <p class="lp-container lp-footer-legal">Feito por <a href="https://georgel.ca" target="_blank" rel="noopener">Ricardo Georgel</a></p>
     </footer>
   </body>

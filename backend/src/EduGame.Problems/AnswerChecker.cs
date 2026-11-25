@@ -40,8 +40,9 @@ public static class AnswerChecker
             CultureInfo.InvariantCulture, out value);
     }
 
+    /// <summary>Número para mostrar: vírgula decimal em português e espanhol, ponto em inglês.</summary>
     public static string FormatNumber(decimal value) =>
-        value.ToString("0.##", CultureInfo.InvariantCulture).Replace('.', ',').Replace("-", "−");
+        value.ToString("0.##", CultureInfo.InvariantCulture).Replace('.', Lang.DecimalSeparator).Replace("-", "−");
 }
 
 /// <summary>Valida uma grade preenchida pelas regras do quebra-cabeça (aceita qualquer solução válida).</summary>

@@ -4,6 +4,7 @@ import { getPrefs, setPrefs } from "../prefs.js";
 import { navigate } from "../router.js";
 import { store } from "../store.js";
 import { listVoices, onVoicesChanged, speak, voiceSupported } from "../voice.js";
+import { getLang, LANGUAGES, setLang, sitePath, t } from "../i18n.js";
 
 function radioGroup(name, legend, options, value, onChange) {
   return h(
@@ -21,18 +22,18 @@ function radioGroup(name, legend, options, value, onChange) {
   );
 }
 
-const SAMPLE = "Olá! Quanto é 3 mais 4?";
+const SAMPLE = t("Olá! Quanto é 3 mais 4?");
 
-/** Lista as vozes em português do aparelho, da melhor para a pior. */
+/** Lista as vozes do aparelho no idioma do app, da melhor para a pior. */
 function voicePicker(prefs) {
   const select = h("select", { id: "voice-select" });
-  const field = h("label", { class: "field" }, h("span", {}, "Voz"), select);
-  const hint = h("p", { class: "muted small", hidden: true }, "Vozes marcadas com 🌐 precisam de internet. Sem conexão, usamos uma voz do aparelho.");
+  const field = h("label", { class: "field" }, h("span", {}, t("Voz")), select);
+  const hint = h("p", { class: "muted small", hidden: true }, t("Vozes marcadas com 🌐 precisam de internet. Sem conexão, usamos uma voz do aparelho."));
 
   function fill() {
     const voices = listVoices();
     const chosen = getPrefs().voiceURI;
-    const auto = voices[0] ? `Automática (${voices[0].name})` : "Automática";
+    const auto = voices[0] ? `${t("Automática")} (${voices[0].name})` : t("Automática");
     select.replaceChildren(
       h("option", { value: "" }, auto),
       ...voices.map((v) => h("option", { value: v.voiceURI }, `${v.name}${v.localService ? "" : " 🌐"}`)),
@@ -63,28 +64,28 @@ export function settingsPage() {
     ? h(
         "section",
         { class: "card stack" },
-        h("h2", {}, "Leitura em voz alta"),
+        h("h2", {}, t("Leitura em voz alta")),
         h(
           "label",
           { class: "checkbox" },
           h("input", { type: "checkbox", checked: prefs.autoRead, onChange: (e) => setPrefs({ autoRead: e.target.checked }) }),
-          h("span", {}, "Ler cada enunciado automaticamente (bom para quem está aprendendo a ler)."),
+          h("span", {}, t("Ler cada enunciado automaticamente (bom para quem está aprendendo a ler).")),
         ),
-        h("p", { class: "muted small" }, "Em todo problema há também um botão 🔊 para ouvir quando quiser."),
+        h("p", { class: "muted small" }, t("Em todo problema há também um botão 🔊 para ouvir quando quiser.")),
         voicePicker(prefs),
-        radioGroup("voiceRate", "Velocidade", [["0.8", "Devagar"], ["0.95", "Normal"], ["1.1", "Rápida"]], String(prefs.voiceRate), (v) => {
+        radioGroup("voiceRate", t("Velocidade"), [["0.8", t("Devagar")], ["0.95", t("Normal")], ["1.1", t("Rápida")]], String(prefs.voiceRate), (v) => {
           setPrefs({ voiceRate: Number(v) });
           speak(SAMPLE);
         }),
-        h("button", { type: "button", class: "btn", onClick: () => speak(SAMPLE) }, "🔊 Testar a voz"),
+        h("button", { type: "button", class: "btn", onClick: () => speak(SAMPLE) }, t("🔊 Testar a voz")),
       )
-    : h("section", { class: "card" }, h("h2", {}, "Leitura em voz alta"), h("p", { class: "muted" }, "Este navegador não oferece leitura em voz alta."));
+    : h("section", { class: "card" }, h("h2", {}, t("Leitura em voz alta")), h("p", { class: "muted" }, t("Este navegador não oferece leitura em voz alta.")));
 
   const deleteError = h("p", { class: "form-error", role: "alert", hidden: true });
   const guest = store.state.me?.isGuest;
-  const deleteBtn = h("button", { type: "button", class: "btn btn-danger" }, guest ? "Apagar o progresso deste aparelho" : "Apagar minha conta e todos os dados");
+  const deleteBtn = h("button", { type: "button", class: "btn btn-danger" }, guest ? t("Apagar o progresso deste aparelho") : t("Apagar minha conta e todos os dados"));
   deleteBtn.addEventListener("click", async () => {
-    if (!confirm(guest ? "Isso apaga todo o progresso deste convidado. Não dá para desfazer. Continuar?" : "Isso apaga a conta do responsável e o progresso de TODOS os perfis. Não dá para desfazer. Continuar?")) return;
+    if (!confirm(guest ? t("Isso apaga todo o progresso deste convidado. Não dá para desfazer. Continuar?") : t("Isso apaga a conta do responsável e o progresso de TODOS os perfis. Não dá para desfazer. Continuar?"))) return;
     deleteBtn.disabled = true;
     try {
       await api.deleteAccount();
@@ -100,28 +101,35 @@ export function settingsPage() {
   return h(
     "section",
     { class: "page-narrow" },
-    h("h1", {}, "Configurações"),
+    h("h1", {}, t("Configurações")),
     h(
       "section",
       { class: "card stack" },
-      h("h2", {}, "Aparência"),
-      radioGroup("theme", "Tema", [["sistema", "Igual ao aparelho"], ["claro", "Claro"], ["escuro", "Escuro"]], prefs.theme, (v) => setPrefs({ theme: v })),
-      radioGroup("text", "Tamanho do texto", [["normal", "Normal"], ["grande", "Grande"]], prefs.text, (v) => setPrefs({ text: v })),
-      radioGroup("motion", "Animações", [["normal", "Normais"], ["reduzido", "Reduzidas"]], prefs.motion, (v) => setPrefs({ motion: v })),
-      h("p", { class: "muted small" }, "Estas escolhas valem só para este aparelho."),
+      h("h2", {}, t("Idioma")),
+      radioGroup("lang", t("Idioma do jogo"), LANGUAGES.map((l) => [l.code, l.label]), getLang(), (v) => setLang(v)),
+      h("p", { class: "muted small" }, t("Muda os menus, os problemas e as explicações. Fica salvo neste aparelho.")),
+    ),
+    h(
+      "section",
+      { class: "card stack" },
+      h("h2", {}, t("Aparência")),
+      radioGroup("theme", t("Tema"), [["sistema", t("Igual ao aparelho")], ["claro", t("Claro")], ["escuro", t("Escuro")]], prefs.theme, (v) => setPrefs({ theme: v })),
+      radioGroup("text", t("Tamanho do texto"), [["normal", t("Normal")], ["grande", t("Grande")]], prefs.text, (v) => setPrefs({ text: v })),
+      radioGroup("motion", t("Animações"), [["normal", t("Normais")], ["reduzido", t("Reduzidas")]], prefs.motion, (v) => setPrefs({ motion: v })),
+      h("p", { class: "muted small" }, t("Estas escolhas valem só para este aparelho.")),
     ),
     voice,
     h(
       "section",
       { class: "card stack" },
-      h("h2", {}, "Privacidade"),
-      h("p", { class: "muted" }, "Das crianças, guardamos apenas apelido, avatar, ano escolar (opcional) e o progresso no jogo, e nada disso é compartilhado com terceiros. Turmas só veem os perfis que você escolher."),
+      h("h2", {}, t("Privacidade")),
+      h("p", { class: "muted" }, t("Das crianças, guardamos apenas apelido, avatar, ano escolar (opcional) e o progresso no jogo, e nada disso é compartilhado com terceiros. Turmas só veem os perfis que você escolher.")),
       h(
         "p",
         { class: "small" },
-        h("a", { href: "/privacidade", target: "_blank", rel: "noopener" }, "Política de privacidade"),
+        h("a", { href: sitePath("privacy"), target: "_blank", rel: "noopener" }, t("Política de privacidade")),
         " · ",
-        h("a", { href: "/termos", target: "_blank", rel: "noopener" }, "Termos de uso"),
+        h("a", { href: sitePath("terms"), target: "_blank", rel: "noopener" }, t("Termos de uso")),
       ),
       deleteError,
       deleteBtn,

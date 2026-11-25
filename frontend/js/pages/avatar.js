@@ -2,6 +2,7 @@ import { api } from "../api.js";
 import { errorMessage, h } from "../dom.js";
 import { store } from "../store.js";
 import { avatarView } from "./shared.js";
+import { t } from "../i18n.js";
 
 export async function avatarPage() {
   const id = store.profile.id;
@@ -34,7 +35,7 @@ export async function avatarPage() {
         class: `item-btn${unlocked ? "" : " locked"}`,
         dataset: { group, value },
         disabled: !unlocked,
-        "aria-label": unlocked ? label : `${label}: desbloqueia com ${xpRequired} XP`,
+        "aria-label": unlocked ? label : t("{nome}: desbloqueia com {xp} XP", { nome: label, xp: xpRequired }),
         onClick: () => {
           choice[group] = value;
           render();
@@ -45,14 +46,14 @@ export async function avatarPage() {
     );
   }
 
-  const save = h("button", { type: "button", class: "btn btn-primary btn-block" }, "Salvar meu avatar");
+  const save = h("button", { type: "button", class: "btn btn-primary btn-block" }, t("Salvar meu avatar"));
   save.addEventListener("click", async () => {
     save.disabled = true;
     error.hidden = true;
     try {
       const profile = await api.updateAvatar(id, choice);
       store.updateProfile(profile);
-      status.textContent = "Avatar salvo! ✨";
+      status.textContent = t("Avatar salvo! ✨");
     } catch (err) {
       error.textContent = errorMessage(err);
       error.hidden = false;
@@ -67,25 +68,25 @@ export async function avatarPage() {
   page = h(
     "section",
     { class: "page-narrow" },
-    h("h1", {}, "Meu avatar"),
+    h("h1", {}, t("Meu avatar")),
     h(
       "div",
       { class: "card stack center" },
       preview,
-      h("p", {}, `Você tem ⚡ ${options.xp} XP.`),
-      next ? h("p", { class: "muted small" }, `Próximo item: ${next.name} com ${next.xpRequired} XP.`) : h("p", { class: "muted small" }, "Você desbloqueou tudo! 🎉"),
+      h("p", {}, t("Você tem ⚡ {xp} XP.", { xp: options.xp })),
+      next ? h("p", { class: "muted small" }, t("Próximo item: {nome} com {xp} XP.", { nome: next.name, xp: next.xpRequired })) : h("p", { class: "muted small" }, t("Você desbloqueou tudo! 🎉")),
     ),
-    h("section", { class: "card stack" }, h("h2", {}, "Bicho"), h("div", { class: "item-grid" }, options.avatars.map((a) => item("avatar", a, `Avatar ${a}`, h("span", { class: "item-emoji" }, a))))),
+    h("section", { class: "card stack" }, h("h2", {}, t("Bicho")), h("div", { class: "item-grid" }, options.avatars.map((a) => item("avatar", a, t("Avatar {n}", { n: a }), h("span", { class: "item-emoji" }, a))))),
     h(
       "section",
       { class: "card stack" },
-      h("h2", {}, "Acessório"),
+      h("h2", {}, t("Acessório")),
       h("div", { class: "item-grid" }, options.accessories.map((a) => item("accessory", a.slug, a.name, h("span", { class: "item-emoji" }, a.value || "—"), a.unlocked, a.xpRequired))),
     ),
     h(
       "section",
       { class: "card stack" },
-      h("h2", {}, "Cor de fundo"),
+      h("h2", {}, t("Cor de fundo")),
       h("div", { class: "item-grid" }, options.colors.map((c) => item("color", c.slug, c.name, h("span", { class: `color-swatch color-${c.value}` }, ""), c.unlocked, c.xpRequired))),
     ),
     error,

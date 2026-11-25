@@ -9,6 +9,7 @@ namespace EduGame.Infrastructure.Seeding;
 /// Sincroniza o <see cref="ContentCatalog"/> com o banco (insere e atualiza pelo slug).
 /// É idempotente: roda a cada inicialização. Itens removidos do catálogo não são apagados
 /// (o histórico dos jogadores pode depender deles); geradores removidos são desativados.
+/// O banco guarda os textos em português; <see cref="CatalogText"/> traduz na leitura.
 /// </summary>
 public static class ContentSeeder
 {
@@ -38,10 +39,10 @@ public static class ContentSeeder
         var subject = await db.Subjects.Include(s => s.Levels).SingleOrDefaultAsync(s => s.Slug == def.Slug, ct);
         if (subject is null)
         {
-            subject = new Subject { Slug = def.Slug, Name = def.Name };
+            subject = new Subject { Slug = def.Slug, Name = def.Name.Pt };
             db.Subjects.Add(subject);
         }
-        subject.Name = def.Name;
+        subject.Name = def.Name.Pt;
         subject.Icon = def.Icon;
         subject.Order = def.Order;
 
@@ -50,10 +51,10 @@ public static class ContentSeeder
             var level = subject.Levels.SingleOrDefault(l => l.Slug == levelDef.Slug);
             if (level is null)
             {
-                level = new Level { Slug = levelDef.Slug, Name = levelDef.Name };
+                level = new Level { Slug = levelDef.Slug, Name = levelDef.Label.Pt };
                 subject.Levels.Add(level);
             }
-            level.Name = levelDef.Name;
+            level.Name = levelDef.Label.Pt;
             level.Icon = levelDef.Icon;
             level.Order = levelDef.Order;
             level.MinRating = levelDef.MinRating;
@@ -70,12 +71,12 @@ public static class ContentSeeder
         {
             if (!existing.TryGetValue(skillDef.Slug, out var skill))
             {
-                skill = new Skill { Slug = skillDef.Slug, Name = skillDef.Name, SubjectId = subject.Id };
+                skill = new Skill { Slug = skillDef.Slug, Name = skillDef.Name.Pt, SubjectId = subject.Id };
                 db.Skills.Add(skill);
                 existing[skillDef.Slug] = skill;
             }
-            skill.Name = skillDef.Name;
-            skill.Description = skillDef.Description;
+            skill.Name = skillDef.Name.Pt;
+            skill.Description = skillDef.Description.Pt;
             skill.LevelId = levels[skillDef.Level].Id;
             skill.Order = ++order;
             var codes = BnccCatalog.ForSkill(skillDef.Slug);
@@ -91,13 +92,13 @@ public static class ContentSeeder
         {
             if (!existing.TryGetValue(def.Code, out var row))
             {
-                row = new BnccSkill { Code = def.Code, Component = def.Component, Grade = def.Grade, Summary = def.Summary };
+                row = new BnccSkill { Code = def.Code, Component = def.Component.Pt, Grade = def.Grade.Pt, Summary = def.Summary.Pt };
                 db.BnccSkills.Add(row);
             }
-            row.Component = def.Component;
-            row.Grade = def.Grade;
+            row.Component = def.Component.Pt;
+            row.Grade = def.Grade.Pt;
             row.GradeOrder = def.GradeOrder;
-            row.Summary = def.Summary;
+            row.Summary = def.Summary.Pt;
         }
     }
 
@@ -141,11 +142,11 @@ public static class ContentSeeder
         {
             if (!regions.TryGetValue(regionDef.Slug, out var region))
             {
-                region = new Region { Slug = regionDef.Slug, Name = regionDef.Name, SubjectId = subject.Id };
+                region = new Region { Slug = regionDef.Slug, Name = regionDef.Name.Pt, SubjectId = subject.Id };
                 db.Regions.Add(region);
             }
-            region.Name = regionDef.Name;
-            region.Description = regionDef.Description;
+            region.Name = regionDef.Name.Pt;
+            region.Description = regionDef.Description.Pt;
             region.Icon = regionDef.Icon;
             region.LevelId = levels[regionDef.Level].Id;
             region.Order = ++regionOrder;
@@ -156,10 +157,10 @@ public static class ContentSeeder
                 var stage = region.Stages.SingleOrDefault(s => s.Slug == stageDef.Slug);
                 if (stage is null)
                 {
-                    stage = new Stage { Slug = stageDef.Slug, Name = stageDef.Name };
+                    stage = new Stage { Slug = stageDef.Slug, Name = stageDef.Name.Pt };
                     region.Stages.Add(stage);
                 }
-                stage.Name = stageDef.Name;
+                stage.Name = stageDef.Name.Pt;
                 stage.Order = ++stageOrder;
                 stage.ProblemCount = stageDef.ProblemCount;
                 stage.SkillIds = [.. stageDef.Skills.Select(slug => skills[slug].Id)];

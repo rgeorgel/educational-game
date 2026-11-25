@@ -59,6 +59,32 @@
   color: var(--text);
 }
 
+/* Seletor de idioma (cabeçalho antes de entrar). */
+.lang-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.lang-select {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lang-select:focus-visible {
+  outline: 2px solid var(--primary, currentColor);
+  outline-offset: 2px;
+}
+
 .profile-chip {
   display: inline-flex;
   align-items: center;

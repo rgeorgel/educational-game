@@ -1,6 +1,7 @@
 using EduGame.Api.Common;
 using EduGame.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Progress;
 
@@ -17,7 +18,7 @@ public static class ProgressEndpoints
         group.MapGet("/progress", async (Guid profileId, HttpContext http, AppDbContext db, ProgressService progress, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
 
             var subjects = await db.Subjects.OrderBy(s => s.Order).ToListAsync(ct);
             var list = new List<SubjectProgressDto>();
@@ -39,14 +40,14 @@ public static class ProgressEndpoints
         group.MapGet("/history", async (Guid profileId, int? days, HttpContext http, AppDbContext db, ProgressService progress, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             return Results.Ok(await progress.HistoryAsync(profileId, Math.Clamp(days ?? 14, 1, 90), ct));
         });
 
         group.MapGet("/daily", async (Guid profileId, HttpContext http, AppDbContext db, GameClock clock, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             var today = clock.Today;
             var sessions = await db.GameSessions.Where(s => s.ProfileId == profileId && s.DailyDate == today).ToListAsync(ct);
             var subjects = await db.Subjects.OrderBy(s => s.Order).ToListAsync(ct);
@@ -60,7 +61,7 @@ public static class ProgressEndpoints
         group.MapGet("/achievements", async (Guid profileId, HttpContext http, AppDbContext db, ProgressService progress, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             return Results.Ok(await progress.AchievementsAsync(profileId, ct));
         });
     }

@@ -51,6 +51,7 @@ Jogo educacional de **matemática e lógica** para crianças e adolescentes, com
   - fichas para imprimir com gabarito;
   - até 8 perfis no Família.
 - [x] **Pagamento pelo Stripe:** Checkout, portal do cliente e webhooks. Liga quando as chaves são configuradas.
+- [x] **Três idiomas (português do Brasil, inglês e espanhol):** interface, problemas, dicas, explicações, catálogo, medalhas, e-mails, planilhas, landing, professores, termos, privacidade e blog. Ver [Idiomas](#idiomas).
 - [ ] Fase 4 — Novos tópicos.
 
 ## Stack
@@ -258,6 +259,18 @@ Sem SMTP:
 - em desenvolvimento, o e-mail completo aparece no log da API (`docker compose logs edugame-api`), com o link clicável;
 - em produção, "Esqueci minha senha" avisa que está indisponível e o log da API mostra o que falta configurar.
 
+## Idiomas
+
+O jogo funciona em português do Brasil (padrão), inglês e espanhol.
+
+- **Escolha do idioma no jogo:** `?lang=en` no endereço (os links das páginas em inglês e espanhol já levam), senão a escolha salva no aparelho, senão o idioma do navegador (sem correspondência, inglês). A pessoa troca em Configurações ou, antes de entrar, no 🌐 do cabeçalho.
+- **Interface (`frontend/js`):** os textos ficam em português dentro de `t("…")` (ou `tn(n, "1 coisa", "{n} coisas")` para plural), e o português é a chave dos dicionários `frontend/js/i18n/en.js` e `es.js`. Ao criar ou mudar um texto, acrescente a tradução nos dois arquivos e rode `python3 scripts/check_i18n.py --sobras` (a CI também roda). Sem tradução, a frase aparece em português.
+- **API:** o app manda o idioma no cabeçalho `X-Lang` (links de download usam `?lang=`); sem ele, português. No C#, `Lang.Tr("pt", "en", "es")` escolhe o texto e `Text` guarda os três (`EduGame.Problems/Lang.cs`). O idioma vale para problemas gerados, mensagens de erro, e-mails e planilhas CSV.
+- **Problemas:** cada gerador escreve o enunciado, as dicas e a explicação nos três idiomas. As listas sorteadas (nomes, objetos) têm o mesmo tamanho em todos os idiomas, para o desafio do dia continuar igual para todos (há teste para isso). Os desafios escritos à mão têm a tradução em `Curated/i18n/*.en.json` e `*.es.json`, pelo slug.
+- **Catálogo:** o banco guarda nomes e descrições em português; `CatalogText` traduz na leitura, a partir dos textos de `ContentCatalog`, `BnccCatalog` e `LevelDefinitions`.
+- **Números e dinheiro:** vírgula decimal em português e espanhol, ponto em inglês (a resposta aceita os dois). Nos problemas, `R$` em português e `$` em inglês e espanhol. Os preços dos planos continuam em reais.
+- **Páginas estáticas:** `frontend/en/` e `frontend/es/` (`/en/`, `/en/teachers`, `/en/terms`, `/en/privacy`, `/es/`, `/es/profesores`, `/es/terminos`, `/es/privacidad`), com `hreflang` ligando as versões. Termos e privacidade traduzidos dizem que a versão em português prevalece.
+
 ## Termos de uso e privacidade
 
 - `/termos` e `/privacidade` (arquivos `frontend/termos.html` e `frontend/privacidade.html`).
@@ -267,11 +280,12 @@ Sem SMTP:
 
 ## Blog
 
-Páginas estáticas em `/blog` (lista) e `/blog/nome-do-post`, feitas para o Google encontrar o site.
+Páginas estáticas em `/blog` (lista) e `/blog/nome-do-post`, feitas para o Google encontrar o site, e as traduções em `/en/blog` e `/es/blog`.
 
 - Os textos ficam em `content/blog/*.html`: um cabeçalho com `slug`, `title`, `description`, `emoji`, `date` e `related`, e depois o HTML do post (`<h2>`, `<p>`, `<ul>`…).
-- Para publicar um post novo ou uma edição, rode `python3 scripts/build_blog.py` e faça o commit. O script gera `frontend/blog/` (posts, lista e `feed.xml`), com dados estruturados para o Google, e atualiza o `sitemap.xml` e o `llms.txt`.
-- Não edite `frontend/blog/` à mão: ele é apagado e gerado de novo a cada execução.
+- As traduções ficam em `content/blog/en/` e `content/blog/es/`, com o slug no idioma e `translation-of: slug-em-portugues` (liga as versões no `hreflang` e no seletor de idioma). O `related` usa os slugs do mesmo idioma.
+- Para publicar um post novo ou uma edição, rode `python3 scripts/build_blog.py` e faça o commit. O script gera `frontend/blog/`, `frontend/en/blog/` e `frontend/es/blog/` (posts, lista e `feed.xml`), com dados estruturados para o Google, e atualiza o `sitemap.xml` e o `llms.txt`.
+- Não edite `frontend/blog/`, `frontend/en/blog/` nem `frontend/es/blog/` à mão: são apagados e gerados de novo a cada execução.
 - Depois do deploy, envie o `sitemap.xml` no Google Search Console para os posts novos serem encontrados mais rápido.
 - Também depois do deploy, avise o Bing e outros buscadores pelo IndexNow: `python3 scripts/indexnow.py --desde AAAA-MM-DD` (só as páginas com `lastmod` a partir dessa data), `python3 scripts/indexnow.py /blog/nome-do-post` (páginas escolhidas) ou sem argumentos (o sitemap inteiro). A chave é o arquivo `frontend/<chave>.txt`; não apague nem renomeie. O Google não usa IndexNow.
 

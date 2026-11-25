@@ -3,6 +3,7 @@ using EduGame.Api.Features.Progress;
 using EduGame.Domain.Content;
 using EduGame.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Map;
 
@@ -43,9 +44,9 @@ public static class MapEndpoints
             Guid profileId, string slug, HttpContext http, AppDbContext db, ProgressService progress, CancellationToken ct) =>
         {
             var profile = await db.FindOwnedProfileAsync(http.User, profileId, ct);
-            if (profile is null) return ApiResults.NotFound("Perfil não encontrado.");
+            if (profile is null) return ApiResults.NotFound(Tr("Perfil não encontrado.", "Profile not found.", "Perfil no encontrado."));
             var subject = await db.Subjects.SingleOrDefaultAsync(s => s.Slug == slug, ct);
-            if (subject is null) return ApiResults.NotFound("Tópico não encontrado.");
+            if (subject is null) return ApiResults.NotFound(Tr("Tópico não encontrado.", "Subject not found.", "Tema no encontrado."));
 
             var subjectProgress = await progress.ForSubjectAsync(profileId, subject, ct);
             var currentOrder = subjectProgress.LevelOrder;

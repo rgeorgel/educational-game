@@ -2,6 +2,7 @@ using EduGame.Api.Common;
 using EduGame.Domain.Billing;
 using EduGame.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Billing;
 
@@ -42,7 +43,8 @@ public sealed class PlanService(AppDbContext db, IConfiguration config, GameCloc
 {
     public bool Enforced => config.GetValue("Plans:Enforce", false);
 
-    public static IReadOnlyList<PlanOffer> Offers { get; } =
+    /// <summary>Planos da página de planos, no idioma da requisição.</summary>
+    public static IReadOnlyList<PlanOffer> Offers =>
         [.. Plans.All.Select(p => new PlanOffer(p.Slug, p.Name, p.Audience, p.PriceLabel, p.SelfService, p.Features))];
 
     public async Task<PlanInfo> ForUserAsync(Guid userId, CancellationToken ct)
@@ -104,7 +106,7 @@ public sealed class PlanService(AppDbContext db, IConfiguration config, GameCloc
     {
         var used = await db.Subscriptions.AnyAsync(s => s.UserId == userId && s.Plan == plan.Slug
             && (s.Source == SubscriptionSources.Trial || s.Source == SubscriptionSources.Stripe), ct);
-        if (used) return $"Você já usou o teste grátis do {plan.Name}. Para continuar com ele, é só assinar.";
+        if (used) return Tr($"Você já usou o teste grátis do {plan.Name}. Para continuar com ele, é só assinar.", $"You've already used the {plan.Name} free trial. To keep it, just subscribe.", $"Ya usaste la prueba gratis de {plan.Name}. Para seguir con él, solo suscríbete.");
 
         var now = clock.Now;
         db.Subscriptions.Add(new Subscription
@@ -122,13 +124,13 @@ public sealed class PlanService(AppDbContext db, IConfiguration config, GameCloc
 
     /// <summary>Mensagem para quando o limite do plano foi atingido.</summary>
     public static string LimitMessage(PlanInfo plan, string what) =>
-        plan.Enforced ? $"{what} Veja os planos para ter mais." : what;
+        plan.Enforced ? Tr($"{what} Veja os planos para ter mais.", $"{what} See the plans to get more.", $"{what} Mira los planes para tener más.") : what;
 
     /// <summary>403 para recurso de outro plano; o app mostra o link para a página de planos.</summary>
     public static IResult Locked(string feature, string planSlug) =>
         TypedResults.Problem(
-            detail: $"{feature} faz parte do plano {Plans.BySlug(planSlug)?.Name ?? planSlug}.",
+            detail: Tr($"{feature} faz parte do plano {Plans.BySlug(planSlug)?.Name ?? planSlug}.", $"{feature} is part of the {Plans.BySlug(planSlug)?.Name ?? planSlug} plan.", $"{feature} forma parte del plan {Plans.BySlug(planSlug)?.Name ?? planSlug}."),
             statusCode: StatusCodes.Status403Forbidden,
-            title: "Recurso de plano",
+            title: Tr("Recurso de plano", "Plan feature", "Función del plan"),
             extensions: new Dictionary<string, object?> { ["plan"] = planSlug });
 }

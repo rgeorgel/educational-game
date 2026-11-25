@@ -3,6 +3,7 @@ import { errorMessage, h } from "../dom.js";
 import { navigate } from "../router.js";
 import { store } from "../store.js";
 import { levelProgress, startAndPlay } from "./shared.js";
+import { t, tn } from "../i18n.js";
 
 export async function mapPage({ subject }) {
   const profile = store.profile;
@@ -13,7 +14,7 @@ export async function mapPage({ subject }) {
 
   const tabs = h(
     "nav",
-    { class: "subject-tabs", "aria-label": "Trilhas" },
+    { class: "subject-tabs", "aria-label": t("Trilhas") },
     subjects.map((s) =>
       h("a", { href: `#/mapa/${s.slug}`, class: `tab${s.slug === subject ? " active" : ""}`, "aria-current": s.slug === subject ? "page" : null }, `${s.icon} ${s.name}`),
     ),
@@ -22,9 +23,9 @@ export async function mapPage({ subject }) {
   // ---------- Teste de nivelamento (só antes de começar a trilha) ----------
   let placement = null;
   if (progress.placementAvailable) {
-    const startBtn = h("button", { type: "button", class: "btn btn-primary" }, "Fazer o teste (10 perguntas)");
+    const startBtn = h("button", { type: "button", class: "btn btn-primary" }, t("Fazer o teste (10 perguntas)"));
     startBtn.addEventListener("click", () => startAndPlay(() => api.startPlacement(profile.id, subject), startBtn, error));
-    const skipBtn = h("button", { type: "button", class: "btn btn-ghost" }, "Começar do início");
+    const skipBtn = h("button", { type: "button", class: "btn btn-ghost" }, t("Começar do início"));
     skipBtn.addEventListener("click", async () => {
       skipBtn.disabled = true;
       try {
@@ -43,8 +44,8 @@ export async function mapPage({ subject }) {
       h(
         "div",
         { class: "banner-body" },
-        h("h2", {}, "Já sabe um pouco de " + progress.name + "?"),
-        h("p", { class: "muted" }, "Faça um teste rápido para começar no nível certo. Não há dicas nem nota — é só para descobrir por onde começar."),
+        h("h2", {}, t("Já sabe um pouco de {nome}?", { nome: progress.name })),
+        h("p", { class: "muted" }, t("Faça um teste rápido para começar no nível certo. Não há dicas nem nota — é só para descobrir por onde começar.")),
         h("div", { class: "actions-left" }, startBtn, skipBtn),
       ),
     );
@@ -53,7 +54,7 @@ export async function mapPage({ subject }) {
   // ---------- Desafio do Guardião ----------
   let guardian = null;
   if (progress.guardianAvailable) {
-    const btn = h("button", { type: "button", class: "btn btn-primary" }, "Enfrentar o Guardião");
+    const btn = h("button", { type: "button", class: "btn btn-primary" }, t("Enfrentar o Guardião"));
     btn.addEventListener("click", () => startAndPlay(() => api.startGuardian(profile.id, subject), btn, error));
     guardian = h(
       "section",
@@ -62,8 +63,8 @@ export async function mapPage({ subject }) {
       h(
         "div",
         { class: "banner-body" },
-        h("h2", {}, `Desafio do Guardião: rumo ao ${progress.nextLevel.name}!`),
-        h("p", { class: "muted" }, "12 problemas de todas as habilidades do nível. Acerte pelo menos 9 para subir de nível. Se não der, pratique as habilidades que faltam e tente de novo quando quiser."),
+        h("h2", {}, t("Desafio do Guardião: rumo ao {nivel}!", { nivel: progress.nextLevel.name })),
+        h("p", { class: "muted" }, t("12 problemas de todas as habilidades do nível. Acerte pelo menos 9 para subir de nível. Se não der, pratique as habilidades que faltam e tente de novo quando quiser.")),
         h("div", { class: "actions-left" }, btn),
       ),
     );
@@ -72,7 +73,7 @@ export async function mapPage({ subject }) {
   // ---------- Revisão inteligente ----------
   let review = null;
   if (progress.reviewAvailable) {
-    const btn = h("button", { type: "button", class: "btn" }, "🧩 Revisar");
+    const btn = h("button", { type: "button", class: "btn" }, t("🧩 Revisar"));
     btn.addEventListener("click", () => startAndPlay(() => api.startReview(profile.id, subject), btn, error));
     review = h(
       "div",
@@ -81,9 +82,9 @@ export async function mapPage({ subject }) {
         "p",
         {},
         progress.needsReviewSkills > 0
-          ? `${progress.needsReviewSkills} ${progress.needsReviewSkills === 1 ? "habilidade pede" : "habilidades pedem"} revisão. `
-          : "Treine o que você mais precisa: ",
-        h("span", { class: "muted small" }, "8 problemas das habilidades em que você está mais fraco ou que não pratica há tempo."),
+          ? `${tn(progress.needsReviewSkills, "{n} habilidade pede revisão.", "{n} habilidades pedem revisão.")} `
+          : t("Treine o que você mais precisa: "),
+        h("span", { class: "muted small" }, t("8 problemas das habilidades em que você está mais fraco ou que não pratica há tempo.")),
       ),
       btn,
     );
@@ -102,8 +103,8 @@ export async function mapPage({ subject }) {
       { class: "level-head" },
       h("span", { class: `level-badge level-${section.level.slug}` }, h("span", { "aria-hidden": "true" }, section.level.icon), ` ${section.level.name}`),
       section.unlocked
-        ? h("span", { class: "muted small" }, `★ ${stars} de ${levelStages.length * 3}${section.current ? " · nível atual" : ""}`)
-        : h("span", { class: "muted small" }, "🔒 Passe no Desafio do Guardião para abrir"),
+        ? h("span", { class: "muted small" }, `★ ${t("{a} de {b}", { a: stars, b: levelStages.length * 3 })}${section.current ? ` · ${t("nível atual")}` : ""}`)
+        : h("span", { class: "muted small" }, t("🔒 Passe no Desafio do Guardião para abrir")),
     );
 
     if (!section.unlocked) {
@@ -146,7 +147,7 @@ export async function mapPage({ subject }) {
     guardian,
     review,
     levels,
-    h("p", { class: "muted small center" }, `Ganhe pelo menos 1 estrela para liberar a próxima etapa. Quando a barra do nível chegar a ${progress.guardianAt}% (a marca na barra), o Desafio do Guardião abre.`),
+    h("p", { class: "muted small center" }, t("Ganhe pelo menos 1 estrela para liberar a próxima etapa. Quando a barra do nível chegar a {g}% (a marca na barra), o Desafio do Guardião abre.", { g: progress.guardianAt })),
   );
 }
 
@@ -183,8 +184,8 @@ function trail(items, nextStageId, onPlay) {
     const done = stage.stars > 0;
     const isNext = stage.id === nextStageId;
     const label = stage.unlocked
-      ? `Etapa ${number}: ${stage.name}. ${stage.stars} de 3 estrelas. ${stage.problemCount} problemas.${isNext ? " Próxima etapa." : ""}`
-      : `Etapa ${number}: ${stage.name}. Bloqueada.`;
+      ? `${t("Etapa {n}: {nome}. {e} de 3 estrelas. {p} problemas.", { n: number, nome: stage.name, e: stage.stars, p: stage.problemCount })}${isNext ? ` ${t("Próxima etapa.")}` : ""}`
+      : t("Etapa {n}: {nome}. Bloqueada.", { n: number, nome: stage.name });
     const node = h(
       "button",
       { type: "button", class: "trail-node", disabled: !stage.unlocked, "aria-label": label, title: stage.skills.join(", ") },
@@ -195,14 +196,14 @@ function trail(items, nextStageId, onPlay) {
     const step = h(
       "li",
       { class: ["trail-step", done ? "done" : "", stage.unlocked ? "" : "locked", isNext ? "next" : "", challenge ? "challenge" : ""].filter(Boolean).join(" ") },
-      isNext ? h("span", { class: "trail-bubble", "aria-hidden": "true" }, "Jogar!") : null,
+      isNext ? h("span", { class: "trail-bubble", "aria-hidden": "true" }, t("Jogar!")) : null,
       node,
       h(
         "span",
         { class: "trail-label" },
         h("strong", {}, stage.name),
         h("star-rating", { stars: String(stage.stars) }),
-        h("span", { class: "muted small" }, `${stage.problemCount} problemas`),
+        h("span", { class: "muted small" }, t("{p} problemas", { p: stage.problemCount })),
       ),
     );
     step.style.setProperty("--wave", String(WAVE[index % WAVE.length]));

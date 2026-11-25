@@ -12,11 +12,13 @@ public sealed record LevelDto(string Slug, string Name, string Icon);
 /// <summary>Habilidade da BNCC ligada a uma habilidade do jogo.</summary>
 public sealed record BnccRefDto(string Code, string Grade, string Component, string Summary)
 {
-    private static readonly Dictionary<string, BnccRefDto> All =
-        EduGame.Infrastructure.Seeding.BnccCatalog.Habilidades.ToDictionary(h => h.Code, h => new BnccRefDto(h.Code, h.Grade, h.Component, h.Summary));
+    private static readonly Dictionary<string, EduGame.Infrastructure.Seeding.BnccCatalog.Habilidade> All =
+        EduGame.Infrastructure.Seeding.BnccCatalog.Habilidades.ToDictionary(h => h.Code);
 
+    /// <summary>Monta a cada chamada: os textos saem no idioma da requisição.</summary>
     public static IReadOnlyList<BnccRefDto> For(IEnumerable<string> codes) =>
-        [.. codes.Select(c => All.GetValueOrDefault(c)).OfType<BnccRefDto>()];
+        [.. codes.Select(c => All.GetValueOrDefault(c)).OfType<EduGame.Infrastructure.Seeding.BnccCatalog.Habilidade>()
+            .Select(h => new BnccRefDto(h.Code, h.Grade, h.Component, h.Summary))];
 }
 
 public sealed record SkillProgressDto(

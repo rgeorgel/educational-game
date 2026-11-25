@@ -6,31 +6,32 @@ import { loading } from "./shared.js";
 import { getPrefs } from "../prefs.js";
 import { speak, voiceSupported } from "../voice.js";
 import { confettiFrom, floatText } from "../effects.js";
+import { t } from "../i18n.js";
 
-const PRAISE = ["Muito bem!", "Isso aí!", "Mandou bem!", "Excelente!", "Certinho!", "Show!"];
-const ENCOURAGE = ["Quase! Vamos ver como faz.", "Não foi dessa vez — errar faz parte de aprender.", "Boa tentativa! Olha a explicação."];
+const PRAISE = [t("Muito bem!"), t("Isso aí!"), t("Mandou bem!"), t("Excelente!"), t("Certinho!"), t("Show!")];
+const ENCOURAGE = [t("Quase! Vamos ver como faz."), t("Não foi dessa vez — errar faz parte de aprender."), t("Boa tentativa! Olha a explicação.")];
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 // Depois que um desafio novo aparece, ignora toques na área de resposta por um instante.
-// No celular, um toque duplo em "Continuar" (ou o toque que chega atrasado enquanto a tela
+// No celular, um toque duplo em t("Continuar") (ou o toque que chega atrasado enquanto a tela
 // troca) caía numa opção do desafio seguinte e contava como resposta errada.
 const INPUT_GUARD_MS = 600;
 
 const MODE_LABEL = {
-  guardiao: "🛡️ Desafio do Guardião",
-  nivelamento: "🧭 Teste de nivelamento",
-  diario: "📆 Desafio do dia · XP em dobro",
-  revisao: "🧩 Revisão",
+  guardiao: t("🛡️ Desafio do Guardião"),
+  nivelamento: t("🧭 Teste de nivelamento"),
+  diario: t("📆 Desafio do dia · XP em dobro"),
+  revisao: t("🧩 Revisão"),
 };
 
 /** Texto lido em voz alta: enunciado, figuras/código e as opções. */
 function readable(problem) {
   const parts = [problem.prompt];
   if (problem.visual) parts.push(problem.visual.replace(/\n/g, ". "));
-  if (problem.code) parts.push(problem.code.replace(/←/g, " recebe ").replace(/\n/g, ". "));
-  if (problem.choices && problem.type !== "ordenar") parts.push(`Opções: ${problem.choices.join(", ")}.`);
-  if (problem.type === "ordenar") parts.push(`Itens: ${problem.choices.join(", ")}.`);
+  if (problem.code) parts.push(problem.code.replace(/←/g, ` ${t("recebe")} `).replace(/\n/g, ". "));
+  if (problem.choices && problem.type !== "ordenar") parts.push(t("Opções: {lista}.", { lista: problem.choices.join(", ") }));
+  if (problem.type === "ordenar") parts.push(t("Itens: {lista}.", { lista: problem.choices.join(", ") }));
   return parts.join(" ");
 }
 
@@ -43,7 +44,7 @@ export async function sessionPage({ sessionId }) {
   // Sequência de acertos nesta visita ("🔥 3 seguidas").
   let streak = 0;
   const combo = h("span", { class: "combo", hidden: true, "aria-live": "polite" });
-  const body = h("div", { class: "play-body" }, loading("Preparando o desafio…"));
+  const body = h("div", { class: "play-body" }, loading(t("Preparando o desafio…")));
   const live = h("div", { class: "visually-hidden", "aria-live": "polite" });
 
   const root = h(
@@ -52,7 +53,7 @@ export async function sessionPage({ sessionId }) {
     h(
       "header",
       { class: "play-top" },
-      h("a", { href: "#/", class: "btn btn-ghost btn-icon", "aria-label": "Sair da sessão", onClick: exit }, "✕"),
+      h("a", { href: "#/", class: "btn btn-ghost btn-icon", "aria-label": t("Sair da sessão"), onClick: exit }, "✕"),
       dots,
       combo,
       counter,
@@ -83,7 +84,7 @@ export async function sessionPage({ sessionId }) {
     try {
       next = await api.next(sessionId);
     } catch (err) {
-      body.replaceChildren(h("div", { class: "card" }, h("h1", {}, "Ops!"), h("p", {}, errorMessage(err)), h("a", { href: "#/", class: "btn" }, "Voltar")));
+      body.replaceChildren(h("div", { class: "card" }, h("h1", {}, t("Ops!")), h("p", {}, errorMessage(err)), h("a", { href: "#/", class: "btn" }, t("Voltar"))));
       return;
     }
     if (next.done) {
@@ -97,10 +98,10 @@ export async function sessionPage({ sessionId }) {
     renderDots(problem.number, problem.total);
     live.textContent = "";
 
-    const hintsList = h("ol", { class: "hints-list" }, problem.hints.map((t) => h("li", {}, t)));
+    const hintsList = h("ol", { class: "hints-list" }, problem.hints.map((hint) => h("li", {}, hint)));
     const hintButton = h("button", { type: "button", class: "btn btn-ghost hint-btn" });
     const updateHintButton = (shown) => {
-      hintButton.textContent = `💡 Dica (${shown}/${problem.hintsTotal})`;
+      hintButton.textContent = `💡 ${t("Dica")} (${shown}/${problem.hintsTotal})`;
       hintButton.disabled = shown >= problem.hintsTotal;
     };
     updateHintButton(problem.hints.length);
@@ -108,9 +109,9 @@ export async function sessionPage({ sessionId }) {
       hintButton.disabled = true;
       try {
         const res = await api.hint(sessionId, problem.id);
-        hintsList.replaceChildren(...res.hints.map((t) => h("li", {}, t)));
+        hintsList.replaceChildren(...res.hints.map((hint) => h("li", {}, hint)));
         updateHintButton(res.hints.length);
-        live.textContent = `Dica: ${res.hints.at(-1)}`;
+        live.textContent = `${t("Dica")}: ${res.hints.at(-1)}`;
       } catch (err) {
         live.textContent = errorMessage(err);
         updateHintButton(problem.hints.length);
@@ -148,7 +149,7 @@ export async function sessionPage({ sessionId }) {
       streak = result.correct ? streak + 1 : 0;
       combo.hidden = streak < 2;
       if (streak >= 2) {
-        combo.textContent = `🔥 ${streak} seguidas`;
+        combo.textContent = `🔥 ${t("{n} seguidas", { n: streak })}`;
         combo.classList.remove("bump");
         void combo.offsetWidth; // reinicia a animação
         combo.classList.add("bump");
@@ -163,16 +164,16 @@ export async function sessionPage({ sessionId }) {
     function showFeedback(result) {
       current.feedbackShown = true;
       current.finished = result.sessionFinished;
-      const continueBtn = h("button", { type: "button", class: "btn btn-primary btn-block", onClick: next }, result.sessionFinished ? "Ver resultado" : "Continuar");
+      const continueBtn = h("button", { type: "button", class: "btn btn-primary btn-block", onClick: next }, result.sessionFinished ? t("Ver resultado") : t("Continuar"));
       current.continueBtn = continueBtn;
       feedback.className = `feedback ${result.correct ? "is-correct" : "is-wrong"}`;
       feedback.replaceChildren();
       append(feedback, [
-        h("p", { class: "feedback-title" }, result.correct ? `✅ ${pick(PRAISE)}` : `💭 ${problem.mode === "etapa" || problem.mode === "revisao" ? pick(ENCOURAGE) : "Não foi dessa vez."}`),
-        result.correct ? null : h("p", {}, "A resposta certa é ", h("strong", {}, result.correctAnswer), "."),
+        h("p", { class: "feedback-title" }, result.correct ? `✅ ${pick(PRAISE)}` : `💭 ${problem.mode === "etapa" || problem.mode === "revisao" ? pick(ENCOURAGE) : t("Não foi dessa vez.")}`),
+        result.correct ? null : h("p", {}, t("A resposta certa é "), h("strong", {}, result.correctAnswer), "."),
         h("p", { class: "explanation" }, result.explanation),
         h("p", { class: "xp" }, `+${result.xpEarned} XP`),
-        !result.correct && !result.sessionFinished && (problem.mode === "etapa" || problem.mode === "revisao") ? h("p", { class: "muted small" }, "Agora vem um parecido para você tentar de novo!") : null,
+        !result.correct && !result.sessionFinished && (problem.mode === "etapa" || problem.mode === "revisao") ? h("p", { class: "muted small" }, t("Agora vem um parecido para você tentar de novo!")) : null,
         continueBtn,
       ]);
       feedback.hidden = false;
@@ -181,12 +182,12 @@ export async function sessionPage({ sessionId }) {
     }
 
     function next() {
-      // Um só avanço por desafio: toques repetidos em "Continuar" não fazem nada.
+      // Um só avanço por desafio: toques repetidos em t("Continuar") não fazem nada.
       if (current.advancing) return;
       current.advancing = true;
       if (current.continueBtn) {
         current.continueBtn.disabled = true;
-        if (!current.finished) current.continueBtn.textContent = "Carregando…";
+        if (!current.finished) current.continueBtn.textContent = t("Carregando…");
       }
       if (current.finished) navigate(`/resultado/${sessionId}`, { replace: true });
       else loadNext();
@@ -210,18 +211,18 @@ export async function sessionPage({ sessionId }) {
       MODE_LABEL[problem.mode] ? h("p", { class: `mode-tag mode-${problem.mode}` }, MODE_LABEL[problem.mode]) : null,
       h("p", { class: "skill-tag" }, problem.skill.name),
       h("h1", { id: "prompt", class: "prompt", tabindex: "-1" }, problem.prompt),
-      voiceSupported ? h("button", { type: "button", class: "btn btn-ghost btn-small listen-btn", onClick: () => speak(readable(problem)) }, "🔊 Ouvir") : null,
-      problem.visual ? h("p", { class: "visual", "aria-label": "Figura do problema" }, problem.visual) : null,
-      problem.code ? h("pre", { class: "code-block", "aria-label": "Programa" }, h("code", {}, problem.code)) : null,
+      voiceSupported ? h("button", { type: "button", class: "btn btn-ghost btn-small listen-btn", onClick: () => speak(readable(problem)) }, t("🔊 Ouvir")) : null,
+      problem.visual ? h("p", { class: "visual", "aria-label": t("Figura do problema") }, problem.visual) : null,
+      problem.code ? h("pre", { class: "code-block", "aria-label": t("Programa") }, h("code", {}, problem.code)) : null,
       problem.figure && problem.type !== "fracao-visual" ? h("div", { class: "figure-wrap" }, readOnlyFigure(problem.figure)) : null,
       answerArea,
       problem.hintsTotal > 0
         ? h("div", { class: "hints" }, hintButton, hintsList)
-        : h("p", { class: "muted small" }, "No teste de nivelamento não há dicas. Tudo bem não saber — responda o que achar!"),
+        : h("p", { class: "muted small" }, t("No teste de nivelamento não há dicas. Tudo bem não saber — responda o que achar!")),
     );
 
     body.replaceChildren(card, feedback);
-    // Começa sempre do topo: a tela não fica rolada onde estava o "Continuar" do desafio anterior.
+    // Começa sempre do topo: a tela não fica rolada onde estava o t("Continuar") do desafio anterior.
     window.scrollTo({ top: 0, behavior: "instant" });
     card.querySelector("#prompt").focus({ preventScroll: true });
     if (getPrefs().autoRead) speak(readable(problem));

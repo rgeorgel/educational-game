@@ -57,6 +57,35 @@ function clearAnalyticsCookies() {
 
 let banner = null;
 
+// Textos do aviso no idioma da página (pt, en ou es).
+const LANG = (document.documentElement.lang || "pt").slice(0, 2);
+const TEXT = {
+  pt: {
+    label: "Aviso de cookies",
+    body: "Com sua permissão, usamos o Google Analytics nas páginas de apresentação e no blog, para saber quantas pessoas visitam e de onde vêm. O jogo das crianças não tem nenhum rastreador.",
+    more: "Saiba mais",
+    privacy: "/privacidade#cookies",
+    deny: "Recusar",
+    accept: "Aceitar",
+  },
+  en: {
+    label: "Cookie notice",
+    body: "With your permission, we use Google Analytics on the information pages and the blog to know how many people visit and where they come from. The children's game has no trackers at all.",
+    more: "Learn more",
+    privacy: "/en/privacy#cookies",
+    deny: "Decline",
+    accept: "Accept",
+  },
+  es: {
+    label: "Aviso de cookies",
+    body: "Con tu permiso, usamos Google Analytics en las páginas de presentación y en el blog, para saber cuántas personas nos visitan y de dónde vienen. El juego de los niños no tiene ningún rastreador.",
+    more: "Más información",
+    privacy: "/es/privacidad#cookies",
+    deny: "Rechazar",
+    accept: "Aceptar",
+  },
+}[LANG] ?? {};
+
 function showBanner() {
   if (banner) {
     banner.hidden = false;
@@ -65,15 +94,13 @@ function showBanner() {
   }
   banner = document.createElement("section");
   banner.className = "lp-consent";
-  banner.setAttribute("aria-label", "Aviso de cookies");
+  banner.setAttribute("aria-label", TEXT.label);
+  // Textos fixos deste arquivo (sem dados de fora), então innerHTML é seguro aqui.
   banner.innerHTML = `
-    <p>
-      Com sua permissão, usamos o Google Analytics nas páginas de apresentação e no blog, para saber quantas
-      pessoas visitam e de onde vêm. O jogo das crianças não tem nenhum rastreador. <a href="/privacidade#cookies">Saiba mais</a>
-    </p>
+    <p>${TEXT.body} <a href="${TEXT.privacy}">${TEXT.more}</a></p>
     <div class="lp-consent-actions">
-      <button type="button" class="lp-btn lp-btn-ghost lp-btn-small" data-consent="denied">Recusar</button>
-      <button type="button" class="lp-btn lp-btn-primary lp-btn-small" data-consent="granted">Aceitar</button>
+      <button type="button" class="lp-btn lp-btn-ghost lp-btn-small" data-consent="denied">${TEXT.deny}</button>
+      <button type="button" class="lp-btn lp-btn-primary lp-btn-small" data-consent="granted">${TEXT.accept}</button>
     </div>`;
   banner.addEventListener("click", (event) => {
     const value = event.target.closest("[data-consent]")?.dataset.consent;

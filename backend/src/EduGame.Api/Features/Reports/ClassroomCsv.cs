@@ -1,29 +1,44 @@
 using System.Globalization;
 using System.Text;
+using static EduGame.Problems.Lang;
 
 namespace EduGame.Api.Features.Reports;
 
 /// <summary>
-/// Planilhas da turma em CSV para Excel/Google Planilhas em português:
-/// separador ";", UTF-8 com BOM (acentos certos no Excel) e proteção contra fórmulas em células.
+/// Planilhas da turma em CSV para Excel/Google Planilhas, no idioma da requisição:
+/// separador ";" (português e espanhol) ou "," (inglês), UTF-8 com BOM (acentos certos no Excel)
+/// e proteção contra fórmulas em células.
 /// </summary>
 public static class ClassroomCsv
 {
     private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
 
+    /// <summary>O Excel em inglês separa colunas por vírgula; em português e espanhol, por ponto e vírgula.</summary>
+    private static char Separator => Current == En ? ',' : ';';
+
     public static byte[] Students(IReadOnlyList<ProfileReport> students, IReadOnlyList<AssignmentDto> assignments)
     {
         var subjects = students.SelectMany(s => s.Subjects).Select(s => s.Name).Distinct().ToList();
-        var header = new List<string> { "Apelido", "Último dia jogado", "Dias seguidos", "Problemas (7 dias)", "Acertos (7 dias)", "Problemas (total)", "Acertos (total)" };
-        foreach (var subject in subjects) header.AddRange([$"{subject}: nível", $"{subject}: % para o próximo nível"]);
-        header.AddRange(["Tarefas feitas", "Pede atenção", "BNCC (pede atenção)"]);
+        var header = new List<string>
+        {
+            Tr("Apelido", "Nickname", "Apodo"),
+            Tr("Último dia jogado", "Last day played", "Último día jugado"),
+            Tr("Dias seguidos", "Day streak", "Días seguidos"),
+            Tr("Problemas (7 dias)", "Problems (7 days)", "Problemas (7 días)"),
+            Tr("Acertos (7 dias)", "Correct (7 days)", "Aciertos (7 días)"),
+            Tr("Problemas (total)", "Problems (total)", "Problemas (total)"),
+            Tr("Acertos (total)", "Correct (total)", "Aciertos (total)"),
+        };
+        foreach (var subject in subjects)
+            header.AddRange([Tr($"{subject}: nível", $"{subject}: level", $"{subject}: nivel"), Tr($"{subject}: % para o próximo nível", $"{subject}: % to next level", $"{subject}: % para el siguiente nivel")]);
+        header.AddRange([Tr("Tarefas feitas", "Assignments done", "Tareas hechas"), Tr("Pede atenção", "Needs attention", "Necesita atención"), Tr("BNCC (pede atenção)", "BNCC (needs attention)", "BNCC (necesita atención)")]);
 
         var rows = students.Select(s =>
         {
             var row = new List<string>
             {
                 s.Nickname,
-                s.LastActive?.ToString("dd/MM/yyyy") ?? "",
+                s.LastActive?.ToString(Current == En ? "MM/dd/yyyy" : "dd/MM/yyyy", CultureInfo.InvariantCulture) ?? "",
                 s.Streak.ToString(PtBr),
                 s.LastSevenDays.Problems.ToString(PtBr),
                 Percent(s.LastSevenDays.Correct, s.LastSevenDays.Problems),
@@ -38,7 +53,7 @@ public static class ClassroomCsv
             var done = assignments.Count(a => a.Students.Any(x => x.ProfileId == s.Id && x.Status == "feita"));
             var attention = s.Subjects.SelectMany(x => x.AttentionSkills).ToList();
             row.AddRange([
-                assignments.Count == 0 ? "" : $"{done} de {assignments.Count}",
+                assignments.Count == 0 ? "" : Tr($"{done} de {assignments.Count}", $"{done} of {assignments.Count}", $"{done} de {assignments.Count}"),
                 string.Join(", ", attention.Select(a => a.Name)),
                 string.Join(", ", attention.SelectMany(a => a.Bncc).Distinct()),
             ]);
@@ -49,7 +64,13 @@ public static class ClassroomCsv
 
     public static byte[] Skills(IReadOnlyList<SkillClassDto> skills)
     {
-        string[] header = ["Matéria", "Nível", "Habilidade", "BNCC", "Alunos que praticaram", "Dominam", "Praticando", "Pedem revisão", "Respostas", "Acertos"];
+        string[] header =
+        [
+            Tr("Matéria", "Subject", "Materia"), Tr("Nível", "Level", "Nivel"), Tr("Habilidade", "Skill", "Habilidad"), "BNCC",
+            Tr("Alunos que praticaram", "Students who practiced", "Alumnos que practicaron"), Tr("Dominam", "Mastered", "Dominan"),
+            Tr("Praticando", "Practicing", "Practicando"), Tr("Pedem revisão", "Need review", "Necesitan repaso"),
+            Tr("Respostas", "Answers", "Respuestas"), Tr("Acertos", "Correct", "Aciertos"),
+        ];
         var rows = skills.Select(s => (IReadOnlyList<string>)
         [
             s.SubjectName, s.LevelName, s.Name, string.Join(", ", s.Bncc),
@@ -64,8 +85,8 @@ public static class ClassroomCsv
     private static byte[] Build(IReadOnlyList<string> header, IEnumerable<IReadOnlyList<string>> rows)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(string.Join(';', header.Select(Cell)));
-        foreach (var row in rows) sb.AppendLine(string.Join(';', row.Select(Cell)));
+        sb.AppendLine(string.Join(Separator, header.Select(Cell)));
+        foreach (var row in rows) sb.AppendLine(string.Join(Separator, row.Select(Cell)));
         return [.. Encoding.UTF8.GetPreamble(), .. Encoding.UTF8.GetBytes(sb.ToString())];
     }
 
@@ -74,7 +95,7 @@ public static class ClassroomCsv
     {
         value ??= "";
         if (value.Length > 0 && "=+-@\t\r".Contains(value[0]) && !IsNumberLike(value)) value = "'" + value;
-        return value.IndexOfAny([';', '"', '\n', '\r']) >= 0 ? $"\"{value.Replace("\"", "\"\"")}\"" : value;
+        return value.IndexOfAny([Separator, '"', '\n', '\r']) >= 0 ? $"\"{value.Replace("\"", "\"\"")}\"" : value;
     }
 
     private static bool IsNumberLike(string value) => decimal.TryParse(value.TrimEnd('%'), NumberStyles.Number, PtBr, out _);

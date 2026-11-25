@@ -1,3 +1,5 @@
+using EduGame.Problems;
+
 namespace EduGame.Domain.Billing;
 
 /// <summary>O que um plano libera. Jogar é sempre grátis; os planos são para adultos (responsáveis e professores).</summary>
@@ -24,7 +26,12 @@ public sealed record PlanFeatures(
 /// <param name="SelfService">Pode ser escolhido pela própria pessoa na página de planos (Escola é por contrato).</param>
 /// <param name="PriceLabel">Preço exibido na página de planos.</param>
 /// <param name="MonthlyPriceCents">Preço mensal em centavos de real (usado ao criar o preço no Stripe); 0 = sem cobrança online.</param>
-public sealed record PlanDefinition(string Slug, string Name, string Audience, string PriceLabel, bool SelfService, int Rank, PlanFeatures Features, int MonthlyPriceCents = 0);
+public sealed record PlanDefinition(string Slug, Text NameText, Text AudienceText, Text PriceLabelText, bool SelfService, int Rank, PlanFeatures Features, int MonthlyPriceCents = 0)
+{
+    public string Name => NameText.Current;
+    public string Audience => AudienceText.Current;
+    public string PriceLabel => PriceLabelText.Current;
+}
 
 public static class Plans
 {
@@ -33,18 +40,18 @@ public static class Plans
     public const string FamilySlug = "familia";
     public const string SchoolSlug = "escola";
 
-    public static readonly PlanDefinition Free = new(FreeSlug, "Grátis", "Para começar", "R$ 0", true, 0,
+    public static readonly PlanDefinition Free = new(FreeSlug, new("Grátis", "Free", "Gratis"), new("Para começar", "To get started", "Para empezar"), new("R$ 0", "R$0", "R$ 0"), true, 0,
         new(MaxProfiles: 3, MaxClassrooms: 1, MaxActiveAssignmentsPerClassroom: 2, CanExport: false, Worksheets: false, WeeklyReport: false, Reinforcement: false));
 
-    public static readonly PlanDefinition Teacher = new(TeacherSlug, "Professor Pro", "Para professores", "R$ 19,90/mês", true, 1,
+    public static readonly PlanDefinition Teacher = new(TeacherSlug, new("Professor Pro", "Teacher Pro", "Profesor Pro"), new("Para professores", "For teachers", "Para profesores"), new("R$ 19,90/mês", "R$19.90/month", "R$ 19,90/mes"), true, 1,
         new(MaxProfiles: 3, MaxClassrooms: 20, MaxActiveAssignmentsPerClassroom: 50, CanExport: true, Worksheets: true, WeeklyReport: false, Reinforcement: false),
         MonthlyPriceCents: 1990);
 
-    public static readonly PlanDefinition Family = new(FamilySlug, "Família", "Para pais e responsáveis", "R$ 9,90/mês", true, 1,
+    public static readonly PlanDefinition Family = new(FamilySlug, new("Família", "Family", "Familia"), new("Para pais e responsáveis", "For parents and guardians", "Para madres, padres y tutores"), new("R$ 9,90/mês", "R$9.90/month", "R$ 9,90/mes"), true, 1,
         new(MaxProfiles: 8, MaxClassrooms: 1, MaxActiveAssignmentsPerClassroom: 2, CanExport: false, Worksheets: true, WeeklyReport: true, Reinforcement: true),
         MonthlyPriceCents: 990);
 
-    public static readonly PlanDefinition School = new(SchoolSlug, "Escola", "Para escolas e redes", "Sob consulta", false, 2,
+    public static readonly PlanDefinition School = new(SchoolSlug, new("Escola", "School", "Escuela"), new("Para escolas e redes", "For schools and districts", "Para escuelas y redes"), new("Sob consulta", "Contact us", "A consultar"), false, 2,
         new(MaxProfiles: 8, MaxClassrooms: 300, MaxActiveAssignmentsPerClassroom: 50, CanExport: true, Worksheets: true, WeeklyReport: true, Reinforcement: true));
 
     public static IReadOnlyList<PlanDefinition> All { get; } = [Free, Teacher, Family, School];

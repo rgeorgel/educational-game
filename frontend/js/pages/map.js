@@ -20,6 +20,62 @@ export async function mapPage({ subject }) {
     ),
   );
 
+  /** Muda o nível na trilha (escolha inicial ou ir para um nível mais fácil) e recarrega o mapa. */
+  const changeLevel = async (level, button) => {
+    button.disabled = true;
+    error.hidden = true;
+    try {
+      await api.changeLevel(profile.id, subject, level.slug);
+      navigate(`/mapa/${subject}`);
+    } catch (err) {
+      error.textContent = errorMessage(err);
+      error.hidden = false;
+      button.disabled = false;
+    }
+  };
+
+  // ---------- Ir para um nível mais fácil ----------
+  // Discreto no cartão do nível; vira um aviso quando o jogador está acertando pouco no nível atual.
+  let easierToggle = null;
+  let easierBanner = null;
+  const currentIndex = map.levels.findIndex((l) => l.current);
+  if (currentIndex > 0) {
+    const lower = map.levels.slice(0, currentIndex);
+    const picker = levelPicker(
+      lower,
+      {
+        id: "easier-picker",
+        selected: lower.at(-1).level.slug,
+        confirmLabel: (level) => t("Ir para o {nivel}", { nivel: level.name }),
+        note: t("Suas estrelas e o que você já praticou ficam guardados. Para subir de novo, passe no Desafio do Guardião."),
+      },
+      changeLevel,
+    );
+    if (progress.suggestEasierLevel) {
+      const toggle = pickerToggle(h("button", { type: "button", class: "btn" }, t("Escolher um nível mais fácil")), picker);
+      easierBanner = h(
+        "section",
+        { class: "card banner banner-easier" },
+        h("div", { class: "banner-icon", "aria-hidden": "true" }, "🧗"),
+        h(
+          "div",
+          { class: "banner-body" },
+          h("h2", {}, t("O nível {nivel} está difícil?", { nivel: progress.level.name })),
+          h("p", { class: "muted" }, t("Você está acertando poucas perguntas por aqui. Voltar um nível e treinar mais um pouco ajuda a chegar mais forte. Você decide!")),
+          h("div", { class: "actions-left" }, toggle),
+          picker,
+        ),
+      );
+    } else {
+      easierToggle = h(
+        "div",
+        { class: "easier-level" },
+        pickerToggle(h("button", { type: "button", class: "btn btn-ghost btn-small" }, t("Está difícil? Ir para um nível mais fácil")), picker),
+        picker,
+      );
+    }
+  }
+
   // ---------- Teste de nivelamento (só antes de começar a trilha) ----------
   let placement = null;
   if (progress.placementAvailable) {
@@ -37,6 +93,18 @@ export async function mapPage({ subject }) {
         skipBtn.disabled = false;
       }
     });
+    const picker = levelPicker(
+      map.levels,
+      {
+        id: "level-picker",
+        selected: progress.suggestedLevel,
+        suggested: progress.suggestedLevel,
+        confirmLabel: (level) => t("Começar no {nivel}", { nivel: level.name }),
+        note: t("As etapas dos níveis anteriores ficam abertas e contam como dominadas. Para subir mais, passe no Desafio do Guardião."),
+      },
+      changeLevel,
+    );
+    const chooseBtn = pickerToggle(h("button", { type: "button", class: "btn" }, t("Escolher meu nível")), picker);
     placement = h(
       "section",
       { class: "card banner banner-placement" },
@@ -45,8 +113,9 @@ export async function mapPage({ subject }) {
         "div",
         { class: "banner-body" },
         h("h2", {}, t("Já sabe um pouco de {nome}?", { nome: progress.name })),
-        h("p", { class: "muted" }, t("Faça um teste rápido para começar no nível certo. Não há dicas nem nota — é só para descobrir por onde começar.")),
-        h("div", { class: "actions-left" }, startBtn, skipBtn),
+        h("p", { class: "muted" }, t("Faça um teste rápido para começar no nível certo, ou escolha você mesmo o nível. Não há dicas nem nota — é só para descobrir por onde começar.")),
+        h("div", { class: "actions-left" }, startBtn, chooseBtn, skipBtn),
+        picker,
       ),
     );
   }
@@ -141,14 +210,82 @@ export async function mapPage({ subject }) {
     "section",
     { class: "page" },
     tabs,
-    h("div", { class: "map-hero", dataset: { subject } }, h("h1", {}, `${progress.icon} ${progress.name}`), h("div", { class: "card" }, levelProgress(progress))),
+    h("div", { class: "map-hero", dataset: { subject } }, h("h1", {}, `${progress.icon} ${progress.name}`), h("div", { class: "card" }, levelProgress(progress), easierToggle)),
     error,
+    easierBanner,
     placement,
     guardian,
     review,
     levels,
     h("p", { class: "muted small center" }, t("Ganhe pelo menos 1 estrela para liberar a próxima etapa. Quando a barra do nível chegar a {g}% (a marca na barra), o Desafio do Guardião abre.", { g: progress.guardianAt })),
   );
+}
+
+// ---------- Escolha do nível inicial ----------
+
+/**
+ * Lista níveis para o jogador escolher (onde começar a trilha, ou para qual nível mais fácil ir).
+ * Começa com `selected` marcado; `suggested` ganha o selo "Sugerido".
+ */
+function levelPicker(sections, { id, selected: selectedSlug, suggested, confirmLabel, note }, onConfirm) {
+  let selected = sections.find((s) => s.level.slug === selectedSlug)?.level ?? sections[0].level;
+
+  const confirmBtn = h("button", { type: "button", class: "btn btn-primary" });
+  const options = sections.map(({ level, regions }) => {
+    const option = h(
+      "button",
+      { type: "button", role: "radio", class: "level-option", dataset: { slug: level.slug } },
+      h("span", { class: `level-badge level-${level.slug}` }, h("span", { "aria-hidden": "true" }, level.icon), ` ${level.name}`),
+      level.slug === suggested ? h("span", { class: "chip" }, t("Sugerido")) : null,
+      h("span", { class: "muted small level-option-topics" }, regions.map((r) => r.name).join(" · ")),
+    );
+    option.addEventListener("click", () => select(level));
+    return option;
+  });
+
+  const select = (level) => {
+    selected = level;
+    options.forEach((o) => {
+      const on = o.dataset.slug === level.slug;
+      o.setAttribute("aria-checked", String(on));
+      o.tabIndex = on ? 0 : -1;
+    });
+    confirmBtn.textContent = confirmLabel(level);
+  };
+  select(selected);
+
+  // Setas mudam a escolha, como num grupo de rádios.
+  const group = h("div", { role: "radiogroup", class: "level-options", "aria-label": t("Níveis") }, options);
+  group.addEventListener("keydown", (e) => {
+    const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const index = sections.findIndex((s) => s.level.slug === selected.slug);
+    const next = sections[(index + step + sections.length) % sections.length].level;
+    select(next);
+    options.find((o) => o.dataset.slug === next.slug).focus();
+  });
+  confirmBtn.addEventListener("click", () => onConfirm(selected, confirmBtn));
+
+  return h(
+    "div",
+    { id, class: "level-picker", hidden: true },
+    group,
+    h("p", { class: "muted small" }, note),
+    h("div", { class: "actions-left" }, confirmBtn),
+  );
+}
+
+/** Faz o botão abrir e fechar a lista de níveis. */
+function pickerToggle(button, picker) {
+  button.setAttribute("aria-expanded", "false");
+  button.setAttribute("aria-controls", picker.id);
+  button.addEventListener("click", () => {
+    picker.hidden = !picker.hidden;
+    button.setAttribute("aria-expanded", String(!picker.hidden));
+    if (!picker.hidden) picker.querySelector("[aria-checked='true']")?.focus();
+  });
+  return button;
 }
 
 // ---------- Trilha em ziguezague ----------

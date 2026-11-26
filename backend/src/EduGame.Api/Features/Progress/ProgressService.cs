@@ -45,6 +45,8 @@ public sealed record SubjectProgressDto(
     bool ReadyForNextLevel,
     bool GuardianAvailable,
     bool PlacementAvailable,
+    string? SuggestedLevel,
+    bool SuggestEasierLevel,
     bool ReviewAvailable,
     int NeedsReviewSkills,
     int MasteredSkills,
@@ -101,6 +103,15 @@ public sealed class ProgressService(AppDbContext db, GameClock clock)
         var maxContent = await MaxContentLevelOrderAsync(subject.Id, ct);
         var next = result.Next is { } n ? new LevelDto(n.Slug, n.Name, n.Icon) : null;
         var hasAttempts = await db.SkillMasteries.AnyAsync(m => m.ProfileId == profileId && m.AttemptsCount > 0 && db.Skills.Any(s => s.Id == m.SkillId && s.SubjectId == subject.Id), ct);
+        var placementAvailable = !(progress?.PlacementDone ?? false) && !hasAttempts;
+
+        // Quem pode escolher o nível vê uma sugestão pela série escolar (o mesmo ponto de partida do nivelamento).
+        string? suggested = null;
+        if (placementAvailable)
+        {
+            var grade = await db.Profiles.Where(p => p.Id == profileId).Select(p => p.SchoolGrade).SingleOrDefaultAsync(ct);
+            suggested = Placement.LevelFor(Placement.StartRating(grade), maxContent).Slug;
+        }
 
         return new SubjectProgressDto(
             subject.Slug, subject.Name, subject.Icon,
@@ -111,7 +122,9 @@ public sealed class ProgressService(AppDbContext db, GameClock clock)
             LevelProgress.GuardianThreshold,
             result.ReadyForNextLevel,
             GuardianAvailable: result.ReadyForNextLevel && result.Next is { } nx && nx.Order <= maxContent,
-            PlacementAvailable: !(progress?.PlacementDone ?? false) && !hasAttempts,
+            PlacementAvailable: placementAvailable,
+            SuggestedLevel: suggested,
+            SuggestEasierLevel: LevelProgress.TooHard(levelDef, skillDtos.Sum(s => s.Attempts), skillDtos.Sum(s => s.Correct)),
             ReviewAvailable: hasAttempts,
             NeedsReviewSkills: skillDtos.Count(s => s.Status == SkillStatus.NeedsReview),
             result.MasteredSkills,
@@ -152,8 +165,10 @@ public sealed class ProgressService(AppDbContext db, GameClock clock)
             .Where(s => s.Mode == Domain.Sessions.SessionModes.Stage && s.CorrectCount == s.ProblemCount)
             .CountAsync(s => !db.SessionProblems.Any(p => p.SessionId == s.Id && p.HintsRevealed > 0), ct);
         var active = await db.DailyActivities.Where(d => d.ProfileId == profileId && d.ProblemsSolved > 0).Select(d => d.Date).ToListAsync(ct);
-        var highestLevel = await db.SubjectProgresses.Where(p => p.ProfileId == profileId)
-            .Join(db.Levels, p => p.CurrentLevelId, l => l.Id, (p, l) => (int?)l.Order).MaxAsync(ct) ?? 1;
+        // Medalha de nível só para nível conquistado (Guardião ou nivelamento): escolher o nível no começo não conta.
+        var highestLevel = await db.Levels
+            .Where(l => finished.Any(s => s.ResultLevelId == l.Id && (s.Mode == Domain.Sessions.SessionModes.Guardian || s.Mode == Domain.Sessions.SessionModes.Placement)))
+            .MaxAsync(l => (int?)l.Order, ct) ?? 1;
 
         var stats = new PlayerStats(
             ProblemsSolved: masteries.Sum(m => m.AttemptsCount),

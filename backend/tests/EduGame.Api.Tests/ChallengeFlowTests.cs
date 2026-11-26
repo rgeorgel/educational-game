@@ -115,6 +115,136 @@ public class ChallengeFlowTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Choosing_a_level_starts_there_without_giving_the_level_medal()
+    {
+        var (client, profileId) = await NewPlayerAsync(schoolGrade: 7);
+        var progress = (await MapAsync(client, profileId)).GetProperty("progress");
+        Assert.Equal("medio", progress.GetProperty("suggestedLevel").GetString()); // pela série
+
+        var res = await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "avancado" });
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        Assert.Equal("avancado", (await res.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("slug").GetString());
+
+        var map = await MapAsync(client, profileId);
+        progress = map.GetProperty("progress");
+        Assert.Equal("avancado", progress.GetProperty("level").GetProperty("slug").GetString());
+        Assert.False(progress.GetProperty("placementAvailable").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, progress.GetProperty("suggestedLevel").ValueKind);
+        Assert.Equal(0, progress.GetProperty("percent").GetInt32()); // o novo nível começa do zero
+        Assert.False(progress.GetProperty("guardianAvailable").GetBoolean());
+
+        var levels = map.GetProperty("levels").EnumerateArray().ToList();
+        Assert.True(levels[1].GetProperty("unlocked").GetBoolean());
+        Assert.True(levels[2].GetProperty("current").GetBoolean());
+        Assert.False(levels[3].GetProperty("unlocked").GetBoolean());
+
+        // Jogar uma etapa não dá as medalhas de nível: elas são para quem passa no Guardião ou no nivelamento.
+        var stageId = levels[2].GetProperty("regions")[0].GetProperty("stages")[0].GetProperty("id").GetInt32();
+        var summary = await PlayAsync(client, await StartAsync(client, $"/api/profiles/{profileId}/sessions", new { stageId }), _ => true);
+        var medals = summary.GetProperty("achievements").EnumerateArray().Select(a => a.GetProperty("slug").GetString()).ToList();
+        Assert.DoesNotContain("nivel-medio", medals);
+        Assert.DoesNotContain("nivel-avancado", medals);
+
+        // Depois de começar, o nível não se escolhe mais: só o Guardião sobe.
+        var again = await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "expert" });
+        Assert.Equal(HttpStatusCode.Forbidden, again.StatusCode);
+    }
+
+    [Fact]
+    public async Task Moving_to_an_easier_level_resets_the_given_mastery_and_keeps_stars()
+    {
+        var (client, profileId) = await NewPlayerAsync();
+        await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "avancado" });
+        var levels = (await MapAsync(client, profileId)).GetProperty("levels").EnumerateArray().ToList();
+        var avancadoStage = levels[2].GetProperty("regions")[0].GetProperty("stages")[0].GetProperty("id").GetInt32();
+        await PlayAsync(client, await StartAsync(client, $"/api/profiles/{profileId}/sessions", new { stageId = avancadoStage }), _ => true);
+
+        // Subir sem o Guardião ou ficar no mesmo nível não vale.
+        var up = await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "expert" });
+        Assert.Equal(HttpStatusCode.Forbidden, up.StatusCode);
+        var same = await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "avancado" });
+        Assert.Equal(HttpStatusCode.Forbidden, same.StatusCode);
+
+        var down = await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "medio" });
+        Assert.Equal(HttpStatusCode.OK, down.StatusCode);
+
+        var map = await MapAsync(client, profileId);
+        var progress = map.GetProperty("progress");
+        Assert.Equal("medio", progress.GetProperty("level").GetProperty("slug").GetString());
+        // As habilidades do Médio contavam como dominadas só por causa da escolha: agora começam do zero.
+        Assert.Equal(0, progress.GetProperty("percent").GetInt32());
+        Assert.All(progress.GetProperty("skills").EnumerateArray(), k => Assert.Equal(JsonValueKind.Null, k.GetProperty("rating").ValueKind));
+        Assert.False(progress.GetProperty("guardianAvailable").GetBoolean());
+
+        levels = map.GetProperty("levels").EnumerateArray().ToList();
+        Assert.True(levels[0].GetProperty("unlocked").GetBoolean()); // o Iniciante continua dominado e aberto
+        Assert.False(levels[2].GetProperty("unlocked").GetBoolean());
+        var stage = levels[2].GetProperty("regions")[0].GetProperty("stages")[0];
+        Assert.Equal(3, stage.GetProperty("stars").GetInt32()); // as estrelas ficam guardadas
+
+        var iniciante = WithDb(db => db.SkillMasteries.Count(m => m.ProfileId == profileId && db.Skills.Any(s => s.Id == m.SkillId && s.Level!.Slug == "iniciante" && s.Subject!.Slug == "matematica")));
+        Assert.True(iniciante > 0);
+    }
+
+    [Fact]
+    public async Task Guardian_started_before_moving_down_does_not_promote()
+    {
+        var (client, profileId) = await NewPlayerAsync();
+        WithDb(db =>
+        {
+            var subject = db.Subjects.Single(s => s.Slug == "matematica");
+            var medio = db.Levels.Single(l => l.SubjectId == subject.Id && l.Slug == "medio");
+            db.SubjectProgresses.Add(new SubjectProgress { ProfileId = profileId, SubjectId = subject.Id, CurrentLevelId = medio.Id, PlacementDone = true });
+            foreach (var skill in db.Skills.Where(s => s.SubjectId == subject.Id && s.Level!.Order <= 2).ToList())
+                db.SkillMasteries.Add(new SkillMastery { ProfileId = profileId, SkillId = skill.Id, Rating = 1550, AttemptsCount = 40, CorrectCount = 35, LastPracticedAt = DateTimeOffset.UtcNow });
+            return db.SaveChanges();
+        });
+
+        var guardian = await StartAsync(client, $"/api/profiles/{profileId}/subjects/matematica/guardian");
+        var down = await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "iniciante" });
+        Assert.Equal(HttpStatusCode.OK, down.StatusCode);
+
+        var summary = await PlayAsync(client, guardian, _ => true);
+        Assert.False(summary.GetProperty("guardianPassed").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, summary.GetProperty("resultLevel").ValueKind);
+        var map = await MapAsync(client, profileId);
+        Assert.Equal("iniciante", map.GetProperty("progress").GetProperty("level").GetProperty("slug").GetString());
+    }
+
+    [Fact]
+    public async Task Low_accuracy_suggests_an_easier_level()
+    {
+        var (client, profileId) = await NewPlayerAsync();
+        WithDb(db =>
+        {
+            var subject = db.Subjects.Single(s => s.Slug == "logica");
+            var medio = db.Levels.Single(l => l.SubjectId == subject.Id && l.Slug == "medio");
+            db.SubjectProgresses.Add(new SubjectProgress { ProfileId = profileId, SubjectId = subject.Id, CurrentLevelId = medio.Id, PlacementDone = true });
+            var skill = db.Skills.First(s => s.LevelId == medio.Id);
+            db.SkillMasteries.Add(new SkillMastery { ProfileId = profileId, SkillId = skill.Id, Rating = 1000, AttemptsCount = 20, CorrectCount = 4, LastPracticedAt = DateTimeOffset.UtcNow });
+            return db.SaveChanges();
+        });
+
+        var progress = (await MapAsync(client, profileId, "logica")).GetProperty("progress");
+        Assert.True(progress.GetProperty("suggestEasierLevel").GetBoolean());
+        Assert.False((await MapAsync(client, profileId, "matematica")).GetProperty("progress").GetProperty("suggestEasierLevel").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Choosing_a_level_validates_the_level()
+    {
+        var (client, profileId) = await NewPlayerAsync();
+        var empty = await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "" });
+        Assert.Equal(HttpStatusCode.BadRequest, empty.StatusCode);
+        var unknown = await client.PostAsJsonAsync($"/api/profiles/{profileId}/subjects/matematica/level", new { level = "mestre" });
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+
+        var map = await MapAsync(client, profileId);
+        Assert.Equal("iniciante", map.GetProperty("progress").GetProperty("suggestedLevel").GetString());
+        Assert.True(map.GetProperty("progress").GetProperty("placementAvailable").GetBoolean());
+    }
+
+    [Fact]
     public async Task Guardian_is_locked_until_mastery_then_promotes_on_pass()
     {
         var (client, profileId) = await NewPlayerAsync();

@@ -144,3 +144,14 @@ public class LevelProgressTests
         Assert.Equal(SkillStatus.NeedsReview, LevelProgress.StatusOf(1000, 40, Now.AddDays(-30), level, Now));
     }
 }
+
+public class TooHardTests
+{
+    [Theory]
+    [InlineData("medio", 15, 5, true)]       // 33% de acerto
+    [InlineData("medio", 15, 6, false)]      // 40%: ainda dá
+    [InlineData("medio", 14, 0, false)]      // poucas respostas para julgar
+    [InlineData("iniciante", 30, 0, false)]  // não há nível mais fácil
+    public void Suggests_an_easier_level_only_with_enough_answers_and_low_accuracy(string level, int attempts, int correct, bool expected) =>
+        Assert.Equal(expected, LevelProgress.TooHard(LevelProgress.BySlug(level), attempts, correct));
+}

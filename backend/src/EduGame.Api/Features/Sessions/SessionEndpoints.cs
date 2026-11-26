@@ -1,4 +1,5 @@
 using EduGame.Api.Common;
+using EduGame.Api.Features.Progress;
 using EduGame.Domain.Content;
 using EduGame.Domain.Players;
 using EduGame.Domain.Sessions;
@@ -13,6 +14,7 @@ public static class SessionEndpoints
     public sealed record StartRequest(int StageId);
     public sealed record StartResponse(Guid SessionId, int Total, string Mode);
     public sealed record AnswerRequest(string Answer);
+    public sealed record ChangeLevelRequest(string? Level);
 
     public static void MapSessions(this RouteGroupBuilder api)
     {
@@ -37,6 +39,17 @@ public static class SessionEndpoints
 
         subjectGroup.MapPost("/review", (Guid profileId, string slug, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
             WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) => Created(await sessions.StartReviewAsync(profile, subject, ct))));
+
+        subjectGroup.MapPost("/level", (Guid profileId, string slug, ChangeLevelRequest req, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(req.Level))
+                return Task.FromResult(ApiResults.Validation("level", Tr("Escolha um nível.", "Choose a level.", "Elige un nivel.")));
+            return WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) =>
+            {
+                var level = await sessions.ChangeLevelAsync(profile, subject, req.Level, ct);
+                return Results.Ok(new LevelDto(level.Slug, level.Name, level.Icon));
+            });
+        });
 
         subjectGroup.MapPost("/placement/skip", (Guid profileId, string slug, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
             WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) =>

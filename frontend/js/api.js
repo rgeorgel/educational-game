@@ -155,6 +155,7 @@ export const api = {
   startGuardian: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/guardian`),
   startPlacement: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/placement`),
   skipPlacement: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/placement/skip`),
+  changeLevel: (profileId, subject, level) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/level`, { level }),
   next: (sessionId) => get(`/sessions/${sessionId}/next`),
   hint: (sessionId, problemId) => post(`/sessions/${sessionId}/problems/${problemId}/hint`),
   answer: (sessionId, problemId, answer) => post(`/sessions/${sessionId}/problems/${problemId}/answer`, { answer }),

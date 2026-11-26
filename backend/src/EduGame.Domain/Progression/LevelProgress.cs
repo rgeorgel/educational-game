@@ -27,6 +27,19 @@ public static class LevelProgress
     /// <summary>Quantos dias sem praticar até uma habilidade dominada pedir revisão.</summary>
     public const int ReviewAfterDays = 21;
 
+    /// <summary>Respostas no nível a partir das quais o jogo pode sugerir um nível mais fácil.</summary>
+    public const int EasierLevelMinAttempts = 15;
+
+    /// <summary>Taxa de acerto abaixo da qual o nível parece difícil demais.</summary>
+    public const double EasierLevelBelowShare = 0.4;
+
+    /// <summary>
+    /// O nível parece difícil demais: já houve respostas suficientes e o jogador acerta pouco.
+    /// O jogo só sugere descer; quem decide é o jogador.
+    /// </summary>
+    public static bool TooHard(LevelDefinition level, int attempts, int correct) =>
+        level.Order > 1 && attempts >= EasierLevelMinAttempts && (double)correct / attempts < EasierLevelBelowShare;
+
     public static SkillStatus StatusOf(int? rating, int attempts, DateTimeOffset? lastPracticed, LevelDefinition level, DateTimeOffset now)
     {
         if (rating is null || attempts == 0) return SkillStatus.NotStarted;

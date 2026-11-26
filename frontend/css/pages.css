@@ -676,6 +676,58 @@ body.is-playing .app-header {
   border: 2px solid var(--primary);
 }
 
+.banner-easier {
+  border: 2px solid var(--warning);
+}
+
+.easier-level {
+  margin-top: var(--space-2);
+}
+
+.level-picker {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.level-picker[hidden] {
+  display: none;
+}
+
+.level-options {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.level-option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  /* Transparente: fica bem tanto no aviso escuro quanto no cartão claro do nível. */
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.level-option:hover {
+  border-color: var(--primary);
+}
+
+.level-option[aria-checked="true"] {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.level-option-topics {
+  flex-basis: 100%;
+}
+
 .actions-left {
   display: flex;
   flex-wrap: wrap;

@@ -223,6 +223,59 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         }, ct);
     }
 
+    /// <summary>
+    /// Muda o nível do jogador na trilha. Antes de começar a trilha, ele escolhe qualquer nível com conteúdo
+    /// (no lugar do teste de nivelamento). Depois, só pode ir para um nível mais fácil: subir é pelo Desafio do Guardião.
+    /// </summary>
+    public async Task<Level> ChangeLevelAsync(PlayerProfile profile, Subject subject, string levelSlug, CancellationToken ct)
+    {
+        var level = await db.Levels.SingleOrDefaultAsync(l => l.SubjectId == subject.Id && l.Slug == levelSlug, ct)
+            ?? throw new SessionException(SessionError.NotFound, Tr("Nível não encontrado.", "Level not found.", "Nivel no encontrado."));
+        var status = await progress.ForSubjectAsync(profile.Id, subject, ct);
+        var sp = await GetOrCreateSubjectProgressAsync(profile.Id, subject.Id, ct);
+
+        Level result;
+        if (status.PlacementAvailable)
+        {
+            if (level.Order > await progress.MaxContentLevelOrderAsync(subject.Id, ct))
+                throw new SessionException(SessionError.NotFound, Tr("Nível não encontrado.", "Level not found.", "Nivel no encontrado."));
+            sp.PlacementDone = true;
+            result = await RaiseLevelAsync(sp, level, clock.Now, ct);
+        }
+        else if (level.Order < status.LevelOrder)
+        {
+            result = await LowerLevelAsync(sp, level, ct);
+        }
+        else
+        {
+            throw new SessionException(SessionError.NotAvailable, Tr(
+                "Depois de começar a trilha, só dá para ir para um nível mais fácil. Para subir, passe no Desafio do Guardião.",
+                "Once you've started the trail, you can only move to an easier level. To go up, pass the Guardian Challenge.",
+                "Después de empezar el camino, solo puedes pasar a un nivel más fácil. Para subir, supera el Desafío del Guardián."));
+        }
+
+        await db.SaveChangesAsync(ct);
+        return result;
+    }
+
+    /// <summary>
+    /// Leva o jogador a um nível mais fácil. Apaga o domínio "dado" (habilidades nunca jogadas que contavam como
+    /// dominadas por causa do nivelamento ou da escolha) do novo nível para cima: assim a barra do novo nível
+    /// começa do zero e o Guardião não abre na hora. O que ele realmente jogou e as estrelas das etapas ficam guardados.
+    /// </summary>
+    private async Task<Level> LowerLevelAsync(SubjectProgress sp, Level target, CancellationToken ct)
+    {
+        var given = await db.SkillMasteries
+            .Where(m => m.ProfileId == sp.ProfileId && m.AttemptsCount == 0
+                && db.Skills.Any(s => s.Id == m.SkillId && s.SubjectId == sp.SubjectId && s.Level!.Order >= target.Order))
+            .ToListAsync(ct);
+        db.SkillMasteries.RemoveRange(given);
+
+        sp.CurrentLevelId = target.Id;
+        sp.LevelReachedAt = clock.Now;
+        return target;
+    }
+
     /// <summary>Marca o nivelamento como dispensado: o jogador prefere começar do início.</summary>
     public async Task SkipPlacementAsync(PlayerProfile profile, Subject subject, CancellationToken ct)
     {
@@ -512,7 +565,8 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
                 sp.LastCompletedAt = now;
                 break;
             }
-            case SessionModes.Guardian when Guardian.Passed(session.CorrectCount, session.ProblemCount):
+            // Se o jogador mudou de nível durante o desafio, a prova do nível antigo não promove.
+            case SessionModes.Guardian when Guardian.Passed(session.CorrectCount, session.ProblemCount) && session.LevelId == subjectProgress.CurrentLevelId:
             {
                 var current = await db.Levels.SingleAsync(l => l.Id == session.LevelId, ct);
                 var next = await db.Levels.SingleAsync(l => l.SubjectId == session.SubjectId && l.Order == current.Order + 1, ct);
@@ -542,37 +596,37 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         await progress.AwardAchievementsAsync(session.ProfileId, now, ct);
     }
 
+    /// <summary>Promove o jogador ao fim de uma sessão (Guardião ou nivelamento) e anota o nível em que ele ficou.</summary>
+    private async Task PromoteAsync(GameSession session, SubjectProgress sp, Level target, DateTimeOffset now, CancellationToken ct) =>
+        session.ResultLevelId = (await RaiseLevelAsync(sp, target, now, ct)).Id;
+
     /// <summary>
-    /// Leva o jogador ao nível indicado (nunca rebaixa). As habilidades dos níveis anteriores
-    /// passam a contar como dominadas, e as do novo nível começam no início da faixa dele.
+    /// Leva o jogador ao nível indicado (nunca rebaixa) e devolve o nível em que ele ficou. As habilidades
+    /// dos níveis anteriores passam a contar como dominadas, e as do novo nível começam no início da faixa dele.
     /// </summary>
-    private async Task PromoteAsync(GameSession session, SubjectProgress sp, Level target, DateTimeOffset now, CancellationToken ct)
+    private async Task<Level> RaiseLevelAsync(SubjectProgress sp, Level target, DateTimeOffset now, CancellationToken ct)
     {
         var current = await db.Levels.SingleAsync(l => l.Id == sp.CurrentLevelId, ct);
-        if (target.Order <= current.Order)
-        {
-            session.ResultLevelId = current.Id;
-            return;
-        }
+        if (target.Order <= current.Order) return current;
 
         sp.CurrentLevelId = target.Id;
         sp.LevelReachedAt = now;
-        session.ResultLevelId = target.Id;
 
-        var lowerSkills = await db.Skills.Where(s => s.SubjectId == session.SubjectId && s.Level!.Order < target.Order)
+        var lowerSkills = await db.Skills.Where(s => s.SubjectId == sp.SubjectId && s.Level!.Order < target.Order)
             .Select(s => new { s.Id, LevelSlug = s.Level!.Slug }).ToListAsync(ct);
         var ids = lowerSkills.Select(s => s.Id).ToList();
-        var masteries = await db.SkillMasteries.Where(m => m.ProfileId == session.ProfileId && ids.Contains(m.SkillId)).ToDictionaryAsync(m => m.SkillId, ct);
+        var masteries = await db.SkillMasteries.Where(m => m.ProfileId == sp.ProfileId && ids.Contains(m.SkillId)).ToDictionaryAsync(m => m.SkillId, ct);
         foreach (var skill in lowerSkills)
         {
             var mastered = LevelProgress.TargetRating(LevelProgress.BySlug(skill.LevelSlug));
             if (!masteries.TryGetValue(skill.Id, out var m))
             {
-                m = new SkillMastery { ProfileId = session.ProfileId, SkillId = skill.Id, Rating = mastered };
+                m = new SkillMastery { ProfileId = sp.ProfileId, SkillId = skill.Id, Rating = mastered };
                 db.SkillMasteries.Add(m);
             }
             m.Rating = Math.Max(m.Rating, mastered);
         }
+        return target;
     }
 
     private async Task<SubjectProgress> GetOrCreateSubjectProgressAsync(Guid profileId, int subjectId, CancellationToken ct)
@@ -662,7 +716,8 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
             session.XpEarned,
             nextRef,
             nextUnlocked,
-            session.Mode == SessionModes.Guardian && session.IsFinished ? Guardian.Passed(session.CorrectCount, session.ProblemCount) : null,
+            // Só conta como aprovado se a prova promoveu (não promove se o jogador mudou de nível no meio).
+            session.Mode == SessionModes.Guardian && session.IsFinished ? session.ResultLevelId is not null : null,
             resultLevel,
             achievements,
             subjectProgress,

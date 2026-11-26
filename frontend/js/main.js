@@ -16,6 +16,7 @@ import { guardianPage } from "./pages/guardian.js";
 import { settingsPage } from "./pages/settings.js";
 import { avatarView } from "./pages/shared.js";
 import { stopSpeaking } from "./voice.js";
+import { gamesPage } from "./pages/games.js";
 import { homePage } from "./pages/home.js";
 import { mapPage } from "./pages/map.js";
 import { profilesPage } from "./pages/profiles.js";
@@ -42,6 +43,7 @@ route("/cadastro", () => authPage("criar"), { title: "Criar conta" });
 route("/esqueci", forgotPasswordPage, { title: "Esqueci minha senha" });
 route("/nova-senha/:userId/:token", resetPasswordPage, { title: "Nova senha" });
 route("/perfis", profilesPage, { title: "Perfis" });
+route("/jogos", gamesPage, { title: "Jogos" });
 route("/mapa/:subject", mapPage, { title: "Mapa" });
 route("/jogar/:sessionId", sessionPage, { title: "Jogando" });
 route("/resultado/:sessionId", summaryPage, { title: "Resultado" });
@@ -98,6 +100,7 @@ function renderHeader() {
   if (me && profile && !playing) {
     nav.push(
       link("#/", "🏠", t("Início"), path === "/"),
+      link("#/jogos", "🎮", t("Jogos"), path === "/jogos"),
       link("#/progresso", "📈", t("Progresso"), path === "/progresso"),
       h("a", { href: "#/avatar", class: "profile-chip", title: t("Meu avatar") }, avatarView(profile, "sm"), h("span", { class: "nav-text" }, profile.nickname)),
     );

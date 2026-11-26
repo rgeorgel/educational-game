@@ -115,6 +115,8 @@ export const api = {
 
   daily: (profileId) => get(`/profiles/${profileId}/daily`),
   startDaily: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/daily`),
+  games: (profileId) => get(`/profiles/${profileId}/games`),
+  startGame: (profileId, subject, skill) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/games/${encodeURIComponent(skill)}`),
   startReview: (profileId, subject) => post(`/profiles/${profileId}/subjects/${encodeURIComponent(subject)}/review`),
 
   avatarOptions: (profileId) => get(`/profiles/${profileId}/avatar`),

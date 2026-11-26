@@ -927,3 +927,40 @@ body.game .logout-btn .nav-ico {
     justify-content: center;
   }
 }
+
+/* ---------- Menu de jogos ---------- */
+body.game .game-card {
+  border-radius: var(--radius-lg);
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  box-shadow: var(--shadow);
+}
+
+body.game .game-card:hover:not(:disabled) {
+  box-shadow: var(--shadow-lift);
+}
+
+body.game .game-art {
+  background: linear-gradient(135deg, var(--math-1), var(--math-2));
+}
+
+body.game .game-card[data-subject="logica"] .game-art {
+  background: linear-gradient(135deg, var(--logic-1), var(--logic-2));
+}
+
+body.game .game-card:hover:not(:disabled) .game-icon {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+body.game .game-icon {
+  transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+body.game .games-callout {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, var(--surface)), var(--surface) 70%);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease;
+}
+
+body.game .games-callout:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+}

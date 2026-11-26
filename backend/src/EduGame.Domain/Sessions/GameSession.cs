@@ -21,6 +21,9 @@ public static class SessionModes
 
     /// <summary>Treino de reforço de uma habilidade escolhida pelo responsável (plano Família).</summary>
     public const string Reinforcement = "reforco";
+
+    /// <summary>Jogo livre: o jogador escolheu um jogo (uma habilidade) no menu de jogos, fora da trilha.</summary>
+    public const string FreePlay = "livre";
 }
 
 /// <summary>Uma sessão de jogo: uma etapa, um Desafio do Guardião ou um teste de nivelamento.</summary>

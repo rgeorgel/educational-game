@@ -4,9 +4,11 @@ import { store } from "../store.js";
 import { confetti, countUp } from "../effects.js";
 import { levelBadge, levelProgress, startAndPlay } from "./shared.js";
 import { canShare, shareBox } from "../share.js";
+import { gameIcon } from "./games.js";
 import { t } from "../i18n.js";
 
 const TITLES = [t("Continue praticando!"), t("Boa! Etapa concluída!"), t("Muito bem!"), t("Perfeito!")];
+const GAME_TITLES = [t("Continue praticando!"), t("Boa partida!"), t("Muito bem!"), t("Perfeito!")];
 
 export async function summaryPage({ sessionId }) {
   const s = await api.summary(sessionId);
@@ -20,6 +22,7 @@ export async function summaryPage({ sessionId }) {
   else if (s.mode === "diario") main = dailyResult(s);
   else if (s.mode === "revisao") main = reviewResult(s, profileId, error, mapLink);
   else if (s.mode === "reforco") main = reinforcementResult(s);
+  else if (s.mode === "livre") main = freePlayResult(s, profileId, error);
   else main = stageResult(s, profileId, error, mapLink);
 
   // Momento bom para lembrar o convidado de salvar: acabou de conquistar algo.
@@ -172,6 +175,27 @@ function reinforcementResult(s) {
     h("p", { class: "xp" }, `+${s.xpEarned} XP`),
     h("p", { class: "muted" }, done ? t("Seu responsável vai ver que você concluiu este treino.") : t("Faltou pouco: com 2 estrelas o treino fica concluído. Tente de novo quando quiser!")),
     h("div", { class: "actions" }, h("a", { href: "#/", class: "btn btn-primary" }, t("Voltar ao início"))),
+  );
+}
+
+/** Jogo livre (escolhido no menu de jogos): jogar de novo o mesmo jogo ou escolher outro. */
+function freePlayResult(s, profileId, error) {
+  const again = h("button", { type: "button", class: "btn btn-primary" }, t("🔁 Jogar de novo"));
+  again.addEventListener("click", () => startAndPlay(() => api.startGame(profileId, s.subjectSlug, s.game.slug), again, error));
+  const message =
+    s.stars === 3 ? t("Você acertou tudo! Que tal um jogo mais difícil?") : s.stars > 0 ? t("Jogue de novo para ficar ainda melhor nesse jogo.") : t("Esse foi puxado! Veja as explicações e tente de novo — cada partida ajuda.");
+  return h(
+    "div",
+    { class: "card center result" },
+    h("p", { class: "result-icon", "aria-hidden": "true" }, gameIcon(s.game?.slug)),
+    h("p", { class: "muted" }, s.game?.name ?? ""),
+    h("h1", {}, GAME_TITLES[s.stars]),
+    h("star-rating", { stars: String(s.stars), class: "stars-big" }),
+    h("p", { class: "summary-score" }, h("strong", {}, t("{a} de {b}", { a: s.correct, b: s.total })), ` ${t("certas")}`),
+    h("p", { class: "xp" }, `+${s.xpEarned} XP`),
+    h("p", { class: "muted" }, message),
+    error,
+    h("div", { class: "actions" }, s.game ? again : null, h("a", { href: "#/jogos", class: "btn" }, t("🎮 Outros jogos"))),
   );
 }
 

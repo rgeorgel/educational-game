@@ -6,7 +6,7 @@
 // - Respostas e outras escritas (POST/PUT/DELETE): só rede (o servidor confere as respostas).
 // Ao sair da conta, o app pede para apagar o cache de dados (aparelhos compartilhados).
 
-const VERSION = "v17";
+const VERSION = "v18";
 const SHELL_CACHE = `edugame-shell-${VERSION}`;
 const DATA_CACHE = "edugame-data";
 
@@ -51,6 +51,7 @@ const SHELL = [
   "/js/pages/worksheets.js",
   "/js/pages/bncc.js",
   "/js/pages/classrooms.js",
+  "/js/pages/games.js",
   "/js/pages/guardian.js",
   "/js/pages/home.js",
   "/js/pages/map.js",
@@ -66,7 +67,7 @@ const SHELL = [
 ];
 
 // Leituras da API que podem ser mostradas offline (últimos dados vistos).
-const CACHEABLE_API = [/^\/api\/me$/, /^\/api\/subjects$/, /^\/api\/profiles\/[^/]+\/(progress|history|achievements|daily|avatar)/, /^\/api\/profiles\/[^/]+\/subjects\/[^/]+\/map$/];
+const CACHEABLE_API = [/^\/api\/me$/, /^\/api\/subjects$/, /^\/api\/profiles\/[^/]+\/(progress|history|achievements|daily|avatar|games)/, /^\/api\/profiles\/[^/]+\/subjects\/[^/]+\/map$/];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

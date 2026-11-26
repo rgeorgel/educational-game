@@ -11,6 +11,7 @@ const DEFAULTS = {
   voiceURI: "", // voz escolhida; vazio = a melhor voz em português do aparelho
   voiceRate: 0.95, // velocidade da leitura
   sounds: true,
+  gameStats: false, // menu de jogos: mostrar o domínio de cada jogo
 };
 
 function read() {

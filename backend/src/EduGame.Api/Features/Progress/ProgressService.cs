@@ -103,7 +103,11 @@ public sealed class ProgressService(AppDbContext db, GameClock clock)
         var maxContent = await MaxContentLevelOrderAsync(subject.Id, ct);
         var next = result.Next is { } n ? new LevelDto(n.Slug, n.Name, n.Icon) : null;
         var hasAttempts = await db.SkillMasteries.AnyAsync(m => m.ProfileId == profileId && m.AttemptsCount > 0 && db.Skills.Any(s => s.Id == m.SkillId && s.SubjectId == subject.Id), ct);
-        var placementAvailable = !(progress?.PlacementDone ?? false) && !hasAttempts;
+        // O jogo livre (menu de jogos) fica fora da trilha: não tira a chance de fazer o nivelamento ou escolher o nível.
+        var startedTrail = hasAttempts && await db.GameSessions.AnyAsync(s => s.ProfileId == profileId && s.SubjectId == subject.Id
+            && s.Mode != Domain.Sessions.SessionModes.FreePlay
+            && db.SessionProblems.Any(p => p.SessionId == s.Id && db.Attempts.Any(a => a.SessionProblemId == p.Id)), ct);
+        var placementAvailable = !(progress?.PlacementDone ?? false) && !startedTrail;
 
         // Quem pode escolher o nível vê uma sugestão pela série escolar (o mesmo ponto de partida do nivelamento).
         string? suggested = null;

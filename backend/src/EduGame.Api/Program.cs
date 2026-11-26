@@ -206,6 +206,7 @@ api.MapProfiles();
 api.MapMap();
 api.MapSessions();
 api.MapProgress();
+EduGame.Api.Features.Games.GameEndpoints.MapGames(api);
 api.MapReports();
 EduGame.Api.Features.Family.FamilyEndpoints.MapFamily(api);
 EduGame.Api.Features.Billing.BillingEndpoints.MapBilling(api);

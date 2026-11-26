@@ -73,7 +73,8 @@ public sealed record SessionSummary(
     IReadOnlyList<AchievementDto> Achievements,
     SubjectProgressDto Progress,
     IReadOnlyList<string> Marks,
-    DateOnly? DailyDate);
+    DateOnly? DailyDate,
+    SkillRef? Game);
 
 public enum SessionError { NotFound, Locked, Finished, AlreadyAnswered, NotServed, NoHintsLeft, NotAvailable }
 
@@ -223,6 +224,27 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
         }, ct);
     }
 
+    /// <summary>Jogo livre: quantos problemas tem uma partida de um jogo escolhido no menu de jogos.</summary>
+    public const int FreePlayProblemCount = 8;
+
+    /// <summary>
+    /// Jogo livre: o jogador escolhe um jogo (uma habilidade) no menu, de qualquer nível, fora da trilha.
+    /// A dificuldade segue o domínio dele nessa habilidade; não mexe em estrelas, etapas nem nível.
+    /// </summary>
+    public async Task<GameSession> StartFreePlayAsync(PlayerProfile profile, Subject subject, string skillSlug, CancellationToken ct)
+    {
+        var skill = await db.Skills.SingleOrDefaultAsync(s => s.SubjectId == subject.Id && s.Slug == skillSlug && s.Templates.Any(t => t.Active), ct)
+            ?? throw new SessionException(SessionError.NotFound, Tr("Jogo não encontrado.", "Game not found.", "Juego no encontrado."));
+        return await CreateAsync(new GameSession
+        {
+            ProfileId = profile.Id,
+            SubjectId = subject.Id,
+            Mode = SessionModes.FreePlay,
+            SkillIds = [skill.Id],
+            ProblemCount = FreePlayProblemCount,
+        }, ct);
+    }
+
     /// <summary>
     /// Muda o nível do jogador na trilha. Antes de começar a trilha, ele escolhe qualquer nível com conteúdo
     /// (no lugar do teste de nivelamento). Depois, só pode ir para um nível mais fácil: subir é pelo Desafio do Guardião.
@@ -341,8 +363,8 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
     {
         var last = served.LastOrDefault();
 
-        // Etapa/revisão: depois de um erro vem um "problema irmão" (mesma habilidade e gerador), um pouco mais fácil.
-        if (session.Mode is SessionModes.Stage or SessionModes.Review or SessionModes.Reinforcement && last?.Attempt is { IsCorrect: false })
+        // Etapa/revisão/treino: depois de um erro vem um "problema irmão" (mesma habilidade e gerador), um pouco mais fácil.
+        if (session.Mode is SessionModes.Stage or SessionModes.Review or SessionModes.Reinforcement or SessionModes.FreePlay && last?.Attempt is { IsCorrect: false })
             return (last.SkillId, last.GeneratorKey, Math.Max(Rating.Min, last.Difficulty - 100), null);
 
         if (session.Mode == SessionModes.Daily)
@@ -701,6 +723,11 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
             _ => "certo",
         }).ToList();
 
+        // Jogo livre: qual jogo foi jogado (para "jogar de novo" e para o título do resultado).
+        SkillRef? game = null;
+        if (session.Mode == SessionModes.FreePlay && session.SkillIds is [var gameSkillId])
+            game = await db.Skills.Where(s => s.Id == gameSkillId).Select(s => new SkillRef(s.Slug, s.Name)).SingleAsync(ct);
+
         return new SessionSummary(
             session.Id,
             session.Mode,
@@ -722,7 +749,8 @@ public sealed class SessionService(AppDbContext db, ProgressService progress, Ga
             achievements,
             subjectProgress,
             marks,
-            session.DailyDate);
+            session.DailyDate,
+            game);
     }
 
     // ---------- Auxiliares ----------

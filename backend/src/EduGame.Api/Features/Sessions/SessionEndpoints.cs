@@ -40,6 +40,10 @@ public static class SessionEndpoints
         subjectGroup.MapPost("/review", (Guid profileId, string slug, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
             WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) => Created(await sessions.StartReviewAsync(profile, subject, ct))));
 
+        // Jogo livre: um jogo (habilidade) escolhido no menu de jogos.
+        subjectGroup.MapPost("/games/{skill}", (Guid profileId, string slug, string skill, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
+            WithProfileAndSubject(db, http, profileId, slug, ct, async (profile, subject) => Created(await sessions.StartFreePlayAsync(profile, subject, skill, ct))));
+
         subjectGroup.MapPost("/level", (Guid profileId, string slug, ChangeLevelRequest req, HttpContext http, AppDbContext db, SessionService sessions, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(req.Level))

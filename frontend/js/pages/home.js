@@ -69,6 +69,13 @@ export async function homePage() {
       ),
     ),
     h(
+      "a",
+      { class: "card games-callout", href: "#/jogos" },
+      h("span", { class: "games-callout-icon", "aria-hidden": "true" }, "🎮"),
+      h("span", {}, h("strong", {}, t("Quer jogar um jogo específico?")), h("span", { class: "muted small" }, t("Sudoku, tabuada, frações, enigmas… escolha o seu."))),
+      h("span", { class: "btn btn-small" }, t("Ver jogos")),
+    ),
+    h(
       "div",
       { class: "totals stagger" },
       h("div", { class: "tile" }, h("strong", {}, `🔥 ${data.totals.streak}`), h("span", {}, data.totals.streak === 1 ? t("dia de prática") : t("dias de prática"))),

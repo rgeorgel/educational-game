@@ -23,6 +23,7 @@ const MODE_LABEL = {
   nivelamento: t("🧭 Teste de nivelamento"),
   diario: t("📆 Desafio do dia · XP em dobro"),
   revisao: t("🧩 Revisão"),
+  livre: t("🎮 Jogo livre"),
 };
 
 /** Texto lido em voz alta: enunciado, figuras/código e as opções. */
@@ -169,11 +170,11 @@ export async function sessionPage({ sessionId }) {
       feedback.className = `feedback ${result.correct ? "is-correct" : "is-wrong"}`;
       feedback.replaceChildren();
       append(feedback, [
-        h("p", { class: "feedback-title" }, result.correct ? `✅ ${pick(PRAISE)}` : `💭 ${problem.mode === "etapa" || problem.mode === "revisao" ? pick(ENCOURAGE) : t("Não foi dessa vez.")}`),
+        h("p", { class: "feedback-title" }, result.correct ? `✅ ${pick(PRAISE)}` : `💭 ${["etapa", "revisao", "livre"].includes(problem.mode) ? pick(ENCOURAGE) : t("Não foi dessa vez.")}`),
         result.correct ? null : h("p", {}, t("A resposta certa é "), h("strong", {}, result.correctAnswer), "."),
         h("p", { class: "explanation" }, result.explanation),
         h("p", { class: "xp" }, `+${result.xpEarned} XP`),
-        !result.correct && !result.sessionFinished && (problem.mode === "etapa" || problem.mode === "revisao") ? h("p", { class: "muted small" }, t("Agora vem um parecido para você tentar de novo!")) : null,
+        !result.correct && !result.sessionFinished && ["etapa", "revisao", "livre"].includes(problem.mode) ? h("p", { class: "muted small" }, t("Agora vem um parecido para você tentar de novo!")) : null,
         continueBtn,
       ]);
       feedback.hidden = false;

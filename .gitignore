@@ -15,3 +15,6 @@ TestResults/
 
 # Backups do banco (contêm dados pessoais)
 backups/
+
+# Acompanhamento da divulgação (só local)
+divulgacao/
